@@ -54,7 +54,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                         var.CreatorUserID = (Guid)reader["CreatorUserID"];
                     if (!string.IsNullOrEmpty(reader["CreationDate"].ToString()))
                         var.CreationDate = (DateTime)reader["CreationDate"];
-                    
+
                     retItems.Add(var);
                 }
                 catch { }
@@ -79,7 +79,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                     EmailAction ac = EmailAction.None;
                     if (Enum.TryParse<EmailAction>(reader["Action"].ToString(), out ac)) item.Action = ac;
-                    
+
                     retItems.Add(item);
                 }
                 catch (Exception e) { string s = e.ToString(); }
@@ -108,7 +108,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             if (!reader.IsClosed) reader.Close();
         }
-        
+
         private static void _parse_deleted_states(ref IDataReader reader, ref List<DeletedState> retItems)
         {
             while (reader.Read())
@@ -160,7 +160,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                     else continue;
 
                     if (tt == TaggedType.Node_Form || tt == TaggedType.Node_Wiki) tt = TaggedType.Node;
-                    
+
                     retItems.Add(item);
                 }
                 catch { }
@@ -203,7 +203,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                         item["LastName"] = Base64.encode((string)reader["LastName"]);
                     if (!string.IsNullOrEmpty(reader["Date"].ToString())) item["Date"] = (DateTime)reader["Date"];
                     if (!string.IsNullOrEmpty(reader["Types"].ToString())) item["Types"] = (string)reader["Types"];
-                    
+
                     retItems.Add(item);
                 }
                 catch { }
@@ -268,6 +268,52 @@ namespace RaaiVan.Modules.GlobalUtilities
             if (!reader.IsClosed) reader.Close();
         }
 
+        private static void _parse_foreign_key(ref IDataReader reader, ref List<ForeignKey> retItems)
+        {
+            while (reader.Read())
+            {
+                try
+                {
+                    ForeignKey fk = new ForeignKey();
+
+                    if (!string.IsNullOrEmpty(reader["Name"].ToString())) fk.Name = (string)reader["Name"];
+                    if (!string.IsNullOrEmpty(reader["Table"].ToString())) fk.Table = (string)reader["Table"];
+                    if (!string.IsNullOrEmpty(reader["Column"].ToString())) fk.Column = (string)reader["Column"];
+                    if (!string.IsNullOrEmpty(reader["RefTable"].ToString())) fk.RefTable = (string)reader["RefTable"];
+                    if (!string.IsNullOrEmpty(reader["RefColumn"].ToString())) fk.RefColumn = (string)reader["RefColumn"];
+
+                    retItems.Add(fk);
+                }
+                catch { }
+            }
+
+            if (!reader.IsClosed) reader.Close();
+        }
+
+        private static void _parse_indexes(ref IDataReader reader, ref List<DBIndex> retItems)
+        {
+            while (reader.Read())
+            {
+                try
+                {
+                    DBIndex ind = new DBIndex();
+
+                    if (!string.IsNullOrEmpty(reader["Name"].ToString())) ind.Name = (string)reader["Name"];
+                    if (!string.IsNullOrEmpty(reader["Table"].ToString())) ind.Table = (string)reader["Table"];
+                    if (!string.IsNullOrEmpty(reader["Column"].ToString())) ind.Column = (string)reader["Column"];
+                    if (!string.IsNullOrEmpty(reader["Order"].ToString())) ind.Order = (int)reader["Order"];
+                    if (!string.IsNullOrEmpty(reader["IsDescending"].ToString())) ind.IsDescending = (bool)reader["IsDescending"];
+                    if (!string.IsNullOrEmpty(reader["IsUnique"].ToString())) ind.IsUnique = (bool)reader["IsUnique"];
+                    if (!string.IsNullOrEmpty(reader["IsIncludedColumn"].ToString())) ind.IsIncludedColumn = (bool)reader["IsIncludedColumn"];
+
+                    retItems.Add(ind);
+                }
+                catch { }
+            }
+
+            if (!reader.IsClosed) reader.Close();
+        }
+
         public static string GetSystemVersion()
         {
             try
@@ -318,7 +364,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                 int totalCount = 0;
 
                 List<Application> ret = new List<Application>();
-                IDataReader reader = ProviderUtil.execute_reader(GetFullyQualifiedName("GetApplicationsByIDs"), 
+                IDataReader reader = ProviderUtil.execute_reader(GetFullyQualifiedName("GetApplicationsByIDs"),
                     string.Join(",", applicationIds.Select(id => id.ToString())), ',');
                 _parse_applications(ref reader, ref ret, ref totalCount);
                 return ret;
@@ -355,7 +401,7 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             try
             {
-                return ProviderUtil.succeed(ProviderUtil.execute_reader(GetFullyQualifiedName("AddOrModifyApplication"), 
+                return ProviderUtil.succeed(ProviderUtil.execute_reader(GetFullyQualifiedName("AddOrModifyApplication"),
                     applicationId, name, title, description, currentUserId));
             }
             catch (Exception ex) { string strEx = ex.ToString(); return false; }
@@ -424,7 +470,7 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             try
             {
-                long result = ProviderUtil.succeed_long(ProviderUtil.execute_reader(GetFullyQualifiedName("SetOwnerVariable"), 
+                long result = ProviderUtil.succeed_long(ProviderUtil.execute_reader(GetFullyQualifiedName("SetOwnerVariable"),
                     applicationId, id, ownerId, name, value, currentUserId, DateTime.Now));
 
                 if (result <= 0) return null;
@@ -433,7 +479,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             catch (Exception ex) { string strEx = ex.ToString(); return null; }
         }
 
-        public static void GetOwnerVariables(ref List<Variable> ret, Guid applicationId, 
+        public static void GetOwnerVariables(ref List<Variable> ret, Guid applicationId,
             long? id, Guid? ownerId, string name, Guid? creatorUserId)
         {
             try
@@ -473,7 +519,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             queueTable.Columns.Add("Title", typeof(string));
             queueTable.Columns.Add("EmailBody", typeof(string));
 
-            foreach (EmailQueueItem itm in items) 
+            foreach (EmailQueueItem itm in items)
                 queueTable.Rows.Add(itm.ID, itm.SenderUserID, itm.Action, itm.Email, itm.Title, itm.EmailBody);
 
             SqlParameter queueParam = new SqlParameter("@EmailQueueItems", SqlDbType.Structured);
@@ -552,7 +598,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             catch (Exception ex) { return new List<DeletedState>(); }
         }
 
-        public static void GetGuids(Guid applicationId, ref List<KeyValuePair<string, Guid>> retItems, 
+        public static void GetGuids(Guid applicationId, ref List<KeyValuePair<string, Guid>> retItems,
             ref List<string> ids, string type, bool? exist, bool? createIfNotExist)
         {
             SqlConnection con = new SqlConnection(ProviderUtil.ConnectionString);
@@ -573,26 +619,27 @@ namespace RaaiVan.Modules.GlobalUtilities
             cmd.Parameters.AddWithValue("@ApplicationID", applicationId);
             cmd.Parameters.Add(idsParam);
             cmd.Parameters.AddWithValue("@Type", type);
-            if(exist.HasValue) cmd.Parameters.AddWithValue("@Exist", exist);
+            if (exist.HasValue) cmd.Parameters.AddWithValue("@Exist", exist);
             if (createIfNotExist.HasValue) cmd.Parameters.AddWithValue("@CreateIfNotExist", createIfNotExist);
 
             string sep = ", ";
-            string arguments = "@ApplicationID" + sep + "@IDs" + sep + "@Type" + 
-                (exist.HasValue ? sep + "@Exist" : string.Empty) + 
+            string arguments = "@ApplicationID" + sep + "@IDs" + sep + "@Type" +
+                (exist.HasValue ? sep + "@Exist" : string.Empty) +
                 (createIfNotExist.HasValue ? sep + "@CreateIfNotExist" : string.Empty);
             cmd.CommandText = ("EXEC" + " " + GetFullyQualifiedName("GetGuids") + " " + arguments);
 
             con.Open();
 
-            try {
+            try
+            {
                 IDataReader reader = (IDataReader)cmd.ExecuteReader();
-                _parse_guids(ref reader, ref retItems); 
+                _parse_guids(ref reader, ref retItems);
             }
             catch (Exception ex) { string strEx = ex.ToString(); }
             finally { con.Close(); }
         }
 
-        public static bool SaveTaggedItems(Guid applicationId, ref List<TaggedItem> items, 
+        public static bool SaveTaggedItems(Guid applicationId, ref List<TaggedItem> items,
             bool? removeOldTags, Guid currentUserId)
         {
             if (items == null || items.Count == 0 || currentUserId == Guid.Empty) return false;
@@ -632,7 +679,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             finally { con.Close(); }
         }
 
-        public static void GetTaggedItems(Guid applicationId, ref List<TaggedItem> retItems, 
+        public static void GetTaggedItems(Guid applicationId, ref List<TaggedItem> retItems,
             Guid contextId, List<TaggedType> taggedTypes)
         {
             SqlConnection con = new SqlConnection(ProviderUtil.ConnectionString);
@@ -709,7 +756,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             try
             {
-                return ProviderUtil.succeed((IDataReader)ProviderUtil.execute_reader(spName, applicationId, 
+                return ProviderUtil.succeed((IDataReader)ProviderUtil.execute_reader(spName, applicationId,
                     userId, likedId, like, DateTime.Now));
             }
             catch (Exception ex) { return false; }
@@ -829,6 +876,34 @@ namespace RaaiVan.Modules.GlobalUtilities
                 return items;
             }
             catch (Exception ex) { return new List<SchemaInfo>(); }
+        }
+
+        public static List<ForeignKey> GetForeignKeys()
+        {
+            string spName = GetFullyQualifiedName("ForeignKeys");
+
+            try
+            {
+                IDataReader reader = (IDataReader)ProviderUtil.execute_reader(spName);
+                List<ForeignKey> items = new List<ForeignKey>();
+                _parse_foreign_key(ref reader, ref items);
+                return items;
+            }
+            catch (Exception ex) { return new List<ForeignKey>(); }
+        }
+
+        public static List<DBIndex> GetIndexes()
+        {
+            string spName = GetFullyQualifiedName("Indexes");
+
+            try
+            {
+                IDataReader reader = (IDataReader)ProviderUtil.execute_reader(spName);
+                List<DBIndex> items = new List<DBIndex>();
+                _parse_indexes(ref reader, ref items);
+                return items;
+            }
+            catch (Exception ex) { return new List<DBIndex>(); }
         }
     }
 }

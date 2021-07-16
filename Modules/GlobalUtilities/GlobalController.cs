@@ -256,5 +256,15 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             return DataProvider.GetSchemaInfo();
         }
+
+        public static List<ForeignKey> get_foreign_keys()
+        {
+            return DataProvider.GetForeignKeys();
+        }
+
+        public static List<DBIndex> get_indexes()
+        {
+            return DataProvider.GetIndexes();
+        }
     }
 }

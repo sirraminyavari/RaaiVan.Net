@@ -166,21 +166,8 @@ namespace RaaiVan.Web.API
             }
             */
 
-            if (PublicMethods.parse_string(context.Request.Params["command"], false) == "postgresql_scripts" && PublicMethods.is_dev())
-            {
-                paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(MSSQL2PostgreSQL.toScript(GlobalController.get_schema_info())),
-                    fileName: "postgre_script.sql", contentType: "application/sql", isAttachment: true);
-                return;
-            }
-            else if (PublicMethods.parse_string(context.Request.Params["command"], false) == "sql_scripts" && PublicMethods.is_dev())
-            {
-                string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), decode: false);
-                paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(PublicMethods.generate_script_file(fileName)),
-                    fileName: "script.sql", contentType: "application/sql", isAttachment: true);
-                return;
-            }
-
-            if (ProcessTenantIndependentRequest(context)) return;
+            if (DevelopmentSpecificRequest(context)) return;
+            else if (ProcessTenantIndependentRequest(context)) return;
             
             if (!paramsContainer.ApplicationID.HasValue)
             {
@@ -259,6 +246,46 @@ namespace RaaiVan.Web.API
             }
         }
 
+        public bool DevelopmentSpecificRequest(HttpContext context)
+        {
+            if (!PublicMethods.is_dev()) return false;
+
+            string command = PublicMethods.parse_string(context.Request.Params["Command"], false);
+            if (!string.IsNullOrEmpty(command)) command = command.ToLower();
+
+            switch (command) {
+                case "sql_scripts":
+                    string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), decode: false);
+                    paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(PublicMethods.generate_script_file(fileName)),
+                        fileName: "script.sql", contentType: "application/sql", isAttachment: true);
+                    return true;
+                case "postgresql_scripts":
+                    paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(SchemaInfo.toScript(GlobalController.get_schema_info())),
+                    fileName: "postgre_script.sql", contentType: "application/sql", isAttachment: true);
+                    return true;
+                case "postgresql_transfer_data":
+                    PostgreSQLDBUtil.config(
+                        host: PublicMethods.parse_string(paramsContainer.request_param("host"), decode: false),
+                        dbName: PublicMethods.parse_string(paramsContainer.request_param("dbname"), decode: false),
+                        username: PublicMethods.parse_string(paramsContainer.request_param("username"), decode: false),
+                        password: PublicMethods.parse_string(paramsContainer.request_param("password"), decode: false));
+
+                    Dictionary<string, object> result = MSSQL2PostgreSQL.transfer_data(GlobalController.get_schema_info());
+                    paramsContainer.return_response(PublicMethods.toJSON(result));
+                    return true;
+                case "postgresql_foreign_keys":
+                    paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(ForeignKey.toScript(GlobalController.get_foreign_keys())),
+                    fileName: "postgre_foreign_keys.sql", contentType: "application/sql", isAttachment: true);
+                    return true;
+                case "postgresql_indexes":
+                    paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(DBIndex.toScript(GlobalController.get_indexes())),
+                    fileName: "postgre_indexes.sql", contentType: "application/sql", isAttachment: true);
+                    return true;
+            }
+
+            return false;
+        }
+
         public bool ProcessTenantIndependentRequest(HttpContext context)
         {
             if (!RaaiVanSettings.SAASBasedMultiTenancy && !paramsContainer.ApplicationID.HasValue)
@@ -294,7 +321,7 @@ namespace RaaiVan.Web.API
                         ref responseText);
                     break;
             }
-            
+
             if (!string.IsNullOrEmpty(responseText))
                 paramsContainer.return_response(ref responseText);
 
