@@ -266,5 +266,15 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             return DataProvider.GetIndexes();
         }
+
+        public static List<SchemaInfo> get_user_defined_table_types()
+        {
+            return DataProvider.GetUserDefinedTableTypes();
+        }
+
+        public static List<SchemaInfo> get_full_text_indexes()
+        {
+            return DataProvider.GetFullTextIndexes();
+        }
     }
 }

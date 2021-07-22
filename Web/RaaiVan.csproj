@@ -1955,6 +1955,8 @@
     <Content Include="Services\CoreNetwork.asmx" />
     <Content Include="Services\Knowledge.asmx" />
     <Content Include="Global.asax" />
+    <Content Include="sql_map.js" />
+    <Content Include="sql_map_postgre.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
@@ -2433,6 +2435,7 @@
     <Content Include="Script\DataTables\Persian.json" />
     <Content Include="_Web.config" />
     <None Include="Properties\PublishProfiles\local_x64.pubxml" />
+    <Content Include="raaivan.license" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />

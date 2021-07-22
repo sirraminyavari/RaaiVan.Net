@@ -314,6 +314,58 @@ namespace RaaiVan.Modules.GlobalUtilities
             if (!reader.IsClosed) reader.Close();
         }
 
+        private static void _parse_user_defined_table_types(ref IDataReader reader, ref List<SchemaInfo> retItems)
+        {
+            while (reader.Read())
+            {
+                try
+                {
+                    SchemaInfo si = new SchemaInfo();
+
+                    if (!string.IsNullOrEmpty(reader["Name"].ToString())) si.Table = (string)reader["Name"];
+                    if (!string.IsNullOrEmpty(reader["Column"].ToString())) si.Column = (string)reader["Column"];
+                    if (!string.IsNullOrEmpty(reader["IsNullable"].ToString())) si.IsNullable = (bool)reader["IsNullable"];
+                    if (!string.IsNullOrEmpty(reader["IsIdentity"].ToString())) si.IsIdentity = (bool)reader["IsIdentity"];
+                    if (!string.IsNullOrEmpty(reader["MaxLength"].ToString())) si.MaxLength = (int)reader["MaxLength"];
+                    if (!string.IsNullOrEmpty(reader["Order"].ToString())) si.Order = (int)reader["Order"];
+
+                    MSSQLDataType dt = MSSQLDataType.None;
+                    if (!string.IsNullOrEmpty(reader["DataType"].ToString()) &&
+                        Enum.TryParse<MSSQLDataType>((string)reader["DataType"], true, out dt)) si.DataType = dt;
+
+                    retItems.Add(si);
+                }
+                catch { }
+            }
+
+            if (!reader.IsClosed) reader.Close();
+        }
+
+        private static void _parse_full_text_indexes(ref IDataReader reader, ref List<SchemaInfo> retItems)
+        {
+            while (reader.Read())
+            {
+                try
+                {
+                    SchemaInfo si = new SchemaInfo();
+
+                    if (!string.IsNullOrEmpty(reader["Table"].ToString())) si.Table = (string)reader["Table"];
+                    if (!string.IsNullOrEmpty(reader["Column"].ToString())) si.Column = (string)reader["Column"];
+                    if (!string.IsNullOrEmpty(reader["IsIdentity"].ToString())) si.IsIdentity = (bool)reader["IsIdentity"];
+                    if (!string.IsNullOrEmpty(reader["MaxLength"].ToString())) si.MaxLength = (int)reader["MaxLength"];
+
+                    MSSQLDataType dt = MSSQLDataType.None;
+                    if (!string.IsNullOrEmpty(reader["DataType"].ToString()) &&
+                        Enum.TryParse<MSSQLDataType>((string)reader["DataType"], true, out dt)) si.DataType = dt;
+
+                    retItems.Add(si);
+                }
+                catch { }
+            }
+
+            if (!reader.IsClosed) reader.Close();
+        }
+
         public static string GetSystemVersion()
         {
             try
@@ -904,6 +956,34 @@ namespace RaaiVan.Modules.GlobalUtilities
                 return items;
             }
             catch (Exception ex) { return new List<DBIndex>(); }
+        }
+
+        public static List<SchemaInfo> GetUserDefinedTableTypes()
+        {
+            string spName = GetFullyQualifiedName("UserDefinedTableTypes");
+
+            try
+            {
+                IDataReader reader = (IDataReader)ProviderUtil.execute_reader(spName);
+                List<SchemaInfo> items = new List<SchemaInfo>();
+                _parse_user_defined_table_types(ref reader, ref items);
+                return items;
+            }
+            catch (Exception ex) { return new List<SchemaInfo>(); }
+        }
+
+        public static List<SchemaInfo> GetFullTextIndexes()
+        {
+            string spName = GetFullyQualifiedName("FullTextIndexes");
+
+            try
+            {
+                IDataReader reader = (IDataReader)ProviderUtil.execute_reader(spName);
+                List<SchemaInfo> items = new List<SchemaInfo>();
+                _parse_full_text_indexes(ref reader, ref items);
+                return items;
+            }
+            catch (Exception ex) { return new List<SchemaInfo>(); }
         }
     }
 }

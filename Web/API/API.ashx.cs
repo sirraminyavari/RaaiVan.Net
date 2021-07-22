@@ -255,13 +255,23 @@ namespace RaaiVan.Web.API
 
             switch (command) {
                 case "sql_scripts":
-                    string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), decode: false);
-                    paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(PublicMethods.generate_script_file(fileName)),
-                        fileName: "script.sql", contentType: "application/sql", isAttachment: true);
-                    return true;
+                    {
+                        string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), decode: false);
+                        paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(PublicMethods.generate_script_file(fileName)),
+                            fileName: "script.sql", contentType: "application/sql", isAttachment: true);
+                        return true;
+                    }
                 case "postgresql_scripts":
+                    {
+                        string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), decode: false);
+                        string scriptContent = MSSQL2PostgreSQL.convert_mssql_to_postgresql(PublicMethods.generate_script_file(fileName));
+                        paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(scriptContent),
+                            fileName: "postgresql_script.sql", contentType: "application/sql", isAttachment: true);
+                        return true;
+                    }
+                case "postgresql_schema":
                     paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(SchemaInfo.toScript(GlobalController.get_schema_info())),
-                    fileName: "postgre_script.sql", contentType: "application/sql", isAttachment: true);
+                    fileName: "postgre_schema.sql", contentType: "application/sql", isAttachment: true);
                     return true;
                 case "postgresql_transfer_data":
                     PostgreSQLDBUtil.config(
@@ -280,6 +290,16 @@ namespace RaaiVan.Web.API
                 case "postgresql_indexes":
                     paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(DBIndex.toScript(GlobalController.get_indexes())),
                     fileName: "postgre_indexes.sql", contentType: "application/sql", isAttachment: true);
+                    return true;
+                case "postgresql_user_defined_types":
+                    paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(
+                        SchemaInfo.toScript_UserDefinedTableTypes(GlobalController.get_user_defined_table_types())),
+                    fileName: "postgre_user_defined_types.sql", contentType: "application/sql", isAttachment: true);
+                    return true;
+                case "postgresql_full_text_indexes":
+                    paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(
+                        SchemaInfo.toScript_FullTextIndexes(GlobalController.get_full_text_indexes())),
+                    fileName: "postgre_full_text_indexes.sql", contentType: "application/sql", isAttachment: true);
                     return true;
             }
 

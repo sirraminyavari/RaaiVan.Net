@@ -54,14 +54,14 @@ namespace RaaiVan.Modules.GlobalUtilities
                     !string.IsNullOrEmpty(c.DefaultValue) && c.DefaultValue.ToLower().Contains("newid()") ?
                     " DEFAULT gen_random_uuid()" : string.Empty;
 
-                return MSSQL2PostgreSQL.resolve_name(c.Column) + " " + dt + nullable + defaultValue;
+                return "\"" + MSSQL2PostgreSQL.resolve_name(c.Column) + "\" " + dt + nullable + defaultValue;
             }).Where(x => !string.IsNullOrEmpty(x)).ToList();
 
             List<string> primary = columns
                 .Where(c => c.IsPrimaryKey.HasValue && c.IsPrimaryKey.Value)
                 .Select(c => MSSQL2PostgreSQL.resolve_name(c.Column)).ToList();
 
-            if (primary.Count > 0) strColumns.Add("PRIMARY KEY (" + string.Join(", ", primary) + ")");
+            if (primary.Count > 0) strColumns.Add("PRIMARY KEY (" + string.Join(", ", primary.Select(p => "\"" + p + "\"")) + ")");
 
             return "CREATE TABLE IF NOT EXISTS " + MSSQL2PostgreSQL.resolve_table_name(tableName) + " (" +
                 "\r\n\t" +
@@ -75,6 +75,54 @@ namespace RaaiVan.Modules.GlobalUtilities
             List<string> tables = info.Select(i => i.Table).Distinct().ToList();
 
             return string.Join("\r\n\r\n", tables.Select(t => toScript(t, MSSQL2PostgreSQL.get_columns(t, info))));
+        }
+
+        public static string toScript_UserDefinedTableTypes(string typeName, List<SchemaInfo> columns)
+        {
+            return "DROP TYPE IF EXISTS " + MSSQL2PostgreSQL.resolve_name(typeName) + ";\r\n\r\n" + 
+                "CREATE TYPE " + MSSQL2PostgreSQL.resolve_name(typeName) + " AS (\r\n\t" +
+                string.Join(",\r\n\t", columns.Select(c => "\"" + MSSQL2PostgreSQL.resolve_name(c.Column) + "\" " +
+                    MSSQL2PostgreSQL.resolve_data_type(c.DataType, c.MaxLength, c.IsIdentity))) + 
+                "\r\n);";
+        }
+
+        public static string toScript_UserDefinedTableTypes(List<SchemaInfo> info)
+        {
+            List<string> tables = info.Select(i => i.Table)
+                .Where(i => !i.ToLower().StartsWith("keyless"))
+                .Distinct().ToList();
+
+            return string.Join("\r\n\r\n\r\n", tables.Select(t => toScript_UserDefinedTableTypes(t, MSSQL2PostgreSQL.get_columns(t, info))));
+        }
+
+        public static string toScript_FullTextIndexes(string tableName, List<SchemaInfo> columns)
+        {
+            string indexName = "ix_fts_" + MSSQL2PostgreSQL.resolve_table_name(tableName);
+
+            return "DROP INDEX IF EXISTS " + indexName + ";\r\n\r\n" +
+                "CREATE INDEX " + indexName + " ON " + MSSQL2PostgreSQL.resolve_table_name(tableName) + "\r\n" + 
+                "USING pgroonga (\r\n\t" +
+                string.Join(",\r\n\t", columns.Select(c =>
+                {
+                    string dataType = MSSQL2PostgreSQL.resolve_data_type(c.DataType, c.MaxLength, c.IsIdentity);
+
+                    return "\"" + MSSQL2PostgreSQL.resolve_name(c.Column) + "\"" +
+                        (dataType.ToLower().Contains("varchar") ? " pgroonga_varchar_full_text_search_ops_v2" : string.Empty);
+                })) +
+                "\r\n);";
+        }
+
+        public static string toScript_FullTextIndexes(List<SchemaInfo> info)
+        {
+            info.Where(i => i.Table.ToLower() == "usr_view_users" && i.Column.ToLower() == "username")
+                .ToList().ForEach(i => i.Table = "aspnet_Users");
+
+            info.Where(i => i.Table.ToLower() == "usr_view_users").ToList().ForEach(i => i.Table = "USR_Profile");
+
+            List<string> tables = info.Select(i => i.Table).Distinct().ToList();
+
+            return "CREATE EXTENSION IF NOT EXISTS pgroonga;\r\n\r\n\r\n" +  
+                string.Join("\r\n\r\n\r\n", tables.Select(t => toScript_FullTextIndexes(t, MSSQL2PostgreSQL.get_columns(t, info))));
         }
     }
     
@@ -132,7 +180,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             string constraintName = (isUnique ? "ux_" : "ix_") + 
                 MSSQL2PostgreSQL.resolve_table_name(table) + "_" +
                 MSSQL2PostgreSQL.resolve_name(data[0].Column) + "_" + 
-                PublicMethods.random_string(8);
+                PublicMethods.random_string(8).ToLower();
 
             List<string> columnNames = data.Where(d => !d.IsIncludedColumn.HasValue || !d.IsIncludedColumn.Value)
                 .Select(d =>
@@ -165,6 +213,8 @@ namespace RaaiVan.Modules.GlobalUtilities
     {
         public static string resolve_name(string name)
         {
+            if (PublicMethods.is_all_upper(name)) return name.ToLower();
+
             string postgreName = string.Empty;
 
             string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -180,7 +230,6 @@ namespace RaaiVan.Modules.GlobalUtilities
             else if (retStr == "user_name") retStr = "username";
             else if (retStr == "u_r_l") retStr = "url";
             else if (retStr == "birth_day") retStr = "birthdate";
-            else if (retStr == "like") retStr = "like_status";
 
             return retStr
                 .Replace("__", "_")
@@ -198,7 +247,8 @@ namespace RaaiVan.Modules.GlobalUtilities
                 .Replace("_e_mail", "_email")
                 .Replace("_user_name", "_username")
                 .Replace("_u_r_l", "_url")
-                .Replace("aspnet_", "rv_");
+                .Replace("aspnet_", "rv_")
+                .Replace("c_n_", "cn_");
         }
 
         public static string resolve_table_name(string mssqlName)
@@ -260,7 +310,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static string resolve_constraint_name(string name) {
             return string.IsNullOrEmpty(name) || name.Length <= 39 ? name :
-                name.Substring(0, 30) + "_" + PublicMethods.random_string(8);
+                name.Substring(0, 30) + "_" + PublicMethods.random_string(8).ToLower();
         }
 
         public static List<SchemaInfo> get_columns(string tableName, List<SchemaInfo> columns)
@@ -397,6 +447,128 @@ namespace RaaiVan.Modules.GlobalUtilities
             });
 
             return result;
+        }
+
+        private static string convert_mssql_to_postgresql_one_line(string script)
+        {
+            //resove pattern: [dbo].[table_name]
+            {
+                List<string> matches = Expressions.get_matches_string(script, @"\[dbo\].\[.*\]").Distinct().ToList();
+
+                int preLength = "[dbo].[".Length;
+
+                matches.ForEach(mth =>
+                {
+                    int lnt = mth.Length - preLength - 1;
+                    script = script.Replace(mth, resolve_table_name(mth.Substring(preLength, lnt)));
+                });
+            }
+            //end of resove pattern: [dbo].[table_name]
+
+
+            //resove pattern: ' AS column_name,'
+            {
+                List<string> matches = Expressions.get_matches_string(script, @"\s[aA][sS]\s+\[?[a-zA-Z_]*\]?").Distinct().ToList();
+
+                matches.ForEach(mth =>
+                {
+                    string alias = mth.Replace("[", "").Replace("]", "").Substring(mth.ToLower().IndexOf("as") + 2).Trim();
+                    script = script.Replace(mth, " AS " + resolve_name(alias));
+                });
+            }
+            //end of resove pattern: ' AS [dbo].[table_name],'
+
+
+            //resolve pattern: alias.column_name
+            {
+                List<string> matches = Expressions.get_matches_string(script, @"\[?[a-zA-Z_0-9]*\]?\.\[?[a-zA-Z_0-9]*\]?")
+                    .Distinct().ToList();
+
+                matches.ForEach(mth =>
+                {
+                    string[] parts = mth.Replace("[", "").Replace("]", "").Split('.');
+                    script = script.Replace(mth, resolve_name(parts[0]) + "." + resolve_name(parts[1]));
+                });
+            }
+            //end of resolve pattern: alias.column_name
+
+
+            //modify 'CREATE VIEW' statements
+            if (script.ToLower().Trim().StartsWith("create view"))
+                script = script.Substring(0, script.IndexOf(" with ", StringComparison.OrdinalIgnoreCase));
+            //end of modify 'CREATE VIEW' statements
+
+
+            return script
+                .Replace("ISNULL(", "COALESCE(")
+                .Replace("NEWID()", "gen_random_uuid()")
+                .Replace("newid()", "gen_random_uuid()");
+        }
+
+        public static string convert_mssql_to_postgresql(string script)
+        {
+            if (string.IsNullOrEmpty(script)) return string.Empty;
+
+
+            //convert 'GO' to ';'
+            script = Expressions.replace(script, @"\s+[gG][oO](?=\s+)", ";");
+            //end of convert 'GO' to ';'
+
+
+            //delete CREATE INDEX statements of views
+            script = Expressions.replace(script, @"[iI][fF]\s[^;]*[sS][yY][sS]\.[iI][nN][dD][eE][xX][eE][sS][^;]*;\s*", "");
+            script = Expressions.replace(script, @"[cC][rR][eE][aA][tT][eE][^;]+[iI][nN][dD][eE][xX]\s+[^;]*;\s*", "");
+            //end of delete CREATE INDEX statements of views
+
+
+            //convert DROP VIEW statements
+            {
+                List<string> matches = Expressions.get_matches_string(script,
+                    @"[iI][fF]\s[^;]*[sS][yY][sS]\.[vV][iI][eE][wW][sS][^;]*\s[dD][rR][oO][pP]\s[^;]*;\s*").Distinct().ToList();
+
+                matches.ForEach(mth =>
+                {
+                    string ptrn = "DROP VIEW";
+                    string alias = mth.Substring(mth.IndexOf(ptrn, StringComparison.OrdinalIgnoreCase) + ptrn.Length).Trim();
+                    script = script.Replace(mth, "DROP VIEW IF EXISTS " + alias + "\r\n\r\n");
+                });
+            }
+            //end of convert DROP VIEW statements
+
+
+            //convert DROP PROCEDURE statements
+            {
+                List<string> matches = Expressions.get_matches_string(script,
+                    @"[iI][fF]\s[^;]*[iI][sS][pP][rR][oO][cC][eE][dD][uU][rR][eE][^;]*\s[dD][rR][oO][pP]\s[^;]*;\s*")
+                    .Distinct().ToList();
+
+                matches.ForEach(mth =>
+                {
+                    string ptrn = "DROP PROCEDURE";
+                    string alias = mth.Substring(mth.IndexOf(ptrn, StringComparison.OrdinalIgnoreCase) + ptrn.Length).Trim();
+                    script = script.Replace(mth, "DROP PROCEDURE IF EXISTS " + alias + "\r\n\r\n");
+                });
+            }
+            //end of convert DROP PROCEDURE statements
+
+
+            //convert DROP FUNCTION statements
+            {
+                List<string> matches = Expressions.get_matches_string(script,
+                    @"[iI][fF]\s[^;]*\s[dD][rR][oO][pP]\s+[fF][uU][nN][cC][tT][iI][oO][nN][^;]*;\s*")
+                    .Distinct().ToList();
+
+                matches.ForEach(mth =>
+                {
+                    string ptrn = "DROP FUNCTION";
+                    string alias = mth.Substring(mth.IndexOf(ptrn, StringComparison.OrdinalIgnoreCase) + ptrn.Length).Trim();
+                    script = script.Replace(mth, "DROP FUNCTION IF EXISTS " + alias + "\r\n\r\n");
+                });
+            }
+            //end of convert DROP PROCEDURE statements
+
+
+            return string.Join("\n", script.Split('\n').Select(ln => convert_mssql_to_postgresql_one_line(ln)));
         }
     }
 }
