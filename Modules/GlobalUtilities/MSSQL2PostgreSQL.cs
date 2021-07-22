@@ -248,7 +248,10 @@ namespace RaaiVan.Modules.GlobalUtilities
                 .Replace("_user_name", "_username")
                 .Replace("_u_r_l", "_url")
                 .Replace("aspnet_", "rv_")
-                .Replace("c_n_", "cn_");
+                .Replace("c_n_", "cn_")
+                .Replace("_f_n_", "_fn_")
+                .Replace("kwf_n_", "kw_fn_")
+                .Replace("member_ship", "membership");
         }
 
         public static string resolve_table_name(string mssqlName)
@@ -449,11 +452,33 @@ namespace RaaiVan.Modules.GlobalUtilities
             return result;
         }
 
+        private static string convert_boolean_check_or_assignment(string script, string name)
+        {
+            string resolvedName = resolve_name(name);
+
+            string nameExpression = string.Join("", name.ToCharArray()
+                .Select(c => !char.IsLetter(c) ? c.ToString() : "[" + c.ToString().ToLower() + c.ToString().ToUpper() + "]"));
+
+            script = Expressions.replace(script, @"\." + nameExpression + @"\s*\=\s*1", "." + resolvedName + " = TRUE");
+            script = Expressions.replace(script, @"\." + nameExpression + @"\s*\=\s*0", "." + resolvedName + " = FALSE");
+
+            script = Expressions.replace(script, @"\." + nameExpression + @"\s*\,\s*1", "." + resolvedName + ", TRUE");
+            script = Expressions.replace(script, @"\." + nameExpression + @"\s*\,\s*0", "." + resolvedName + ", FALSE");
+
+            script = Expressions.replace(script, @"\s" + nameExpression + @"\s*\=\s*1", " " + resolvedName + " = TRUE");
+            script = Expressions.replace(script, @"\s" + nameExpression + @"\s*\=\s*0", " " + resolvedName + " = FALSE");
+
+            script = Expressions.replace(script, @"\(\s*" + nameExpression + @"\s*\,\s*1\s*\)", "." + resolvedName + ", TRUE");
+            script = Expressions.replace(script, @"\(\s*" + nameExpression + @"\s*\,\s*0\s*\)", "." + resolvedName + ", FALSE");
+
+            return resolvedName.ToLower() == name.ToLower() ? script : convert_boolean_check_or_assignment(script, resolvedName);
+        }
+
         private static string convert_mssql_to_postgresql_one_line(string script)
         {
             //resove pattern: [dbo].[table_name]
             {
-                List<string> matches = Expressions.get_matches_string(script, @"\[dbo\].\[.*\]").Distinct().ToList();
+                List<string> matches = Expressions.get_matches_string(script, @"\[dbo\].\[[a-zA-Z0-9_]+\]").Distinct().ToList();
 
                 int preLength = "[dbo].[".Length;
 
@@ -468,7 +493,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             //resove pattern: ' AS column_name,'
             {
-                List<string> matches = Expressions.get_matches_string(script, @"\s[aA][sS]\s+\[?[a-zA-Z_]*\]?").Distinct().ToList();
+                List<string> matches = Expressions.get_matches_string(script, @"\s[aA][sS]\s+\[?[a-zA-Z0-9_]*\]?").Distinct().ToList();
 
                 matches.ForEach(mth =>
                 {
@@ -499,26 +524,82 @@ namespace RaaiVan.Modules.GlobalUtilities
             //end of modify 'CREATE VIEW' statements
 
 
+            //convert '[name]' to 'name'
+            {
+                List<string> matches = Expressions.get_matches_string(script, @"\[[a-zA-Z0-9_]+\]").Distinct().ToList();
+
+                matches.ForEach(mth =>
+                {
+                    string alias = resolve_name(mth.Substring(1, mth.Length - 2));
+                    script = script.Replace(mth, alias);
+                });
+            }
+            //end of convert '[name]' to 'name'
+
+
+            //convert boolean checks and assignments
+            new List<string>() {
+                "Searchable",
+                "Deleted",
+                "IsKnowledge",
+                "IsDocument",
+                "Validated",
+                "IsPending",
+                "HideCreators",
+                "IsApproved",
+                "Approved",
+                "SocialApproved",
+                "Allow",
+                "CalculateHierarchy",
+                "RemoveHierarchy",
+                "ParentDeleted",
+                "Compulsory",
+                "MatchAll",
+                "IsTemporary",
+                "IsSender",
+                "HasPicture",
+                "Like",
+                "LikeStatus",
+                "SetupService",
+                "Archive",
+                "UniqueMembership",
+                "UniqueAdminMember",
+                "Exists",
+                "Done",
+                "TypeDeleted",
+                "Full",
+                "GrabNoContentServices",
+                "NoContent",
+                "CheckAccess",
+                "HasNodeTypeID",
+                "Admin",
+                "IsAdmin"
+            }.Distinct().ToList().ForEach(name => script = convert_boolean_check_or_assignment(script, name));
+            //end of convert boolean checks and assignments
+
+
             return script
                 .Replace("ISNULL(", "COALESCE(")
                 .Replace("NEWID()", "gen_random_uuid()")
-                .Replace("newid()", "gen_random_uuid()");
+                .Replace("newid()", "gen_random_uuid()")
+                .Replace("CAST(1 AS bit)", "TRUE")
+                .Replace("CAST(0 AS bit)", "FALSE");
         }
 
         public static string convert_mssql_to_postgresql(string script)
         {
             if (string.IsNullOrEmpty(script)) return string.Empty;
 
-
             //convert 'GO' to ';'
             script = Expressions.replace(script, @"\s+[gG][oO](?=\s+)", ";");
-            //end of convert 'GO' to ';'
-
+            script = Expressions.replace(script, @"\s+[gG][oO]$", ";");
 
             //delete CREATE INDEX statements of views
             script = Expressions.replace(script, @"[iI][fF]\s[^;]*[sS][yY][sS]\.[iI][nN][dD][eE][xX][eE][sS][^;]*;\s*", "");
             script = Expressions.replace(script, @"[cC][rR][eE][aA][tT][eE][^;]+[iI][nN][dD][eE][xX]\s+[^;]*;\s*", "");
-            //end of delete CREATE INDEX statements of views
+
+            //delete 'SET options ON or OFF'
+            script = Expressions.replace(script, @"[sS][eE][tT]\s+[^;]*\s+([oO][nN]|[oO][fF][fF])\s*;\s*", "");
 
 
             //convert DROP VIEW statements
@@ -541,6 +622,10 @@ namespace RaaiVan.Modules.GlobalUtilities
                 List<string> matches = Expressions.get_matches_string(script,
                     @"[iI][fF]\s[^;]*[iI][sS][pP][rR][oO][cC][eE][dD][uU][rR][eE][^;]*\s[dD][rR][oO][pP]\s[^;]*;\s*")
                     .Distinct().ToList();
+
+                matches.AddRange(Expressions.get_matches_string(script,
+                    @"[iI][fF]\s[^;]*[oO][bB][jJ][eE][cC][tT]_[iI][dD]\s[^;]*\'[pP][rR][oO][cC][eE][dD][uU][rR][eE]\'[^;]*\s[dD][rR][oO][pP]\s[^;]*;\s*")
+                    .Distinct());
 
                 matches.ForEach(mth =>
                 {
@@ -568,7 +653,11 @@ namespace RaaiVan.Modules.GlobalUtilities
             //end of convert DROP PROCEDURE statements
 
 
-            return string.Join("\n", script.Split('\n').Select(ln => convert_mssql_to_postgresql_one_line(ln)));
+            //convert the script line by line
+            script = string.Join("\n", script.Split('\n').Select(ln => convert_mssql_to_postgresql_one_line(ln)));
+
+
+            return script;
         }
     }
 }
