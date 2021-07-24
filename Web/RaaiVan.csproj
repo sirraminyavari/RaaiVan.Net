@@ -1204,6 +1204,7 @@
     <Content Include="Script\Reports\ReportOptions\KW_KnowledgeAdminsDetailReport.js" />
     <Content Include="Script\Reports\ReportOptions\KW_KnowledgeEvaluationsHistoryReport.js" />
     <Content Include="Script\Reports\ReportOptions\KW_KnowledgeAdminsReport.js" />
+    <Content Include="Script\Reports\ReportOptions\RV_ApplicationsPerformanceReport.js" />
     <Content Include="Script\Reports\ReportOptions\USR_ResumeEducationReport.js" />
     <Content Include="Script\Reports\ReportOptions\USR_ResumeCoursesReport.js" />
     <Content Include="Script\Reports\ReportOptions\USR_ResumeHonorsReport.js" />

@@ -976,6 +976,21 @@ namespace RaaiVan.Web.API
 
             List<Guid> lst = ReportUtilities.ReportIDs.Select(u => u.Value).ToList();
 
+
+            //Drop Applications Performance Report
+            bool isRefTeam = RaaiVanSettings.SAASBasedMultiTenancy && RaaiVanSettings.ReferenceTenantID.HasValue &&
+                RaaiVanSettings.ReferenceTenantID == input.ParamsContainer.ApplicationID;
+
+            if (!isRefTeam)
+            {
+                Guid? reportId = ReportUtilities.get_report_id(ModuleIdentifier.RV, "ApplicationsPerformanceReport");
+
+                if (reportId.HasValue)
+                    lst = lst.Where(id => id != reportId.Value).ToList();
+            }
+            //end of Drop Applications Performance Report
+
+
             if (!PublicMethods.is_system_admin(input.ParamsContainer.Tenant.Id, input.ParamsContainer.CurrentUserID.Value))
             {
                 lst = PrivacyController.check_access(input.ParamsContainer.Tenant.Id,

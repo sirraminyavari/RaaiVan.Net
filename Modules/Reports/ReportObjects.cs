@@ -22,6 +22,7 @@ namespace RaaiVan.Modules.Reports
             _ReportIDs.Add(new KeyValuePair<string, Guid>("RV_KnowledgeSupplyIndicatorsReport", Guid.Parse("6B4724E9-3DB1-4879-8E18-4BF7B51F9BAA")));
             _ReportIDs.Add(new KeyValuePair<string, Guid>("RV_KnowledgeDemandIndicatorsReport", Guid.Parse("B4CB2F7E-B673-4023-9940-75D292E29CA7")));
             _ReportIDs.Add(new KeyValuePair<string, Guid>("RV_SocialContributionIndicatorsReport", Guid.Parse("AE876616-C6F6-4B98-A034-80F16D56C75F")));
+            _ReportIDs.Add(new KeyValuePair<string, Guid>("RV_ApplicationsPerformanceReport", Guid.Parse("B3F87E3C-F362-4C67-AC77-793522C47F81")));
             _ReportIDs.Add(new KeyValuePair<string, Guid>("USR_UsersListReport", Guid.Parse("BEF0F10D-75D3-44FD-B23F-B7F62C7E4DB7")));
             _ReportIDs.Add(new KeyValuePair<string, Guid>("USR_MostVisitedItemsReport", Guid.Parse("8895C55A-2C0B-4179-A4DC-BE15F4F3AD59")));
             _ReportIDs.Add(new KeyValuePair<string, Guid>("USR_ProfileFilledPercentageReport", Guid.Parse("52C8CF0B-5125-49AD-8A5D-D1B719DD4B31")));

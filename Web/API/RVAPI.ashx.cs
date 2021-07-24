@@ -663,7 +663,7 @@ namespace RaaiVan.Web.API
                 "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" + 
                     ",\"IsSystemAdmin\":" + (paramsContainer.CurrentUserID.HasValue && 
                         PublicMethods.is_system_admin(applicationId, paramsContainer.CurrentUserID.Value)).ToString().ToLower() +
-                    ",\"Onboarding\":{\"Name\":\"intro\",\"Step\":" + PublicMethods.get_random_number(1, 4).ToString() + "}" + 
+                    //",\"Onboarding\":{\"Name\":\"intro\",\"Step\":" + PublicMethods.get_random_number(1, 4).ToString() + "}" + 
                 "}";
         }
 
