@@ -257,19 +257,34 @@ namespace RaaiVan.Modules.GlobalUtilities
             return (new Regex(_get_pattern(pattern))).IsMatch(input);
         }
 
+        public static MatchCollection get_matches(string input, string pattern)
+        {
+            return string.IsNullOrEmpty(pattern) ? (MatchCollection)null : (new Regex(pattern)).Matches(input);
+        }
+
         public static MatchCollection get_matches(string input, Patterns pattern)
         {
-            string patt = _get_pattern(pattern);
-            return string.IsNullOrEmpty(patt) ? (MatchCollection)null : (new Regex(patt)).Matches(input);
+            return get_matches(input, _get_pattern(pattern));
+        }
+
+        private static List<string> _match_collection_to_string_list(MatchCollection col)
+        {
+            List<string> ret = new List<string>();
+            if (col != null)
+                for (int i = 0; i < col.Count; i++) ret.Add(col[i].Value);
+            return ret;
+        }
+
+        public static List<string> get_matches_string(string input, string pattern)
+        {
+            MatchCollection col = get_matches(input, pattern);
+            return _match_collection_to_string_list(col);
         }
 
         public static List<string> get_matches_string(string input, Patterns pattern)
         {
             MatchCollection col = get_matches(input, pattern);
-            List<string> ret = new List<string>();
-            if (col != null)
-                for (int i = 0; i < col.Count; i++) ret.Add(col[i].Value);
-            return ret;
+            return _match_collection_to_string_list(col);
         }
 
         public static List<string> get_existing_tags(string input, Patterns pattern)
@@ -1111,6 +1126,12 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             if (removeHtmlTags && !string.IsNullOrEmpty(str)) str = Expressions.replace(str, Expressions.Patterns.HTMLTag, " ");
             return convert_numbers_from_local(string.IsNullOrEmpty(str) ? str : str.Replace('ي', 'ی').Replace('ك', 'ک'));
+        }
+
+        public static bool is_all_upper(string input)
+        {
+            return string.IsNullOrEmpty(input) || 
+                !input.ToCharArray().Any(c => Char.IsLetter(c) && !Char.IsUpper(c));
         }
 
         //Arabic - Range: 0600–06FF, Arabic Supplement - Range: 0750–077F, Arabic Presentation Forms-A - Range: FB50–FDFF, Arabic Presentation Forms-B - Range: FE70–FEFF
