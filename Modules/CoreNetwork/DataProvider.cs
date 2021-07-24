@@ -116,8 +116,7 @@ namespace RaaiVan.Modules.CoreNetwork
                     if (Enum.TryParse<Status>(reader["Status"].ToString(), out st)) node.Status = st;
 
                     if (!string.IsNullOrEmpty(reader["WFState"].ToString())) node.WFState = (string)reader["WFState"];
-                    if (!string.IsNullOrEmpty(reader["Searchable"].ToString()))
-                        node.Searchable = (bool)reader["Searchable"];
+                    if (!string.IsNullOrEmpty(reader["Searchable"].ToString())) node.Searchable = (bool)reader["Searchable"];
                     if (!string.IsNullOrEmpty(reader["HideCreators"].ToString())) node.HideCreators = (bool)reader["HideCreators"];
                     if (!string.IsNullOrEmpty(reader["Archive"].ToString())) node.Archive = (bool)reader["Archive"];
 
@@ -169,7 +168,7 @@ namespace RaaiVan.Modules.CoreNetwork
                         if (!string.IsNullOrEmpty(reader["OwnerName"].ToString()))
                             node.OwnerName = (string)reader["OwnerName"];
 
-                        if (!string.IsNullOrEmpty(reader["PublicationDate"].ToString())) 
+                        if (!string.IsNullOrEmpty(reader["PublicationDate"].ToString()))
                             node.PublicationDate = (DateTime)reader["PublicationDate"];
                         if (!string.IsNullOrEmpty(reader["ExpirationDate"].ToString()))
                             node.ExpirationDate = (DateTime)reader["ExpirationDate"];
@@ -185,7 +184,10 @@ namespace RaaiVan.Modules.CoreNetwork
 
                     lstNodes.Add(node);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    string strEx = ex.ToString();
+                }
             }
 
             long totalCount = (hasTotalCount && reader.NextResult()) ? ProviderUtil.succeed_long(reader, dontClose: true) : 0;
