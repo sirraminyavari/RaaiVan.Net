@@ -10,7 +10,7 @@ namespace RaaiVan.Modules.RaaiVanConfig
         private static bool _WorkFlow = true;
         private static bool _FormGenerator = true;
         private static bool _Notifications = true;
-        private static bool _SMSEMailNotifier = true;
+        private static bool _SMSEMailNotifier = false;
         private static bool _SocialNetwork = true;
         private static bool _KnowledgeAdmin = true;
         private static bool _Knowledge = true;

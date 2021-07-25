@@ -44,8 +44,14 @@ namespace RaaiVan.Modules.GlobalUtilities
             DataType = MSSQLDataType.None;
         }
 
-        private static string toScript(string tableName, List<SchemaInfo> columns)
+        private static string toScript(string tableName, List<SchemaInfo> columns, bool? withPartitioning)
         {
+            string partitionColumnName = "ApplicationID";
+            int partitionsCount = 10;
+
+            if (!withPartitioning.HasValue) withPartitioning = false;
+            else if (!columns.Any(c => c.Column.ToLower() == partitionColumnName.ToLower())) withPartitioning = false;
+
             List<string> strColumns = columns.Select(c =>
             {
                 string dt = MSSQL2PostgreSQL.resolve_data_type(c.DataType, c.MaxLength, c.IsIdentity);
@@ -63,18 +69,31 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             if (primary.Count > 0) strColumns.Add("PRIMARY KEY (" + string.Join(", ", primary.Select(p => "\"" + p + "\"")) + ")");
 
-            return "CREATE TABLE IF NOT EXISTS " + MSSQL2PostgreSQL.resolve_table_name(tableName) + " (" +
+            string pgTableName = MSSQL2PostgreSQL.resolve_table_name(tableName);
+
+            string strPartitioning = !withPartitioning.HasValue || !withPartitioning.Value ? string.Empty : 
+                " PARTITION BY HASH (" + MSSQL2PostgreSQL.resolve_name(partitionColumnName) + ")";
+
+            string strPartitions = string.IsNullOrEmpty(strPartitioning) ? string.Empty :
+                "\r\n\r\n" + string.Join("\r\n\r\n", Enumerable.Range(1, partitionsCount).Select(number => {
+                    string partitionName = pgTableName + "_" + number.ToString();
+
+                    return "CREATE TABLE IF NOT EXISTS " + partitionName + " PARTITION OF " + pgTableName + "\r\n\t" +
+                        "FOR VALUES WITH (MODULUS " + partitionsCount.ToString() + ", REMAINDER " + (number - 1).ToString() + ");";
+                }));
+
+            return "CREATE TABLE IF NOT EXISTS " + pgTableName + " (" +
                 "\r\n\t" +
                 string.Join(",\r\n\t", strColumns) +
                 "\r\n" +
-                ");";
+                ")" + strPartitioning + ";" + strPartitions;
         }
 
-        public static string toScript(List<SchemaInfo> info)
+        public static string toScript(List<SchemaInfo> info, bool? withPartitioning)
         {
             List<string> tables = info.Select(i => i.Table).Distinct().ToList();
 
-            return string.Join("\r\n\r\n", tables.Select(t => toScript(t, MSSQL2PostgreSQL.get_columns(t, info))));
+            return string.Join("\r\n\r\n\r\n", tables.Select(t => toScript(t, MSSQL2PostgreSQL.get_columns(t, info), withPartitioning)));
         }
 
         public static string toScript_UserDefinedTableTypes(string typeName, List<SchemaInfo> columns)

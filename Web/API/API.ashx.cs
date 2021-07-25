@@ -270,9 +270,15 @@ namespace RaaiVan.Web.API
                         return true;
                     }
                 case "postgresql_schema":
-                    paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(SchemaInfo.toScript(GlobalController.get_schema_info())),
-                    fileName: "postgre_schema.sql", contentType: "application/sql", isAttachment: true);
-                    return true;
+                    {
+                        bool? withPartitioning = PublicMethods.parse_bool(context.Request.Params["WithPartitioning"]);
+                        
+                        paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(
+                            SchemaInfo.toScript(GlobalController.get_schema_info(), withPartitioning)),
+                            fileName: "postgre_schema.sql", contentType: "application/sql", isAttachment: true);
+
+                        return true;
+                    }
                 case "postgresql_transfer_data":
                     PostgreSQLDBUtil.config(
                         host: PublicMethods.parse_string(paramsContainer.request_param("host"), decode: false),

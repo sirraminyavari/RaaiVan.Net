@@ -506,7 +506,6 @@
                                         NodeIDs: nodeIds.join("|"), Description: !isSaas, Creator: true,
                                         LikesCount: !isSaas, VisitsCount: !isSaas, ParseResults: true,
                                         ResponseHandler: function (nodesInfo) {
-                                            console.log(nodesInfo);
                                             var retNodes = [];
 
                                             (nodesInfo || []).forEach(function (val) { nodeDic[val.NodeID] = val; });
