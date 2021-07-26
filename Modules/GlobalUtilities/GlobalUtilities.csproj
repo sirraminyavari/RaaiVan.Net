@@ -260,8 +260,10 @@
     <Compile Include="ErrorHandler.cs" />
     <Compile Include="GlobalController.cs" />
     <Compile Include="GlobalUtilities.cs" />
-    <Compile Include="MSSQL2PostgreSQL.cs" />
-    <Compile Include="PostgreSQLDBUtil.cs" />
+    <Compile Include="PostgreSQL\MSSQL2PostgreSQL.cs" />
+    <Compile Include="PostgreSQL\Objects.cs" />
+    <Compile Include="PostgreSQL\PGConnection.cs" />
+    <Compile Include="PostgreSQL\PostgreSQLDBUtil.cs" />
     <Compile Include="RVGraphics.cs" />
     <Compile Include="ITenant.cs" />
     <Compile Include="Messages.cs" />

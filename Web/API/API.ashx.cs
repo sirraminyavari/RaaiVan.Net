@@ -254,6 +254,18 @@ namespace RaaiVan.Web.API
             if (!string.IsNullOrEmpty(command)) command = command.ToLower();
 
             switch (command) {
+                case "abc123":
+                    {
+                        PostgreSQLDBUtil.procedure_call_test();
+                        paramsContainer.return_response("result: ok");
+                        return true;
+                    }
+                case "abc1234":
+                    {
+                        PostgreSQLDBUtil.procedure_call_test_2();
+                        paramsContainer.return_response("result: ok");
+                        return true;
+                    }
                 case "sql_scripts":
                     {
                         string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), decode: false);
