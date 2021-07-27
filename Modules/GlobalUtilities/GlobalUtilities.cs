@@ -979,19 +979,19 @@ namespace RaaiVan.Modules.GlobalUtilities
             return retVal;
         }
 
-        public static long? parse_long(string input)
+        public static long? parse_long(string input, long? defaultValue = null)
         {
-            if (string.IsNullOrEmpty(input)) return null;
+            if (string.IsNullOrEmpty(input)) return defaultValue;
             long retVal = 0;
-            if (!long.TryParse(input, out retVal)) return null;
+            if (!long.TryParse(input, out retVal)) return defaultValue;
             return retVal;
         }
 
-        public static double? parse_double(string input)
+        public static double? parse_double(string input, double? defaultValue = null)
         {
-            if (string.IsNullOrEmpty(input)) return null;
+            if (string.IsNullOrEmpty(input)) return defaultValue;
             double retVal = 0;
-            if (!double.TryParse(input, out retVal)) return null;
+            if (!double.TryParse(input, out retVal)) return defaultValue;
             return retVal;
         }
 
@@ -1046,7 +1046,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             try
             {
                 T itm;
-                if (Enum.TryParse<T>(input, out itm)) return itm;
+                if (Enum.TryParse<T>(value: input, ignoreCase: true, result: out itm)) return itm;
                 else return defaultValue;
             }
             catch { return defaultValue; }

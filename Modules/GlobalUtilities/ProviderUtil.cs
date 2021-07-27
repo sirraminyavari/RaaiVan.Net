@@ -651,7 +651,11 @@ namespace RaaiVan.Modules.GlobalUtilities
                 int fieldCount = reader.FieldCount;
 
                 for (int i = 0; i < fieldCount; ++i)
-                    retTable.Columns.Add(reader.GetName(i), reader.GetFieldType(i));
+                {
+                    string colName = reader.GetName(i);
+                    if (string.IsNullOrEmpty(colName)) colName = PublicMethods.random_string(5);
+                    retTable.Columns.Add(colName, reader.GetFieldType(i));
+                }
 
                 while (reader.Read())
                 {

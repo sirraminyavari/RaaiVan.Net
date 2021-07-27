@@ -423,7 +423,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                     colNames.ForEach(n => data[resolve_name(n)] = row[n]);
 
-                    if (PostgreSQLDBUtil.insert(resolve_table_name(tableName), data)) succeedCount++;
+                    if (PostgreSQLConnector.insert(resolve_table_name(tableName), data)) succeedCount++;
                 }
             }
 
@@ -432,7 +432,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static int transfer_data(string tableName, List<SchemaInfo> columns)
         {
-            if (!PostgreSQLDBUtil.delete(resolve_table_name(tableName))) return 0;
+            if (!PostgreSQLConnector.delete(resolve_table_name(tableName))) return 0;
 
             string orderBy = columns.Where(c => c.IsIdentity.HasValue && c.IsIdentity.Value)
                 .Select(c => c.Column).FirstOrDefault();

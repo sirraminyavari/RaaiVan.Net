@@ -12,6 +12,7 @@ using RaaiVan.Modules.Documents;
 using RaaiVan.Modules.Privacy;
 using RaaiVan.Modules.Log;
 using RaaiVan.Modules.Search;
+using RaaiVan.Modules.GlobalUtilities.DBCompositeTypes;
 
 namespace RaaiVan.Web.API
 {
@@ -256,14 +257,42 @@ namespace RaaiVan.Web.API
             switch (command) {
                 case "abc123":
                     {
-                        PostgreSQLDBUtil.procedure_call_test();
-                        paramsContainer.return_response("result: ok");
+                        DBCompositeType<GuidTableType> nodeIds = new DBCompositeType<GuidTableType>()
+                            .add(new GuidTableType() { Value = Guid.Parse("D0637BC1-80C5-47EA-BA23-002BCF0BE290") })
+                            .add(new GuidTableType() { Value = Guid.Parse("77CC8111-4163-4241-A68A-0046A15442B5") })
+                            .add(new GuidTableType() { Value = Guid.Parse("D6B3F272-11C9-4B48-B3D2-00985CACCF5B") })
+                            .add(new GuidTableType() { Value = Guid.Parse("7C80A672-D8C1-4F33-8B07-00AC05897E8E") })
+                            .add(new GuidTableType() { Value = Guid.Parse("DB0303F8-52E2-4B0E-BD1A-015EF4F3119B") });
+
+                        DBResultSet results = DBConnector.read("CN_XX_TEST", Guid.Parse("1BCF6425-580B-4F91-93FD-9CAD7150BAFF"), 
+                            nodeIds, false, null);
+
+                        /*
+                        DBCompositeType<GuidTableType> values = new DBCompositeType<GuidTableType>()
+                            .add(new GuidTableType() { Value = Guid.NewGuid() })
+                            .add(new GuidTableType() { Value = Guid.NewGuid() });
+
+                        DBResultSet results = DBConnector.read("func_test_3", 1, values);
+                        */
+
+                        paramsContainer.return_response("result: ok " + results.ToString());
                         return true;
                     }
                 case "abc1234":
                     {
-                        PostgreSQLDBUtil.procedure_call_test_2();
-                        paramsContainer.return_response("result: ok");
+                        DBResultSet results = DBConnector.read("func_test_2",
+                            (int)1, //int
+                            (long)1, //bigint
+                            (double)1.1, //float
+                            true, //boolean
+                            'a', //char
+                            DateTime.Now, //timestamp
+                            "ramin", //varchar
+                            "ramin", //text
+                            Guid.NewGuid(), //uuid
+                            new byte[10]); //bytea
+
+                        paramsContainer.return_response("result: ok " + results.ToString());
                         return true;
                     }
                 case "sql_scripts":
@@ -292,7 +321,7 @@ namespace RaaiVan.Web.API
                         return true;
                     }
                 case "postgresql_transfer_data":
-                    PostgreSQLDBUtil.config(
+                    PostgreSQLConnector.config(
                         host: PublicMethods.parse_string(paramsContainer.request_param("host"), decode: false),
                         dbName: PublicMethods.parse_string(paramsContainer.request_param("dbname"), decode: false),
                         username: PublicMethods.parse_string(paramsContainer.request_param("username"), decode: false),

@@ -253,6 +253,11 @@
     <Compile Include="CallWebService.cs" />
     <Compile Include="CephStorage.cs" />
     <Compile Include="DataProvider.cs" />
+    <Compile Include="DBHelper\CompositeTypes\GuidTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\ITableType.cs" />
+    <Compile Include="DBHelper\DBCompositeType.cs" />
+    <Compile Include="DBHelper\MSSQLConnector.cs" />
+    <Compile Include="DBHelper\PostgreSQLConnector.cs" />
     <Compile Include="DocumentUtilities.cs" />
     <Compile Include="DownloadedFileMeta.cs" />
     <Compile Include="EmailQueue.cs" />
@@ -260,10 +265,12 @@
     <Compile Include="ErrorHandler.cs" />
     <Compile Include="GlobalController.cs" />
     <Compile Include="GlobalUtilities.cs" />
-    <Compile Include="PostgreSQL\MSSQL2PostgreSQL.cs" />
-    <Compile Include="PostgreSQL\Objects.cs" />
-    <Compile Include="PostgreSQL\PGConnection.cs" />
-    <Compile Include="PostgreSQL\PostgreSQLDBUtil.cs" />
+    <Compile Include="DBHelper\MSSQL2PostgreSQL.cs" />
+    <Compile Include="DBHelper\DBResultSet.cs" />
+    <Compile Include="DBHelper\DBConnector.cs" />
+    <Compile Include="RVDataTable.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="RVGraphics.cs" />
     <Compile Include="ITenant.cs" />
     <Compile Include="Messages.cs" />

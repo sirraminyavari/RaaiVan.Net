@@ -168,7 +168,9 @@ namespace RaaiVan.Modules.GlobalUtilities
         Recommender,
         RecommenderURL,
         RecommenderUsername,
-        RecommenderPassword
+        RecommenderPassword,
+
+        UsePostgreSQL
     }
 
     public static class RaaiVanSettings
@@ -1325,6 +1327,14 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                     return lst;
                 }
+            }
+        }
+
+        public static bool UsePostgreSQL
+        {
+            get
+            {
+                return get_value(null, RVSettingsItem.UsePostgreSQL).ToLower() == "true";
             }
         }
     }
