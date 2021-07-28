@@ -1,5 +1,4 @@
 ﻿using Npgsql;
-using RaaiVan.Modules.GlobalUtilities.DBCompositeTypes;
 using System;
 using System.Collections.Generic;
 using System.Data;

@@ -253,8 +253,9 @@
     <Compile Include="CallWebService.cs" />
     <Compile Include="CephStorage.cs" />
     <Compile Include="DataProvider.cs" />
+    <Compile Include="DBHelper\CompositeTypes\FormFilterTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\GuidTableType.cs" />
-    <Compile Include="DBHelper\CompositeTypes\ITableType.cs" />
+    <Compile Include="DBHelper\ITableType.cs" />
     <Compile Include="DBHelper\DBCompositeType.cs" />
     <Compile Include="DBHelper\MSSQLConnector.cs" />
     <Compile Include="DBHelper\PostgreSQLConnector.cs" />
@@ -268,6 +269,9 @@
     <Compile Include="DBHelper\MSSQL2PostgreSQL.cs" />
     <Compile Include="DBHelper\DBResultSet.cs" />
     <Compile Include="DBHelper\DBConnector.cs" />
+    <Compile Include="Logs\DataProvider.cs" />
+    <Compile Include="Logs\LogController.cs" />
+    <Compile Include="Logs\LogObjects.cs" />
     <Compile Include="RVDataTable.cs">
       <SubType>Component</SubType>
     </Compile>

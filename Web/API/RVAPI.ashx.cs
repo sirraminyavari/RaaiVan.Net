@@ -1209,10 +1209,8 @@ namespace RaaiVan.Web.API
 
             List<User> users = UsersController.get_users(paramsContainer.Tenant.Id, searchText, null, count);
 
-            long totalCount = 0;
-
-            List<Node> nodes = CNController.get_nodes(paramsContainer.Tenant.Id, nodeTypeIds, ref totalCount, null,
-                searchText, isDocument: null, isKnowledge: null, count: count.Value * 2, archive: false, searchable: true);
+            List<Node> nodes = CNController.get_nodes(applicationId: paramsContainer.Tenant.Id, nodeTypeIds: nodeTypeIds,
+                searchText: searchText, count: count.Value * 2, searchable: true);
 
             responseText = "{\"Items\":[";
 

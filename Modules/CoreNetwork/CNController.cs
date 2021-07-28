@@ -8,24 +8,35 @@ using RaaiVan.Modules.GlobalUtilities;
 using RaaiVan.Modules.Users;
 using RaaiVan.Modules.FormGenerator;
 using RaaiVan.Modules.Privacy;
+using RaaiVan.Modules.GlobalUtilities.DBCompositeTypes;
 
 namespace RaaiVan.Modules.CoreNetwork
 {
     public static class CNController
     {
+        public static string GetFullyQualifiedName(string name)
+        {
+            return "[dbo]." + "[CN_" + name + "]"; //'[dbo].' is database owner and 'CN_' is module qualifier
+        }
+
         public static bool initialize(Guid applicationId)
         {
-            return DataProvider.Initialize(applicationId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("Initialize"));
         }
 
         public static bool add_node_type(Guid applicationId, NodeType Info, Guid? templateFormId = null)
         {
-            return DataProvider.AddNodeType(applicationId, Info, templateFormId);
+            if (Info.AdditionalID.HasValue) Info.NodeTypeAdditionalID = Info.AdditionalID.Value.ToString();
+
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddNodeType"),
+                applicationId, Info.NodeTypeID, Info.NodeTypeAdditionalID, Info.Name, Info.ParentID,
+                Info.IsService, Info.TemplateTypeID, templateFormId, Info.CreatorUserID, DateTime.Now);
         }
 
         public static bool rename_node_type(Guid applicationId, NodeType Info)
         {
-            return DataProvider.RenameNodeType(applicationId, Info);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("RenameNodeType"),
+                applicationId, Info.NodeTypeID, Info.Name, Info.LastModifierUserID, Info.LastModificationDate);
         }
 
         public static bool set_node_type_additional_id(Guid applicationId, Guid nodeTypeId,
@@ -524,92 +535,155 @@ namespace RaaiVan.Modules.CoreNetwork
             return get_nodes(applicationId, _nIds, full, currentUserId).FirstOrDefault();
         }
 
-        private static List<Node> _get_nodes(Guid applicationId, ref long totalCount, ref List<NodesCount> nodesCount, 
-            List<Guid> nodeTypeIds, NodeTypes? nodeType, bool? useNodeTypeHierarchy = null, Guid? relatedToNodeId = null, 
-            string searchText = null, bool? isDocument = null, bool? isKnowledge = null, DateTime? lowerCreationDateLimit = null, 
-            DateTime? upperCreationDateLimit = null,  int count = 1000, long? lowerBoundary = 0, bool? archive = false, 
-            bool? searchable = true, bool? grabNoContentServices = null,List<FormFilter> filters = null, 
-            bool? matchAllFilters = null, bool? fetchCounts = null, Guid? currentUserId = null, Guid? creatorUserId = null, bool checkAccess = false)
-        {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetNodes(applicationId, ref retList, ref nodesCount, nodeTypeIds, nodeType, useNodeTypeHierarchy, relatedToNodeId,
-                searchText, isDocument, isKnowledge, lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, 
-                searchable, archive, grabNoContentServices, filters, matchAllFilters, fetchCounts, currentUserId, creatorUserId,
-                checkAccess, ref totalCount);
-            return retList;
-        }
-
-        public static List<Node> get_nodes(Guid applicationId, string searchText,
-            bool? isDocument, bool? isKnowledge, DateTime? lowerCreationDateLimit = null,
-            DateTime? upperCreationDateLimit = null, int count = 1000, long? lowerBoundary = 0,
-            bool? archive = false, bool? searchable = true, bool? grabNoContentServices = null,
-            List<FormFilter> filters = null, bool? matchAllFilters = null)
-        {
-            List<NodesCount> cnts = new List<NodesCount>();
-            long totalCount = 0;
-
-            return _get_nodes(applicationId, ref totalCount, ref cnts, null, null, null, null, searchText, isDocument, isKnowledge,
-                lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, archive, searchable, 
-                grabNoContentServices, filters, matchAllFilters, fetchCounts: false);
-        }
-
-        public static List<Node> get_nodes(Guid applicationId, List<Guid> nodeTypeIds, ref long totalCount, 
+        private static List<Node> get_nodes(Guid applicationId,
+            ref long totalCount, ref List<NodesCount> nodesCount, ref Dictionary<string, object> groupedResults,
+            List<Guid> nodeTypeIds = null, NodeTypes? nodeType = null, bool? useNodeTypeHierarchy = null, 
             Guid? relatedToNodeId = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null, 
-            DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null, int count = 1000, 
-            long? lowerBoundary = 0, bool? archive = false, bool? searchable = true, bool? grabNoContentServices = null,
-            List<FormFilter> filters = null, bool? matchAllFilters = null, bool checkAccess = false)
+            DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null,
+            int? count = null, long? lowerBoundary = null, bool? searchable = null, bool? archive = null, 
+            bool? grabNoContentServices = null, List<FormFilter> filters = null, bool? matchAllFilters = null, 
+            bool? fetchCounts = null, Guid? currentUserId = null, Guid? creatorUserId = null,
+            bool checkAccess = false, Guid? groupByFormElementId = null)
         {
-            List<NodesCount> cnts = new List<NodesCount>();
+            //prepare
+            if (filters == null) filters = new List<FormFilter>();
 
-            return _get_nodes(applicationId, ref totalCount, ref cnts, nodeTypeIds, null, null, relatedToNodeId, searchText,
-                isDocument, isKnowledge, lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, archive,
-                searchable, grabNoContentServices, filters, matchAllFilters, fetchCounts: false, checkAccess: checkAccess);
+            string strAddId = null;
+            if (nodeType != null) strAddId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
+            //end of prepare
+
+            DBCompositeType<FormFilterTableType> formFilters = new DBCompositeType<FormFilterTableType>()
+                .add(filters.Select(f => new FormFilterTableType(
+                    elementId: f.ElementID,
+                    ownerId: f.OwnerID,
+                    text: f.Text,
+                    textItems: ProviderUtil.list_to_string<string>(f.TextItems),
+                    or: f.Or,
+                    exact: f.Exact,
+                    dateFrom: f.DateFrom,
+                    dateTo: f.DateTo,
+                    floatFrom: f.FloatFrom,
+                    floatTo: f.FloatTo,
+                    bit: f.Bit,
+                    guid: f.Guid,
+                    guidItems: ProviderUtil.list_to_string<Guid>(f.GuidItems),
+                    compulsory: f.Compulsory)).ToList());
+
+            DBResultSet results = DBConnector.read(applicationId, DataProvider.GetFullyQualifiedName("GetNodes"),
+                applicationId,
+                currentUserId,
+                nodeTypeIds == null || nodeTypeIds.Count == 0 ? null : ProviderUtil.list_to_string<Guid>(nodeTypeIds),
+                ',',
+                string.IsNullOrEmpty(strAddId) ? null : strAddId,
+                useNodeTypeHierarchy,
+                relatedToNodeId,
+                string.IsNullOrEmpty(searchText) ? null : ProviderUtil.get_search_text(searchText),
+                isDocument,
+                isKnowledge,
+                creatorUserId,
+                searchable,
+                archive,
+                grabNoContentServices,
+                lowerCreationDateLimit,
+                upperCreationDateLimit,
+                count,
+                lowerBoundary,
+                formFilters,
+                matchAllFilters,
+                fetchCounts,
+                checkAccess,
+                RaaiVanSettings.DefaultPrivacy(applicationId),
+                groupByFormElementId);
+
+            if (groupByFormElementId.HasValue && groupByFormElementId != Guid.Empty)
+            {
+                groupedResults = CNParsers.node_counts_grouped_by_element(results);
+                return new List<Node>();
+            }
+            else
+            {
+                return CNParsers.nodes(results, ref nodesCount, ref totalCount, full: false,
+                    fetchCounts: fetchCounts.HasValue && fetchCounts.Value);
+            }
         }
 
-        public static List<Node> get_nodes(Guid applicationId, Guid nodeTypeId, Guid? relatedToNodeId = null, 
-            string searchText = null, bool? isDocument = null, bool? isKnowledge = null,
-            DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null, int count = 1000, 
-            long? lowerBoundary = 0, bool? archive = false, bool? searchable = true, bool? grabNoContentServices = null,
-            List<FormFilter> filters = null, bool? matchAllFilters = null, bool checkAccess = false)
+        public static List<Node> get_nodes(Guid applicationId,
+            List<Guid> nodeTypeIds = null, NodeTypes? nodeType = null, bool? useNodeTypeHierarchy = null,
+            Guid? relatedToNodeId = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null,
+            DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null,
+            int? count = null, long? lowerBoundary = null, bool? searchable = null, bool? archive = null,
+            bool? grabNoContentServices = null, List<FormFilter> filters = null, bool? matchAllFilters = null,
+            Guid? currentUserId = null, Guid? creatorUserId = null, bool checkAccess = false)
         {
             long totalCount = 0;
-            return get_nodes(applicationId, new List<Guid>() { nodeTypeId }, ref totalCount, relatedToNodeId, searchText, 
-                isDocument, isKnowledge, lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, archive,
-                searchable, grabNoContentServices, filters, matchAllFilters, checkAccess: checkAccess);
+            List<NodesCount> retNodesCount = new List<NodesCount>();
+            Dictionary<string, object> groupedResults = new Dictionary<string, object>();
+            bool? fetchCounts = null;
+            Guid? groupByFormElementId = null;
+
+            return get_nodes(applicationId, ref totalCount, ref retNodesCount, ref groupedResults, nodeTypeIds,
+                nodeType, useNodeTypeHierarchy, relatedToNodeId, searchText, isDocument, isKnowledge,
+                lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, searchable, archive,
+                grabNoContentServices, filters, matchAllFilters, fetchCounts, currentUserId, creatorUserId,
+                checkAccess, groupByFormElementId);
         }
 
-        public static List<Node> get_nodes(Guid applicationId, List<Guid> nodeTypeIds, bool? useNodeTypeHierarchy,
-            Guid? relatedToNodeId, string searchText, bool? isDocument, bool? isKnowledge, DateTime? lowerCreationDateLimit, 
-            DateTime? upperCreationDateLimit, int count, long? lowerBoundary, ref long totalCount, ref List<NodesCount> nodesCount, 
-            bool? archive = false, bool? searchable = true, bool? grabNoContentServices = null, List<FormFilter> filters = null, 
-            bool? matchAllFilters = null, bool? fetchCounts = null, Guid? currentUserId = null, 
-            Guid? creatorUserId = null, bool checkAccess = false)
+        public static List<Node> get_nodes(Guid applicationId, ref long totalCount, ref List<NodesCount> nodesCount,
+            List<Guid> nodeTypeIds = null, NodeTypes? nodeType = null, bool? useNodeTypeHierarchy = null,
+            Guid? relatedToNodeId = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null,
+            DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null,
+            int? count = null, long? lowerBoundary = null, bool? searchable = null, bool? archive = null,
+            bool? grabNoContentServices = null, List<FormFilter> filters = null, bool? matchAllFilters = null,
+            bool? fetchCounts = null, Guid ? currentUserId = null, Guid? creatorUserId = null, bool checkAccess = false)
         {
-            return _get_nodes(applicationId, ref totalCount, ref nodesCount, nodeTypeIds, null, useNodeTypeHierarchy, relatedToNodeId,
-                searchText, isDocument, isKnowledge, lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary,
-                archive, searchable, grabNoContentServices, filters, matchAllFilters, fetchCounts, currentUserId, creatorUserId, checkAccess);
+            Dictionary<string, object> groupedResults = new Dictionary<string, object>();
+            Guid? groupByFormElementId = null;
+
+            return get_nodes(applicationId, ref totalCount, ref nodesCount, ref groupedResults, nodeTypeIds,
+                nodeType, useNodeTypeHierarchy, relatedToNodeId, searchText, isDocument, isKnowledge,
+                lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, searchable, archive,
+                grabNoContentServices, filters, matchAllFilters, fetchCounts, currentUserId, creatorUserId,
+                checkAccess, groupByFormElementId);
         }
-        
-        public static List<Node> get_nodes(Guid applicationId, NodeTypes nodeType, string searchText = null, 
-            bool? isDocument = null, bool? isKnowledge = null, DateTime? lowerCreationDateLimit = null, 
-            DateTime? upperCreationDateLimit = null, int count = 1000, long? lowerBoundary = 0, 
-            bool? archive = false, bool? searchable = true, bool? grabNoContentServices = null,
-            List<FormFilter> filters = null, bool? matchAllFilters = null)
+
+        public static List<Node> get_nodes(Guid applicationId, ref long totalCount,
+            List<Guid> nodeTypeIds = null, NodeTypes? nodeType = null, bool? useNodeTypeHierarchy = null,
+            Guid? relatedToNodeId = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null,
+            DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null,
+            int? count = null, long? lowerBoundary = null, bool? searchable = null, bool? archive = null,
+            bool? grabNoContentServices = null, List<FormFilter> filters = null, bool? matchAllFilters = null,
+            Guid? currentUserId = null, Guid? creatorUserId = null, bool checkAccess = false)
         {
-            List<NodesCount> cnts = new List<NodesCount>();
+            List<NodesCount> nodesCount = new List<NodesCount>();
+            bool? fetchCounts = null;
+            Dictionary<string, object> groupedResults = new Dictionary<string, object>();
+            Guid? groupByFormElementId = null;
+
+            return get_nodes(applicationId, ref totalCount, ref nodesCount, ref groupedResults, nodeTypeIds,
+                nodeType, useNodeTypeHierarchy, relatedToNodeId, searchText, isDocument, isKnowledge,
+                lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, searchable, archive,
+                grabNoContentServices, filters, matchAllFilters, fetchCounts, currentUserId, creatorUserId,
+                checkAccess, groupByFormElementId);
+        }
+
+        public static Dictionary<string, object> get_nodes_grouped(Guid applicationId, Guid nodeTypeId, 
+            Guid groupByFormElementId, Guid? relatedToNodeId = null, string searchText = null, bool? isDocument = null, 
+            bool? isKnowledge = null, DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null, 
+            bool? searchable = null, List<FormFilter> filters = null, bool? matchAllFilters = null,
+            Guid? currentUserId = null, Guid? creatorUserId = null, bool checkAccess = false)
+        {
             long totalCount = 0;
+            List<NodesCount> nodesCount = new List<NodesCount>();
+            Dictionary<string, object> groupedResults = new Dictionary<string, object>();
 
-            return _get_nodes(applicationId, ref totalCount, ref cnts, null, nodeType, null, null, searchText, isDocument, isKnowledge, 
-                lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, archive, searchable, 
-                grabNoContentServices, filters, matchAllFilters, fetchCounts: false);
-        }
+            get_nodes(applicationId: applicationId, totalCount: ref totalCount, nodesCount: ref nodesCount, 
+                groupedResults: ref groupedResults, nodeTypeIds: new List<Guid>() { nodeTypeId },
+                relatedToNodeId: relatedToNodeId, searchText: searchText, isDocument: isDocument, isKnowledge: isKnowledge,
+                lowerCreationDateLimit: lowerCreationDateLimit, upperCreationDateLimit: upperCreationDateLimit, 
+                searchable: searchable, filters: filters, matchAllFilters: matchAllFilters, currentUserId: currentUserId, 
+                creatorUserId: creatorUserId, checkAccess: checkAccess, groupByFormElementId: groupByFormElementId);
 
-        public static Dictionary<string, object> get_nodes_grouped(Guid applicationId, Guid nodeTypeId, Guid groupByFormElementId,
-            Guid? relatedToNodeId, string searchText, DateTime? lowerCreationDateLimit, DateTime? upperCreationDateLimit,
-            bool? searchable, List<FormFilter> filters, bool? matchAllFilters, Guid? currentUserId, Guid? creatorUserId, bool checkAccess)
-        {
-            return DataProvider.GetNodes(applicationId, nodeTypeId, groupByFormElementId, relatedToNodeId, searchText,
-                lowerCreationDateLimit, upperCreationDateLimit, searchable, filters, matchAllFilters, currentUserId, creatorUserId, checkAccess);
+            return groupedResults == null ? new Dictionary<string, object>() : groupedResults;
         }
 
         public static List<Node> get_most_popular_nodes(Guid applicationId, List<Guid> nodeTypeIds, Guid? parentNodeId,

@@ -1041,15 +1041,33 @@ namespace RaaiVan.Modules.GlobalUtilities
             return decode ? Base64.decode(input.ToString()) : input.ToString();
         }
 
-        public static T parse_enum<T>(string input, T defaultValue) where T : struct
+        public static T parse_enum<T>(string input, T defaultValue, ref bool error) where T : struct
         {
             try
             {
                 T itm;
-                if (Enum.TryParse<T>(value: input, ignoreCase: true, result: out itm)) return itm;
-                else return defaultValue;
+                if (Enum.TryParse<T>(value: input, ignoreCase: true, result: out itm))
+                {
+                    error = false;
+                    return itm;
+                }
+                else
+                {
+                    error = true;
+                    return defaultValue;
+                }
             }
-            catch { return defaultValue; }
+            catch
+            {
+                error = true;
+                return defaultValue;
+            }
+        }
+
+        public static T parse_enum<T>(string input, T defaultValue) where T : struct
+        {
+            bool error = false;
+            return parse_enum<T>(input, defaultValue, ref error);
         }
 
         public static string get_dic_value(Dictionary<string, object> dic, string key, string defaultValue = null) {

@@ -87,6 +87,7 @@
   <ItemGroup>
     <Compile Include="CNController.cs" />
     <Compile Include="CNObjects.cs" />
+    <Compile Include="CNParsers.cs" />
     <Compile Include="DataProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

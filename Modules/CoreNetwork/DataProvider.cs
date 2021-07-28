@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Collections.Generic;
@@ -14,7 +13,7 @@ namespace RaaiVan.Modules.CoreNetwork
 {
     class DataProvider
     {
-        private static string GetFullyQualifiedName(string name)
+        public static string GetFullyQualifiedName(string name)
         {
             return "[dbo]." + "[CN_" + name + "]"; //'[dbo].' is database owner and 'CN_' is module qualifier
         }
@@ -261,62 +260,6 @@ namespace RaaiVan.Modules.CoreNetwork
             if (!reader.IsClosed) reader.Close();
 
             return totalCount;
-        }
-
-        private static void _parse_relations(ref IDataReader reader, ref List<Relation> lstRelations)
-        {
-            while (reader.Read())
-            {
-                try
-                {
-                    Relation relation = new Relation();
-
-                    bool isInRelation = false;
-                    Guid? nodeId = null;
-                    Node relatedNode = new Node();
-
-                    if (!string.IsNullOrEmpty(reader["NodeID"].ToString())) nodeId = (Guid)reader["NodeID"];
-                    if (!string.IsNullOrEmpty(reader["RelatedNodeID"].ToString())) relatedNode.NodeID = (Guid)reader["RelatedNodeID"];
-                    if (!string.IsNullOrEmpty(reader["RelationTypeID"].ToString())) 
-                        relation.RelationType.RelationTypeID = (Guid)reader["RelationTypeID"];
-                    if (!string.IsNullOrEmpty(reader["IsInRelation"].ToString())) isInRelation = (bool)reader["IsInRelation"];
-                    if (!string.IsNullOrEmpty(reader["RelatedNodeTypeID"].ToString())) 
-                        relatedNode.NodeTypeID = (Guid)reader["RelatedNodeTypeID"];
-                    if (!string.IsNullOrEmpty(reader["RelatedNodeName"].ToString())) relatedNode.Name = (string)reader["RelatedNodeName"];
-                    if (!string.IsNullOrEmpty(reader["RelatedNodeTypeName"].ToString())) relatedNode.NodeType = (string)reader["RelatedNodeTypeName"];
-
-                    if (!string.IsNullOrEmpty(reader["RelatedNodeTypeAdditionalID"].ToString()))
-                    {
-                        try { relatedNode.NodeTypeAdditionalID = int.Parse((string)reader["RelatedNodeTypeAdditionalID"]); }
-                        catch { }
-                    }
-                        
-                    if (!string.IsNullOrEmpty(reader["RelationTypeAdditionalID"].ToString()))
-                        relation.RelationType.AdditionalID = int.Parse((string)reader["RelationTypeAdditionalID"]);
-                    if (!string.IsNullOrEmpty(reader["RelationType"].ToString())) relation.RelationType.Name = (string)reader["RelationType"];
-
-                    if (isInRelation)
-                    {
-                        relation.Destination.NodeID = nodeId;
-                        relation.Source = relatedNode;
-                    }
-                    else
-                    {
-                        relation.Source.NodeID = nodeId;
-                        relation.Destination = relatedNode;
-                    }
-
-                    if (lstRelations.Exists(u => u.Source.NodeID == relation.Destination.NodeID && u.Destination.NodeID == relation.Source.NodeID &&
-                        u.RelationType.RelationTypeID == relation.RelationType.RelationTypeID))
-                        lstRelations.Where(u => u.Source.NodeID == relation.Destination.NodeID && u.Destination.NodeID == relation.Source.NodeID &&
-                        u.RelationType.RelationTypeID == relation.RelationType.RelationTypeID).FirstOrDefault().Bidirectional = true;
-                    else
-                        lstRelations.Add(relation);
-                }
-                catch { }
-            }
-
-            if (!reader.IsClosed) reader.Close();
         }
 
         private static void _parse_nodes_count(ref IDataReader reader, ref List<NodesCount> lstNodesCount)
@@ -865,57 +808,6 @@ namespace RaaiVan.Modules.CoreNetwork
             return ret;
         }
 
-
-        public static bool Initialize(Guid applicationId)
-        {
-            string spName = GetFullyQualifiedName("Initialize");
-
-            try
-            {
-                return ProviderUtil.succeed(ProviderUtil.execute_reader(spName, applicationId));
-            }
-            catch (Exception ex)
-            {
-                LogController.save_error_log(applicationId, null, spName, ex, ModuleIdentifier.CN);
-                return false;
-            }
-        }
-
-        public static bool AddNodeType(Guid applicationId, NodeType Info, Guid? templateFormId)
-        {
-            string spName = GetFullyQualifiedName("AddNodeType");
-
-            try
-            {
-                if (Info.AdditionalID.HasValue) Info.NodeTypeAdditionalID = Info.AdditionalID.Value.ToString();
-                if (Info.ParentID == Guid.Empty) Info.ParentID = null;
-                
-                return ProviderUtil.succeed(ProviderUtil.execute_reader(spName, applicationId, Info.NodeTypeID, 
-                    Info.NodeTypeAdditionalID, Info.Name, Info.ParentID, Info.IsService, Info.TemplateTypeID,
-                    templateFormId, Info.CreatorUserID, DateTime.Now));
-            }
-            catch (Exception ex)
-            {
-                LogController.save_error_log(applicationId, null, spName, ex, ModuleIdentifier.CN);
-                return false;
-            }
-        }
-
-        public static bool RenameNodeType(Guid applicationId, NodeType Info)
-        {
-            string spName = GetFullyQualifiedName("RenameNodeType");
-
-            try
-            {
-                return ProviderUtil.succeed(ProviderUtil.execute_reader(spName, applicationId,
-                    Info.NodeTypeID, Info.Name, Info.LastModifierUserID, Info.LastModificationDate));
-            }
-            catch(Exception ex)
-            {
-                LogController.save_error_log(applicationId, null, spName, ex, ModuleIdentifier.CN);
-                return false;
-            }
-        }
 
         public static bool SetNodeTypeAdditionalID(Guid applicationId, Guid nodeTypeId, 
             string additionalId, Guid currentUserId, ref string errorMessage)
@@ -1905,189 +1797,6 @@ namespace RaaiVan.Modules.CoreNetwork
             {
                 LogController.save_error_log(applicationId, null, spName, ex, ModuleIdentifier.CN);
             }
-        }
-
-        private static void GetNodes(Guid applicationId, ref List<Node> retNodes, ref List<NodesCount> retNodesCount, 
-            List<Guid> nodeTypeIds, NodeTypes? nodeType, bool? useNodeTypeHierarchy, Guid? relatedToNodeId, string searchText, 
-            bool? isDocument, bool? isKnowledge, DateTime? lowerCreationDateLimit, DateTime? upperCreationDateLimit,
-            int count, long? lowerBoundary, bool? searchable, bool? archive, bool? grabNoContentServices, 
-            List<FormFilter> filters, bool? matchAllFilters, bool? fetchCounts, Guid? currentUserId, Guid? creatorUserId, 
-            bool checkAccess, ref long totalCount, Guid? groupByFormElementId, ref Dictionary<string, object> groupedResults)
-        {
-            SqlConnection con = new SqlConnection(ProviderUtil.ConnectionString);
-            SqlCommand cmd = new SqlCommand();
-            cmd.Connection = con;
-            
-            //Add Filters
-            DataTable filtersTable = new DataTable();
-            filtersTable.Columns.Add("ElementID", typeof(Guid));
-            filtersTable.Columns.Add("OwnerID", typeof(Guid));
-            filtersTable.Columns.Add("Text", typeof(string));
-            filtersTable.Columns.Add("TextItems", typeof(string));
-            filtersTable.Columns.Add("Or", typeof(bool));
-            filtersTable.Columns.Add("Exact", typeof(bool));
-            filtersTable.Columns.Add("DateFrom", typeof(DateTime));
-            filtersTable.Columns.Add("DateTo", typeof(DateTime));
-            filtersTable.Columns.Add("FloatFrom", typeof(double));
-            filtersTable.Columns.Add("FloatTo", typeof(double));
-            filtersTable.Columns.Add("Bit", typeof(bool));
-            filtersTable.Columns.Add("Guid", typeof(Guid));
-            filtersTable.Columns.Add("GuidItems", typeof(string));
-            filtersTable.Columns.Add("Compulsory", typeof(bool));
-
-            if (filters != null)
-            {
-                foreach (FormFilter f in filters)
-                {
-                    filtersTable.Rows.Add(f.ElementID, f.OwnerID, f.Text, ProviderUtil.list_to_string<string>(f.TextItems),
-                        f.Or, f.Exact, f.DateFrom, f.DateTo, f.FloatFrom, f.FloatTo, f.Bit, f.Guid,
-                        ProviderUtil.list_to_string<Guid>(f.GuidItems), f.Compulsory);
-                }
-            }
-
-            SqlParameter filtersParam = new SqlParameter("@FormFilters", SqlDbType.Structured);
-            filtersParam.TypeName = "[dbo].[FormFilterTableType]";
-            filtersParam.Value = filtersTable;
-            //end of Add Filters
-
-            string strAddId = null;
-            if (nodeType != null) strAddId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
-            nodeTypeIds = nodeTypeIds == null ? new List<Guid>() : nodeTypeIds;
-
-            cmd.Parameters.AddWithValue("@ApplicationID", applicationId);
-            if (currentUserId.HasValue && currentUserId != Guid.Empty)
-                cmd.Parameters.AddWithValue("@CurrentUserID", currentUserId.Value);
-            if(nodeTypeIds != null && nodeTypeIds.Count > 0)
-                cmd.Parameters.AddWithValue("@strNodeTypeIDs", ProviderUtil.list_to_string<Guid>(nodeTypeIds));
-            cmd.Parameters.AddWithValue("@delimiter", ',');
-            if(!string.IsNullOrEmpty(strAddId)) cmd.Parameters.AddWithValue("@NodeTypeAdditionalID", strAddId);
-            if (useNodeTypeHierarchy.HasValue)
-                cmd.Parameters.AddWithValue("@UseNodeTypeHierarchy", useNodeTypeHierarchy.Value);
-            if (relatedToNodeId.HasValue) cmd.Parameters.AddWithValue("@RelatedToNodeID", relatedToNodeId.Value);
-            if (!string.IsNullOrEmpty(searchText))
-                cmd.Parameters.AddWithValue("@SearchText", ProviderUtil.get_search_text(searchText));
-            if (isDocument.HasValue) cmd.Parameters.AddWithValue("@IsDocument", isDocument.Value);
-            if (isKnowledge.HasValue) cmd.Parameters.AddWithValue("@IsKnowledge", isKnowledge.Value);
-            if (creatorUserId.HasValue) cmd.Parameters.AddWithValue("@CreatorUserID", creatorUserId);
-            if (searchable.HasValue) cmd.Parameters.AddWithValue("@Searchable", searchable.Value);
-            if (archive.HasValue) cmd.Parameters.AddWithValue("@Archive", archive.Value);
-            if (grabNoContentServices.HasValue)
-                cmd.Parameters.AddWithValue("@GrabNoContentServices", grabNoContentServices.Value);
-            if (lowerCreationDateLimit.HasValue)
-                cmd.Parameters.AddWithValue("@LowerCreationDateLimit", lowerCreationDateLimit.Value);
-            if (upperCreationDateLimit.HasValue)
-                cmd.Parameters.AddWithValue("@UpperCreationDateLimit", upperCreationDateLimit.Value);
-            cmd.Parameters.AddWithValue("@Count", count);
-            if(lowerBoundary.HasValue) cmd.Parameters.AddWithValue("@LowerBoundary", lowerBoundary.Value);
-            cmd.Parameters.Add(filtersParam);
-            if (matchAllFilters.HasValue) cmd.Parameters.AddWithValue("@MatchAllFilters", matchAllFilters.Value);
-            if (fetchCounts.HasValue) cmd.Parameters.AddWithValue("@FetchCounts", fetchCounts.Value);
-            cmd.Parameters.AddWithValue("@CheckAccess", checkAccess);
-            cmd.Parameters.AddWithValue("@DefaultPrivacy", RaaiVanSettings.DefaultPrivacy(applicationId));
-            if(groupByFormElementId.HasValue && groupByFormElementId != Guid.Empty)
-                cmd.Parameters.AddWithValue("@GroupByFormElementID", groupByFormElementId.Value);
-
-            string spName = GetFullyQualifiedName("GetNodes");
-
-            string sep = ", ";
-            string arguments = "@ApplicationID" + sep + 
-                (currentUserId.HasValue && currentUserId != Guid.Empty ? "@CurrentUserID" : "null") + sep +
-                (nodeTypeIds != null && nodeTypeIds.Count > 0 ? "@strNodeTypeIDs" : "null") + sep + 
-                "@delimiter" + sep +
-                (!string.IsNullOrEmpty(strAddId) ? "@NodeTypeAdditionalID" : "null") + sep +
-                (useNodeTypeHierarchy.HasValue ? "@UseNodeTypeHierarchy" : "null") + sep +
-                (relatedToNodeId.HasValue ? "@RelatedToNodeID" : "null") + sep +
-                (!string.IsNullOrEmpty(searchText) ? "@SearchText" : "null") + sep +
-                (isDocument.HasValue ? "@IsDocument" : "null") + sep +
-                (isKnowledge.HasValue ? "@IsKnowledge" : "null") + sep +
-                (creatorUserId.HasValue ? "@CreatorUserID" : "null") + sep +
-                (searchable.HasValue ? "@Searchable" : "null") + sep +
-                (archive.HasValue ? "@Archive" : "null") + sep +
-                (grabNoContentServices.HasValue ? "@GrabNoContentServices" : "null") + sep +
-                (lowerCreationDateLimit.HasValue ? "@LowerCreationDateLimit" : "null") + sep +
-                (upperCreationDateLimit.HasValue ? "@UpperCreationDateLimit" : "null") + sep +
-                "@Count" + sep +
-                (lowerBoundary.HasValue ? "@LowerBoundary" : "null") + sep +
-                "@FormFilters" + sep +
-                (matchAllFilters.HasValue ? "@MatchAllFilters" : "null") + sep +
-                (fetchCounts.HasValue ? "@FetchCounts" : "null") + sep +
-                "@CheckAccess" + sep +
-                "@DefaultPrivacy" + sep + 
-                (!groupByFormElementId.HasValue || groupByFormElementId == Guid.Empty ? "null" : "@GroupByFormElementID");
-            cmd.CommandText = ("EXEC" + " " + spName + " " + arguments);
-
-            con.Open();
-            try
-            {
-                IDataReader reader = (IDataReader)cmd.ExecuteReader();
-
-                if (groupByFormElementId.HasValue && groupByFormElementId != Guid.Empty)
-                    groupedResults = _parse_node_counts_grouped_by_element(ref reader);
-                else
-                {
-                    totalCount = _parse_nodes(ref reader, ref retNodes, ref retNodesCount, false, true, 
-                        fetchCounts: fetchCounts.HasValue && fetchCounts.Value);
-                    if (totalCount < 0) totalCount = 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                LogController.save_error_log(applicationId, null, spName, ex, ModuleIdentifier.CN);
-            }
-            finally { con.Close(); }
-        }
-
-        public static void GetNodes(Guid applicationId, ref List<Node> retNodes, ref List<NodesCount> retNodesCount, 
-            List<Guid> nodeTypeIds, NodeTypes? nodeType, bool? useNodeTypeHierarchy, Guid? relatedToNodeId, string searchText,
-            bool? isDocument, bool? isKnowledge, DateTime? lowerCreationDateLimit, DateTime? upperCreationDateLimit,
-            int count, long? lowerBoundary, bool? searchable, bool? archive, bool? grabNoContentServices,
-            List<FormFilter> filters, bool? matchAllFilters, bool? fetchCounts, Guid? currentUserId, Guid? creatorUserId,
-            bool checkAccess, ref long totalCount)
-        {
-            Dictionary<string, object> dic = new Dictionary<string, object>();
-
-            GetNodes(applicationId, ref retNodes, ref retNodesCount, nodeTypeIds, nodeType, useNodeTypeHierarchy, relatedToNodeId,
-                searchText, isDocument, isKnowledge, lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary,
-                searchable, archive, grabNoContentServices, filters, matchAllFilters, fetchCounts, currentUserId, creatorUserId, 
-                checkAccess, ref totalCount, groupByFormElementId: null, groupedResults: ref dic);
-        }
-
-        public static Dictionary<string, object> GetNodes(Guid applicationId, Guid nodeTypeId, Guid groupByFormElementId,
-            Guid? relatedToNodeId, string searchText, DateTime? lowerCreationDateLimit, DateTime? upperCreationDateLimit,
-            bool? searchable,  List<FormFilter> filters, bool? matchAllFilters, Guid? currentUserId, Guid? creatorUserId, bool checkAccess)
-        {
-            Dictionary<string, object> dic = new Dictionary<string, object>();
-
-            List<Node> nds = new List<Node>();
-            List<NodesCount> cnts = new List<NodesCount>();
-            long totalCount = 0;
-
-            GetNodes(applicationId, ref nds, ref cnts,
-                nodeTypeIds: new List<Guid>() { nodeTypeId }, 
-                nodeType: null, 
-                useNodeTypeHierarchy: null, 
-                relatedToNodeId: relatedToNodeId,
-                searchText: searchText, 
-                isDocument: null, 
-                isKnowledge: null, 
-                lowerCreationDateLimit, 
-                upperCreationDateLimit, 
-                count: 0, 
-                lowerBoundary: null,
-                searchable, 
-                archive: false, 
-                grabNoContentServices: null, 
-                filters: filters, 
-                matchAllFilters: matchAllFilters, 
-                fetchCounts: false,
-                currentUserId: currentUserId, 
-                creatorUserId: creatorUserId, 
-                checkAccess: checkAccess,
-                totalCount: ref totalCount, 
-                groupByFormElementId: groupByFormElementId, 
-                groupedResults: ref dic);
-
-            return dic;
         }
 
         public static void GetMostPopularNodes(Guid applicationId, ref List<Node> retNodes, List<Guid> nodeTypeIds, 

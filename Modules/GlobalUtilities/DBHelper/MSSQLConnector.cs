@@ -13,21 +13,21 @@ namespace RaaiVan.Modules.GlobalUtilities
     {
         private static RVDataTable get_table(IDataReader reader)
         {
-            DataTable tbl = new DataTable("tbl");
-            return !ProviderUtil.reader2table(ref reader, ref tbl, closeReader: false) ? null : (RVDataTable)tbl;
+            RVDataTable tbl = new RVDataTable("tbl");
+            return !ProviderUtil.reader2table(ref reader, ref tbl, closeReader: false) ? null : tbl;
         }
 
         public static DBResultSet read(string procedureName, params object[] parameters)
         {
             procedureName = "[dbo].[" + procedureName + "]";
 
-            if (parameters.Any(p => p != null && typeof(IDBCompositeType).IsAssignableFrom(p.GetType())))
-                return read_structured(procedureName, parameters);
-
-            DBResultSet ret = new DBResultSet();
-            
             try
             {
+                if (parameters.Any(p => p != null && typeof(IDBCompositeType).IsAssignableFrom(p.GetType())))
+                    return read_structured(procedureName, parameters);
+
+                DBResultSet ret = new DBResultSet();
+
                 using (IDataReader reader = ProviderUtil.execute_reader(procedureName, parameters))
                 {
                     do
@@ -42,7 +42,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
             catch (Exception ex)
             {
-                return new DBResultSet();
+                throw ex;
             }
         }
 
@@ -96,7 +96,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
             catch (Exception ex)
             {
-                return new DBResultSet();
+                throw ex;
             }
             finally
             {

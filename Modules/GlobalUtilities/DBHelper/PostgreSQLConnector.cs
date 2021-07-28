@@ -95,7 +95,7 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             List<string> columnNames = reader.GetColumnSchema().Select(c => c.ColumnName).ToList();
 
-            DataTable tbl = new DataTable("tbl");
+            RVDataTable tbl = new RVDataTable("tbl", postgreSqlMode: true);
 
             reader.GetColumnSchema().ToList().ForEach(col =>
             {
@@ -162,6 +162,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                         catch (Exception ex)
                         {
                             string strEx = ex.ToString();
+                            throw ex;
                         }
 
                         tran.Commit();
@@ -173,7 +174,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
             catch (Exception ex)
             {
-                return new DBResultSet();
+                throw ex;
             }
             finally
             {

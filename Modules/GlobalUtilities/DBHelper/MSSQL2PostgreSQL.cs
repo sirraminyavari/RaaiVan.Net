@@ -391,7 +391,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             {
                 IDataReader reader = (IDataReader)cmd.ExecuteReader();
 
-                DataTable dt = new DataTable("tbl");
+                RVDataTable dt = new RVDataTable("tbl");
 
                 if (ProviderUtil.reader2table(ref reader, ref dt)) return dt;
                 else return null;

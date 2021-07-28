@@ -691,8 +691,7 @@ namespace RaaiVan.Modules.Search
 
             if (docType == SearchDocType.Node)
             {
-                List<Node> nodes =
-                    CNController.get_nodes(applicationId, searchText: null, isDocument: null, isKnowledge: null);
+                List<Node> nodes = CNController.get_nodes(applicationId: applicationId);
 
                 foreach (Node nd in nodes)
                     docs.Add(new SearchDoc()

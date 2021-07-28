@@ -70,10 +70,11 @@ namespace RaaiVan.Web.API
             if (count.HasValue && count > 5000) count = 5000;
 
             List<Node> nodes = nodeTypeId.HasValue ?
-                CNController.get_nodes(paramsContainer.Tenant.Id, nodeTypeId.Value, null, searchText,
-                isDocument, isKnowledge, null, null, count.Value, lowerBoundary, false) :
-                CNController.get_nodes(paramsContainer.Tenant.Id,
-                    searchText, isDocument, isKnowledge, null, null, count.Value, lowerBoundary, false);
+                CNController.get_nodes(applicationId: paramsContainer.Tenant.Id, nodeTypeIds: new List<Guid>() { nodeTypeId.Value }, 
+                relatedToNodeId: null, searchText: searchText, isDocument: isDocument, isKnowledge: isKnowledge, 
+                count: count.Value, lowerBoundary: lowerBoundary) :
+                CNController.get_nodes(applicationId: paramsContainer.Tenant.Id, searchText: searchText, 
+                isDocument: isDocument, isKnowledge: isKnowledge, count: count.Value, lowerBoundary: lowerBoundary);
 
             if (sitemap.HasValue && sitemap.Value)
             {

@@ -620,7 +620,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             return parse_dashboards(ref reader, ref lstDashboards, ref msg, ref totalCount);
         }
 
-        public static bool parse_dashboards(ref IDataReader reader, ref List<Dashboard> lstDashboards, ref DataTable retTable)
+        public static bool parse_dashboards(ref IDataReader reader, ref List<Dashboard> lstDashboards, ref RVDataTable retTable)
         {
             string msg = string.Empty;
             long totalCount = 0;
@@ -644,7 +644,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             return SqlHelper.ExecuteScalar(ProviderUtil.ConnectionString, spName, parameterValues);
         }
 
-        public static bool reader2table(ref IDataReader reader, ref DataTable retTable, bool closeReader = true)
+        public static bool reader2table(ref IDataReader reader, ref RVDataTable retTable, bool closeReader = true)
         {
             try
             {

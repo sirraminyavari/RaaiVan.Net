@@ -3805,18 +3805,23 @@ namespace RaaiVan.Web.API
 
             if (groupByElementId.HasValue && groupByElementId != Guid.Empty && nodeTypeIds.Count == 1)
             {
-                responseText = PublicMethods.toJSON(CNController.get_nodes_grouped(paramsContainer.Tenant.Id, nodeTypeIds[0],
-                    groupByElementId.Value, relatedToNodeId, searchText, lowerCreationDateLimit, upperCreationDateLimit,
-                    searchable, filters, matchAllFilters, paramsContainer.CurrentUserID, creatorUserId, checkAccess: !hasViewAccess));
+                responseText = PublicMethods.toJSON(CNController.get_nodes_grouped(applicationId: paramsContainer.Tenant.Id, 
+                    nodeTypeId: nodeTypeIds[0], groupByFormElementId: groupByElementId.Value, relatedToNodeId: relatedToNodeId, 
+                    searchText: searchText, lowerCreationDateLimit: lowerCreationDateLimit, 
+                    upperCreationDateLimit: upperCreationDateLimit, searchable: searchable, filters: filters, 
+                    matchAllFilters: matchAllFilters, currentUserId: paramsContainer.CurrentUserID, 
+                    creatorUserId: creatorUserId, checkAccess: !hasViewAccess));
             }
             else {
                 long totalCount = 0;
-
                 List<NodesCount> nodesCount = new List<NodesCount>();
 
-                List<Node> nodes = CNController.get_nodes(paramsContainer.Tenant.Id, nodeTypeIds, useNodeTypeHierarchy,
-                    relatedToNodeId, searchText, isDocument, isKnowledge, lowerCreationDateLimit, upperCreationDateLimit,
-                    count.Value, lowerBoundary, ref totalCount, ref nodesCount, archive: archive.HasValue && archive.Value,
+                List<Node> nodes = CNController.get_nodes(applicationId: paramsContainer.Tenant.Id,
+                    totalCount: ref totalCount, nodesCount: ref nodesCount,
+                    nodeTypeIds: nodeTypeIds, useNodeTypeHierarchy: useNodeTypeHierarchy, relatedToNodeId: relatedToNodeId, 
+                    searchText: searchText, isDocument: isDocument, isKnowledge: isKnowledge,
+                    lowerCreationDateLimit: lowerCreationDateLimit, upperCreationDateLimit: upperCreationDateLimit,
+                    count: count.Value, lowerBoundary: lowerBoundary, archive: archive.HasValue && archive.Value,
                     searchable: searchable, grabNoContentServices: grabNoContentServices, filters: filters,
                     matchAllFilters: matchAllFilters, fetchCounts: fetchCounts, currentUserId: paramsContainer.CurrentUserID,
                     creatorUserId: creatorUserId, checkAccess: !hasViewAccess);
@@ -6211,7 +6216,7 @@ namespace RaaiVan.Web.API
                         });
                 });
 
-                selectedIDsDic.Keys.ToList().ForEach(ntId =>
+                selectedIDsDic.Keys.ToList().ForEach((Action<string>)(ntId =>
                 {
                     Guid? selectedNTId = CNController.get_node_type_id(paramsContainer.Tenant.Id, ntId);
                     if (!selectedNTId.HasValue) return;
@@ -6219,7 +6224,8 @@ namespace RaaiVan.Web.API
                     Dictionary<string, Guid> nIdsDic = CNController.get_node_ids(paramsContainer.Tenant.Id, 
                         selectedNTId.Value, selectedIDsDic[ntId].Keys.ToList());
 
-                    List<Node> selectedNodes = CNController.get_nodes(paramsContainer.Tenant.Id, nIdsDic.Values.ToList());
+                    List<Node> selectedNodes =
+                        CNController.get_nodes(applicationId: paramsContainer.Tenant.Id, nodeIds: nIdsDic.Values.ToList());
                     
                     nIdsDic.Keys.ToList().ForEach(id => {
                         selectedIDsDic[ntId][id]
@@ -6234,7 +6240,7 @@ namespace RaaiVan.Web.API
                                     code: string.Empty, type: SelectedGuidItemType.None));
                             });
                     });
-                });
+                }));
 
                 formElements.Where(e => e.Type == FormElementTypes.Node && e.GuidItems.Count > 0).ToList().ForEach(e =>
                 {
@@ -8276,7 +8282,7 @@ namespace RaaiVan.Web.API
             Guid? tagClassId = !refAppId.HasValue ? null : CNController.get_node_type_id(refAppId.Value, TAG_CLASS_CODE);
 
             List<Node> tags = !tagClassId.HasValue ? new List<Node>() :
-                CNController.get_nodes(refAppId.Value, tagClassId.Value, count: 1000);
+                CNController.get_nodes(applicationId: refAppId.Value, nodeTypeIds: new List<Guid>(){ tagClassId.Value}, count: 1000);
 
             responseText = "{\"Tags\":[" + string.Join(",", tags.Select(t => t.toJson())) + "]}";
         }
@@ -8308,7 +8314,7 @@ namespace RaaiVan.Web.API
             Guid? tagClassId = CNController.get_node_type_id(refAppId.Value, TAG_CLASS_CODE);
 
             List<Node> tags = !tagClassId.HasValue ? new List<Node>() :
-                CNController.get_nodes(refAppId.Value, tagClassId.Value, count: 1000);
+                CNController.get_nodes(applicationId: refAppId.Value, nodeTypeIds: new List<Guid>() { tagClassId.Value }, count: 1000);
 
             List<FormType> forms = !templateFormId.HasValue ? new List<FormType>() :
                 FGController.get_owner_form_instances(refAppId.Value,

@@ -10,22 +10,72 @@ namespace RaaiVan.Modules.GlobalUtilities
     public static class DBConnector
     {
         //to be removed
-        public static DBResultSet read_postgre(string procedureName, params object[] parameters)
+        public static DBResultSet read_postgre(Guid? applicationId, string procedureName, params object[] parameters)
         {
-            return PostgreSQLConnector.read(procedureName, parameters);
+            if (procedureName.ToLower().StartsWith("[dbo].["))
+                procedureName = procedureName.Substring("[dbo].[".Length, procedureName.Length - "[dbo].[".Length - 1);
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i] != null && parameters[i].GetType() == typeof(Guid) && (Guid)parameters[i] == Guid.Empty)
+                    parameters[i] = null;
+            }
+
+            try
+            {
+                return PostgreSQLConnector.read(procedureName, parameters);
+            }
+            catch {
+                return new DBResultSet();
+            }
         }
         //end of to be removed
 
-        public static DBResultSet read(string procedureName, params object[] parameters)
+        public static DBResultSet read(Guid? applicationId, string procedureName, params object[] parameters)
         {
-            return RaaiVanSettings.UsePostgreSQL ?
-                PostgreSQLConnector.read(procedureName, parameters) :
-                MSSQLConnector.read(procedureName, parameters);
+            if (procedureName.ToLower().StartsWith("[dbo].["))
+                procedureName = procedureName.Substring("[dbo].[".Length, procedureName.Length - "[dbo].[".Length - 1);
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i] != null && parameters[i].GetType() == typeof(Guid) && (Guid)parameters[i] == Guid.Empty)
+                    parameters[i] = null;
+            }
+
+            try
+            {
+                return RaaiVanSettings.UsePostgreSQL ?
+                    PostgreSQLConnector.read(procedureName, parameters) :
+                    MSSQLConnector.read(procedureName, parameters);
+            }
+            catch (Exception ex)
+            {
+                int index = procedureName.IndexOf("_");
+
+                if (!procedureName.ToLower().Contains("save") && !procedureName.ToLower().Contains("error") &&
+                    !procedureName.ToLower().Contains("log") && index > 0)
+                {
+                    bool error = false;
+
+                    ModuleIdentifier mi = PublicMethods.parse_enum<ModuleIdentifier>(
+                        procedureName.Substring(0, procedureName.IndexOf("_")), ModuleIdentifier.RV, ref error);
+
+                    Log.LogController.save_error_log(
+                        applicationId: applicationId,
+                        userId: null,
+                        subject: procedureName,
+                        exception: ex,
+                        moduleIdentifier: !error ? (ModuleIdentifier?)mi : null);
+                }
+
+                return new DBResultSet();
+            }
         }
 
-        public static bool succeed(ref string errorMessage, List<Dashboard> retDashboards, string procedureName, params object[] parameters)
+        public static bool succeed(Guid? applicationId, ref string errorMessage, 
+            List<Dashboard> retDashboards, string procedureName, params object[] parameters)
         {
-            DBResultSet result = read(procedureName, parameters);
+            DBResultSet result = read(applicationId, procedureName, parameters);
 
             RVDataTable table = result.get_table();
 
@@ -50,58 +100,58 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
         }
 
-        public static bool succeed(ref string errorMessage, string procedureName, params object[] parameters)
+        public static bool succeed(Guid? applicationId, ref string errorMessage, string procedureName, params object[] parameters)
         {
-            return succeed(ref errorMessage, new List<Dashboard>(), procedureName, parameters);
+            return succeed(applicationId, ref errorMessage, new List<Dashboard>(), procedureName, parameters);
         }
 
-        public static bool succeed(List<Dashboard> retDashboards, string procedureName, params object[] parameters)
+        public static bool succeed(Guid? applicationId, List<Dashboard> retDashboards, string procedureName, params object[] parameters)
         {
             string errorMessage = string.Empty;
-            return succeed(ref errorMessage, retDashboards, procedureName, parameters);
+            return succeed(applicationId, ref errorMessage, retDashboards, procedureName, parameters);
         }
 
-        public static bool succeed(string procedureName, params object[] parameters)
+        public static bool succeed(Guid? applicationId, string procedureName, params object[] parameters)
         {
             string errorMessage = string.Empty;
-            return succeed(ref errorMessage, new List<Dashboard>(), procedureName, parameters);
+            return succeed(applicationId, ref errorMessage, new List<Dashboard>(), procedureName, parameters);
         }
 
-        public static int get_int(string procedureName, params object[] parameters)
+        public static int get_int(Guid? applicationId, string procedureName, params object[] parameters)
         {
-            return read(procedureName, parameters).get_table().GetInt(row: 0, column: 0, defaultValue: 0).Value;
+            return read(applicationId, procedureName, parameters).get_table().GetInt(row: 0, column: 0, defaultValue: 0).Value;
         }
 
-        public static long get_long(string procedureName, params object[] parameters)
+        public static long get_long(Guid? applicationId, string procedureName, params object[] parameters)
         {
-            return read(procedureName, parameters).get_table().GetLong(row: 0, column: 0, defaultValue: 0).Value;
+            return read(applicationId, procedureName, parameters).get_table().GetLong(row: 0, column: 0, defaultValue: 0).Value;
         }
 
-        public static DateTime? get_date(string procedureName, params object[] parameters)
+        public static DateTime? get_date(Guid? applicationId, string procedureName, params object[] parameters)
         {
-            return read(procedureName, parameters).get_table().GetDate(row: 0, column: 0);
+            return read(applicationId, procedureName, parameters).get_table().GetDate(row: 0, column: 0);
         }
 
-        public static Guid? get_guid(string procedureName, params object[] parameters)
+        public static Guid? get_guid(Guid? applicationId, string procedureName, params object[] parameters)
         {
-            return read(procedureName, parameters).get_table().GetGuid(row: 0, column: 0);
+            return read(applicationId, procedureName, parameters).get_table().GetGuid(row: 0, column: 0);
         }
 
-        public static string get_string(string procedureName, params object[] parameters)
+        public static string get_string(Guid? applicationId, string procedureName, params object[] parameters)
         {
-            return read(procedureName, parameters).get_table().GetString(row: 0, column: 0);
+            return read(applicationId, procedureName, parameters).get_table().GetString(row: 0, column: 0);
         }
 
-        public static List<string> get_string_list(string procedureName, params object[] parameters)
+        public static List<string> get_string_list(Guid? applicationId, string procedureName, params object[] parameters)
         {
-            RVDataTable table = read(procedureName, parameters).get_table();
+            RVDataTable table = read(applicationId, procedureName, parameters).get_table();
             return Enumerable.Range(0, table.Rows.Count).Select(r => table.GetString(row: r, column: 0)).ToList();
         }
 
-        public static List<Guid> get_guid_list(ref long totalCount, ref string errorMessage,
+        public static List<Guid> get_guid_list(Guid? applicationId, ref long totalCount, ref string errorMessage,
             string procedureName, params object[] parameters)
         {
-            DBResultSet result = read(procedureName, parameters);
+            DBResultSet result = read(applicationId, procedureName, parameters);
 
             RVDataTable table = result.get_table();
 
@@ -124,28 +174,29 @@ namespace RaaiVan.Modules.GlobalUtilities
             return lst;
         }
 
-        public static List<Guid> get_guid_list(string procedureName, params object[] parameters)
+        public static List<Guid> get_guid_list(Guid? applicationId, string procedureName, params object[] parameters)
         {
             string errorMessage = string.Empty;
             long totalCount = 0;
-            return get_guid_list(ref totalCount, ref errorMessage, procedureName, parameters);
+            return get_guid_list(applicationId, ref totalCount, ref errorMessage, procedureName, parameters);
         }
 
-        public static List<Guid> get_guid_list(ref long totalCount, string procedureName, params object[] parameters)
+        public static List<Guid> get_guid_list(Guid? applicationId, ref long totalCount, string procedureName, params object[] parameters)
         {
             string errorMessage = string.Empty;
-            return get_guid_list(ref totalCount, ref errorMessage, procedureName, parameters);
+            return get_guid_list(applicationId, ref totalCount, ref errorMessage, procedureName, parameters);
         }
 
-        public static List<Guid> get_guid_list(ref string errorMessage, string procedureName, params object[] parameters)
+        public static List<Guid> get_guid_list(Guid? applicationId, 
+            ref string errorMessage, string procedureName, params object[] parameters)
         {
             long totalCount = 0;
-            return get_guid_list(ref totalCount, errorMessage, procedureName, parameters);
+            return get_guid_list(applicationId, ref totalCount, errorMessage, procedureName, parameters);
         }
 
-        public static List<Hierarchy> get_hierarchy(string procedureName, params object[] parameters)
+        public static List<Hierarchy> get_hierarchy(Guid? applicationId, string procedureName, params object[] parameters)
         {
-            RVDataTable table = read(procedureName, parameters).get_table();
+            RVDataTable table = read(applicationId, procedureName, parameters).get_table();
 
             List<Hierarchy> ret = new List<Hierarchy>();
 
@@ -202,10 +253,10 @@ namespace RaaiVan.Modules.GlobalUtilities
             parse_dashboards(ref retDashboards, table, ref totalCount);
         }
 
-        public static int get_dashboards(ref string errorMessage, ref List<Dashboard> retDashboards,
+        public static int get_dashboards(Guid? applicationId, ref string errorMessage, ref List<Dashboard> retDashboards,
             string procedureName, params object[] parameters)
         {
-            DBResultSet result = read(procedureName, parameters);
+            DBResultSet result = read(applicationId, procedureName, parameters);
             RVDataTable table = result.get_table();
 
             if (table == null) return 0;
@@ -237,15 +288,17 @@ namespace RaaiVan.Modules.GlobalUtilities
             return 1;
         }
 
-        public static int get_dashboards(List<Dashboard> retDashboards, string procedureName, params object[] parameters)
+        public static int get_dashboards(Guid? applicationId, List<Dashboard> retDashboards, 
+            string procedureName, params object[] parameters)
         {
             string msg = string.Empty;
-            return get_dashboards(ref msg, ref retDashboards, procedureName, parameters);
+            return get_dashboards(applicationId, ref msg, ref retDashboards, procedureName, parameters);
         }
 
-        public static List<KeyValuePair<Guid, int>> get_items_count_list(string procedureName, params object[] parameters)
+        public static List<KeyValuePair<Guid, int>> get_items_count_list(Guid? applicationId, 
+            string procedureName, params object[] parameters)
         {
-            RVDataTable table = read(procedureName, parameters).get_table();
+            RVDataTable table = read(applicationId, procedureName, parameters).get_table();
 
             List<KeyValuePair<Guid, int>> retDic = new List<KeyValuePair<Guid, int>>();
 
@@ -260,9 +313,9 @@ namespace RaaiVan.Modules.GlobalUtilities
             return retDic;
         }
 
-        public static Dictionary<Guid, int> get_items_count(string procedureName, params object[] parameters)
+        public static Dictionary<Guid, int> get_items_count(Guid? applicationId, string procedureName, params object[] parameters)
         {
-            List<KeyValuePair<Guid, int>> lst = get_items_count_list(procedureName, parameters);
+            List<KeyValuePair<Guid, int>> lst = get_items_count_list(applicationId, procedureName, parameters);
 
             Dictionary<Guid, int> retDic = new Dictionary<Guid, int>();
 
@@ -272,10 +325,10 @@ namespace RaaiVan.Modules.GlobalUtilities
             return retDic;
         }
 
-        public static Dictionary<Guid, bool> get_items_status_bool(string procedureName,
+        public static Dictionary<Guid, bool> get_items_status_bool(Guid? applicationId, string procedureName,
             ref long totalCount, params object[] parameters)
         {
-            RVDataTable table = read(procedureName, parameters).get_table();
+            RVDataTable table = read(applicationId, procedureName, parameters).get_table();
 
             Dictionary<Guid, bool> retDic = new Dictionary<Guid, bool>();
 

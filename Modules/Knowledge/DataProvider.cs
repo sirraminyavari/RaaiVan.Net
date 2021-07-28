@@ -202,7 +202,7 @@ namespace RaaiVan.Modules.Knowledge
         {
             result = false;
 
-            DataTable tbl = new DataTable();
+            RVDataTable tbl = new RVDataTable();
 
             if (!ProviderUtil.parse_dashboards(ref reader, ref retDashboards, ref tbl)) return;
 
@@ -1250,7 +1250,7 @@ namespace RaaiVan.Modules.Knowledge
                     nodeId, currentUserId, description, DateTime.Now);
                 bool result = false;
 
-                DataTable tbl = new DataTable();
+                RVDataTable tbl = new RVDataTable();
                 ProviderUtil.reader2table(ref reader, ref tbl, true);
 
                 result = tbl.Rows[0].Field<int>(tbl.Columns["Result"]) > 0;

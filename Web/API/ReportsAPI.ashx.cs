@@ -116,7 +116,7 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            DataTable tbl = new DataTable();
+            RVDataTable tbl = new RVDataTable();
             string actions = string.Empty;
 
             Dictionary<string, string> columnsDic = new Dictionary<string, string>();

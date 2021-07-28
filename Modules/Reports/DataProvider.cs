@@ -58,7 +58,7 @@ namespace RaaiVan.Modules.Reports
         }
 
         public static void GetReport(Guid applicationId, ModuleIdentifier moduleIdentifier, string reportName,
-            ref DataTable retReport, ref string retActions, ref Dictionary<string, string> columnsDic, 
+            ref RVDataTable retReport, ref string retActions, ref Dictionary<string, string> columnsDic, 
             List<ReportParameter> parameters)
         {
             retReport.Clear();
@@ -97,7 +97,7 @@ namespace RaaiVan.Modules.Reports
                 {
                     if (!reader.NextResult()) break;
 
-                    DataTable oTbl = new DataTable();
+                    RVDataTable oTbl = new RVDataTable();
                     if (!ProviderUtil.reader2table(ref reader, ref oTbl, false)) break;
 
                     string oInfo = reader.NextResult() && reader.Read() ? (string)reader[0] : string.Empty;
@@ -122,13 +122,13 @@ namespace RaaiVan.Modules.Reports
                 if (otherTbls.Count > 0) retReport = _fetch(applicationId, retReport, otherTbls, ref columnsDic);
             }
         }
-
-        protected static DataTable _fetch(Guid applicationId, DataTable mainTable, List<Pair> otherTables, 
+        
+        protected static RVDataTable _fetch(Guid applicationId, RVDataTable mainTable, List<Pair> otherTables, 
             ref Dictionary<string, string> columnsDic)
         {
             try
             {
-                DataTable retTable = new DataTable();
+                RVDataTable retTable = new RVDataTable();
 
                 Dictionary<string, string> localDic = null;
 
@@ -136,7 +136,7 @@ namespace RaaiVan.Modules.Reports
 
                 foreach (Pair p in otherTables)
                 {
-                    DataTable otherTable = (DataTable)p.First;
+                    RVDataTable otherTable = (RVDataTable)p.First;
                     Dictionary<string, string> dic = PublicMethods.json2dictionary((string)p.Second);
 
                     if (dic.ContainsKey("IsDescription") && dic["IsDescription"].ToLower() == "true")
@@ -159,7 +159,7 @@ namespace RaaiVan.Modules.Reports
             catch { return mainTable; }
         }
 
-        protected static DataTable _fetch(Guid applicationId, DataTable mainTable, DataTable otherTable, 
+        protected static RVDataTable _fetch(Guid applicationId, RVDataTable mainTable, RVDataTable otherTable, 
             Dictionary<string, string> info, Dictionary<string, string> localDic, ref Dictionary<string, string> columnsDic)
         {
             if (!info.ContainsKey("ColumnsMap") || !info.ContainsKey("ColumnsToTransfer")) return mainTable;
@@ -173,7 +173,7 @@ namespace RaaiVan.Modules.Reports
 
             List<string> transfer = info["ColumnsToTransfer"].Split(',').ToList();
 
-            DataTable retTable = mainTable;
+            RVDataTable retTable = mainTable;
 
             Dictionary<string, string> colNamesDic = new Dictionary<string, string>();
 
@@ -212,7 +212,7 @@ namespace RaaiVan.Modules.Reports
             return true;
         }
 
-        protected static Dictionary<string, string> _parse_description_table(DataTable tbl)
+        protected static Dictionary<string, string> _parse_description_table(RVDataTable tbl)
         {
             Dictionary<string, string> retDic = new Dictionary<string, string>();
 

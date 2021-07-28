@@ -421,7 +421,7 @@ namespace RaaiVan.Web.API
                 List<Guid> nodeIds = NotificationController.get_dashboards(paramsContainer.Tenant.Id, userId, nodeTypeId, nodeId,
                     dashboardType, DashboardSubType.NotSet, null, searchText, inWorkFlow, lowerBoundary, count, ref totalCount);
 
-                List<Node> nodes = CNController.get_nodes(paramsContainer.Tenant.Id, nodeIds);
+                List<Node> nodes = CNController.get_nodes(applicationId: paramsContainer.Tenant.Id, nodeIds: nodeIds);
 
                 responseText = "{\"TotalCount\":" + totalCount.ToString() +
                     ",\"Items\":[" + string.Join(",", nodes.Select(u => u.toJson())) + "]}";

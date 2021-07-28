@@ -9,10 +9,17 @@ namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
 {
     public class GuidTableType : ITableType
     {
+        public GuidTableType() : base() { } //empty constructor is a must
+
         public string MSSQLName { get { return "GuidTableType"; } }
 
         [PgName("value")]
         public Guid? Value;
+
+        public GuidTableType(Guid? value)
+        {
+            Value = value;
+        }
 
         public object[] to_array()
         {

@@ -63,8 +63,8 @@ namespace RaaiVan.Web.API
         {
             if (!paramsContainer.GBView) return;
 
-            List<Node> nodes = CNController.get_nodes(paramsContainer.Tenant.Id,
-                NodeTypes.Expertise, searchText, null, null, null, null, count, null, false, null);
+            List<Node> nodes = CNController.get_nodes(applicationId: paramsContainer.Tenant.Id,
+                nodeType: NodeTypes.Expertise, searchText: searchText, count: count);
 
             responseText = "{\"Nodes\":[" + "" + string.Join(",", nodes.Select(
                 nd => "{\"NodeID\":\"" + nd.NodeID.Value.ToString() +
