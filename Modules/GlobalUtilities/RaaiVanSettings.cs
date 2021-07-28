@@ -11,6 +11,7 @@ namespace RaaiVan.Modules.GlobalUtilities
     public enum RVSettingsItem
     {
         UseLocalVariables,
+        IsDevEnvironment,
 
         SAASBasedMultiTenancy,
         ReferenceTenantID,
@@ -276,6 +277,11 @@ namespace RaaiVan.Modules.GlobalUtilities
             {
                 return get_value(null, RVSettingsItem.UseLocalVariables).ToLower() == "true";
             }
+        }
+
+        public static bool IsDevEnvironment
+        {
+            get { return get_value(null, RVSettingsItem.IsDevEnvironment).ToLower() == "true"; }
         }
 
         public static bool SAASBasedMultiTenancy

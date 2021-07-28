@@ -838,7 +838,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             new SortedList<Guid, Dictionary<Guid, bool>>();
 
         public static bool is_dev() {
-            return HostingEnvironment.IsDevelopmentEnvironment;
+            return HostingEnvironment.IsDevelopmentEnvironment || RaaiVanSettings.IsDevEnvironment;
         }
 
         public static string get_environment_variable(string variable, string defaultValue = "")

@@ -566,7 +566,7 @@ namespace RaaiVan.Modules.CoreNetwork
                     guidItems: ProviderUtil.list_to_string<Guid>(f.GuidItems),
                     compulsory: f.Compulsory)).ToList());
 
-            DBResultSet results = DBConnector.read(applicationId, DataProvider.GetFullyQualifiedName("GetNodes"),
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodes"),
                 applicationId,
                 currentUserId,
                 nodeTypeIds == null || nodeTypeIds.Count == 0 ? null : ProviderUtil.list_to_string<Guid>(nodeTypeIds),
