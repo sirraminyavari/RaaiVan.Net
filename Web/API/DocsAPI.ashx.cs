@@ -1021,9 +1021,9 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            bool result = like ? CNController.like_nodes(paramsContainer.Tenant.Id,
-                ref docIds, paramsContainer.CurrentUserID.Value) :
-                CNController.unlike_nodes(paramsContainer.Tenant.Id, ref docIds, paramsContainer.CurrentUserID.Value);
+            bool result = like ? 
+                CNController.like_nodes(paramsContainer.Tenant.Id, docIds, paramsContainer.CurrentUserID.Value) :
+                CNController.unlike_nodes(paramsContainer.Tenant.Id, docIds, paramsContainer.CurrentUserID.Value);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";

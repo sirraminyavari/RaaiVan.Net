@@ -3019,7 +3019,7 @@ namespace RaaiVan.Web.API
                 }
             }
 
-            bool result = CNController.remove_nodes(paramsContainer.Tenant.Id, ref nodeIds,
+            bool result = CNController.remove_nodes(paramsContainer.Tenant.Id, nodeIds,
                 removeHierarchy, paramsContainer.CurrentUserID.Value);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
@@ -3197,8 +3197,7 @@ namespace RaaiVan.Web.API
                 relations.Add(newRelation);
             }
 
-            bool result = CNController.add_relations(paramsContainer.Tenant.Id,
-                ref relations, paramsContainer.CurrentUserID.Value);
+            bool result = CNController.add_relations(paramsContainer.Tenant.Id, relations, paramsContainer.CurrentUserID.Value);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -3335,7 +3334,7 @@ namespace RaaiVan.Web.API
             if (connect) result = CNController.make_correlations(paramsContainer.Tenant.Id,
                 ref lstRelations, paramsContainer.CurrentUserID.Value);
             else result = CNController.remove_relations(paramsContainer.Tenant.Id,
-                ref lstRelations, null, paramsContainer.CurrentUserID.Value, true);
+                lstRelations, null, paramsContainer.CurrentUserID.Value, true);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -6820,7 +6819,7 @@ namespace RaaiVan.Web.API
             }
 
             bool result = CNController.set_contribution_limits(paramsContainer.Tenant.Id,
-                nodeTypeId.Value, ref limitNodeTypeIds, paramsContainer.CurrentUserID.Value);
+                nodeTypeId.Value, limitNodeTypeIds, paramsContainer.CurrentUserID.Value);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";

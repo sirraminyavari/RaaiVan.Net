@@ -73,7 +73,7 @@ namespace RaaiVan.Modules.GlobalUtilities
         }
 
         public static bool succeed(Guid? applicationId, ref string errorMessage, 
-            List<Dashboard> retDashboards, string procedureName, params object[] parameters)
+            ref List<Dashboard> retDashboards, string procedureName, params object[] parameters)
         {
             DBResultSet result = read(applicationId, procedureName, parameters);
 
@@ -102,19 +102,22 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static bool succeed(Guid? applicationId, ref string errorMessage, string procedureName, params object[] parameters)
         {
-            return succeed(applicationId, ref errorMessage, new List<Dashboard>(), procedureName, parameters);
+            List<Dashboard> dashboards = new List<Dashboard>();
+            return succeed(applicationId, ref errorMessage, ref dashboards, procedureName, parameters);
         }
 
-        public static bool succeed(Guid? applicationId, List<Dashboard> retDashboards, string procedureName, params object[] parameters)
+        public static bool succeed(Guid? applicationId, ref List<Dashboard> retDashboards, 
+            string procedureName, params object[] parameters)
         {
             string errorMessage = string.Empty;
-            return succeed(applicationId, ref errorMessage, retDashboards, procedureName, parameters);
+            return succeed(applicationId, ref errorMessage, ref retDashboards, procedureName, parameters);
         }
 
         public static bool succeed(Guid? applicationId, string procedureName, params object[] parameters)
         {
             string errorMessage = string.Empty;
-            return succeed(applicationId, ref errorMessage, new List<Dashboard>(), procedureName, parameters);
+            List<Dashboard> dashboards = new List<Dashboard>();
+            return succeed(applicationId, ref errorMessage, ref dashboards, procedureName, parameters);
         }
 
         public static int get_int(Guid? applicationId, string procedureName, params object[] parameters)
@@ -259,8 +262,6 @@ namespace RaaiVan.Modules.GlobalUtilities
             DBResultSet result = read(applicationId, procedureName, parameters);
             RVDataTable table = result.get_table();
 
-            if (table == null) return 0;
-
             if (table.Columns.Count <= 2)
             {
                 try
@@ -288,7 +289,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             return 1;
         }
 
-        public static int get_dashboards(Guid? applicationId, List<Dashboard> retDashboards, 
+        public static int get_dashboards(Guid? applicationId, ref List<Dashboard> retDashboards, 
             string procedureName, params object[] parameters)
         {
             string msg = string.Empty;

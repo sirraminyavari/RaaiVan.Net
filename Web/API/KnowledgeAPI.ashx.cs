@@ -2334,7 +2334,7 @@ namespace RaaiVan.Web.API
                 List<Guid> evaluatorIds = KnowledgeController.get_evaluations_done(paramsContainer.Tenant.Id,
                     nodeId.Value, wfVersionId).Select(u => u.Evaluator.UserID.Value).Distinct().ToList();
 
-                CNController.add_experts(paramsContainer.Tenant.Id, nodeId.Value, ref evaluatorIds);
+                CNController.add_experts(paramsContainer.Tenant.Id, nodeId.Value, evaluatorIds);
             }
 
             //Update previous or first version id or version counter part of AdditionalID for the published item
@@ -2798,7 +2798,7 @@ namespace RaaiVan.Web.API
                 Guid? mainAdmin = get_main_admin(node, contributors, admins);
 
                 if (mainAdmin.HasValue)
-                    CNController.NotifyNodeExpiration(applicationId, id, systemUser.UserID.Value, ref dash);
+                    CNController.notify_node_expiration(applicationId, id, systemUser.UserID.Value, ref dash);
             }
         }
 

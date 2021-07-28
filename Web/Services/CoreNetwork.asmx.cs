@@ -58,7 +58,7 @@ namespace RaaiVan.Web.Services
             if (!string.IsNullOrEmpty(parentNodeId))
                 node.ParentNodeID = CNController.get_node_id(tenant.Id, parentNodeId, nodeTypeId);
 
-            return CNController.add_node(tenant.Id, node, nodeTypeId);
+            return CNController.add_node(applicationId: tenant.Id, info: node, nodeTypeAdditionalId: nodeTypeId);
         }
 
         [WebMethod]

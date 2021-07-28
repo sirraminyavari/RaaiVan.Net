@@ -2393,7 +2393,7 @@ namespace RaaiVan.Web.API
                 {
                     Guid nodeId = Guid.NewGuid();
 
-                    result = CNController.add_node(paramsContainer.Tenant.Id, new Modules.CoreNetwork.Node()
+                    result = CNController.add_node(paramsContainer.Tenant.Id, new Node()
                     {
                         NodeID = nodeId,
                         Name = tag,
