@@ -2272,10 +2272,22 @@ namespace RaaiVan.Modules.CoreNetwork
             return _enable_previous_version_select(applicationId, nodeTypeIdOrNodeId, value: null);
         }
 
+        private static bool _is_tree(Guid applicationId, ref List<Guid> treeIds, List<Guid> nodeTypeOrNodeIds, bool? isTree)
+        {
+            if (isTree.HasValue)
+                return DBConnector.succeed(applicationId, GetFullyQualifiedName("IsTree"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', isTree);
+            else {
+                treeIds = DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("IsTree"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', isTree);
+                return true;
+            }
+        }
+
         public static List<Guid> is_tree(Guid applicationId, List<Guid> nodeTypeOrNodeIds)
         {
             List<Guid> retList = new List<Guid>();
-            DataProvider.IsTree(applicationId, ref retList, nodeTypeOrNodeIds, null);
+            _is_tree(applicationId, ref retList, nodeTypeOrNodeIds, isTree: null);
             return retList;
         }
 
@@ -2287,190 +2299,238 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool is_tree(Guid applicationId, List<Guid> nodeTypeOrNodeIds, bool isTree)
         {
             List<Guid> retList = new List<Guid>();
-            return DataProvider.IsTree(applicationId, ref retList, nodeTypeOrNodeIds, isTree);
+            return _is_tree(applicationId, ref retList, nodeTypeOrNodeIds, isTree);
         }
 
         public static bool is_tree(Guid applicationId, Guid nodeTypeOrNodeId, bool isTree)
         {
-            List<Guid> lst = new List<Guid>();
-            lst.Add(nodeTypeOrNodeId);
-            List<Guid> retList = new List<Guid>();
-            return DataProvider.IsTree(applicationId, ref retList, lst, isTree);
+            return is_tree(applicationId, new List<Guid>() { nodeTypeOrNodeId }, isTree);
+        }
+
+        private static bool _has_unique_membership(Guid applicationId, ref List<Guid> groupIds, List<Guid> nodeTypeOrNodeIds, bool? value)
+        {
+            if (value.HasValue)
+                return DBConnector.succeed(applicationId, GetFullyQualifiedName("HasUniqueMembership"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', value);
+            else
+            {
+                groupIds = DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("HasUniqueMembership"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', value);
+                return true;
+            }
         }
 
         public static List<Guid> has_unique_membership(Guid applicationId, List<Guid> nodeTypeOrNodeIds)
         {
             List<Guid> retList = new List<Guid>();
-            DataProvider.HasUniqueMembership(applicationId, ref retList, nodeTypeOrNodeIds, null);
+            _has_unique_membership(applicationId, ref retList, nodeTypeOrNodeIds, value: null);
             return retList;
         }
 
         public static bool has_unique_membership(Guid applicationId, Guid nodeTypeIdOrNodeId)
         {
-            List<Guid> lst = new List<Guid>();
-            return has_unique_membership(applicationId, lst).Count > 0;
+            return has_unique_membership(applicationId, new List<Guid>() { nodeTypeIdOrNodeId }).Count > 0;
         }
 
         public static bool has_unique_membership(Guid applicationId, List<Guid> nodeTypeOrNodeIds, bool value)
         {
             List<Guid> retList = new List<Guid>();
-            return DataProvider.HasUniqueMembership(applicationId, ref retList, nodeTypeOrNodeIds, value);
+            return _has_unique_membership(applicationId, ref retList, nodeTypeOrNodeIds, value);
         }
 
         public static bool has_unique_membership(Guid applicationId, Guid nodeTypeOrNodeId, bool value)
         {
-            List<Guid> lst = new List<Guid>();
-            lst.Add(nodeTypeOrNodeId);
-            List<Guid> retList = new List<Guid>();
-            return DataProvider.HasUniqueMembership(applicationId, ref retList, lst, value);
+            return has_unique_membership(applicationId, new List<Guid>() { nodeTypeOrNodeId }, value);
+        }
+
+        private static bool _has_unique_admin_member(Guid applicationId, 
+            ref List<Guid> groupIds, List<Guid> nodeTypeOrNodeIds, bool? value)
+        {
+            if (value.HasValue)
+                return DBConnector.succeed(applicationId, GetFullyQualifiedName("HasUniqueAdminMember"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', value);
+            else
+            {
+                groupIds = DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("HasUniqueAdminMember"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', value);
+                return true;
+            }
         }
 
         public static List<Guid> has_unique_admin_member(Guid applicationId, List<Guid> nodeTypeOrNodeIds)
         {
             List<Guid> retList = new List<Guid>();
-            DataProvider.HasUniqueAdminMember(applicationId, ref retList, nodeTypeOrNodeIds, null);
+            _has_unique_admin_member(applicationId, ref retList, nodeTypeOrNodeIds, value: null);
             return retList;
         }
 
         public static bool has_unique_admin_member(Guid applicationId, Guid nodeTypeIdOrNodeId)
         {
-            List<Guid> lst = new List<Guid>();
-            return has_unique_admin_member(applicationId, lst).Count > 0;
+            return has_unique_admin_member(applicationId, new List<Guid>() { nodeTypeIdOrNodeId }).Count > 0;
         }
 
         public static bool has_unique_admin_member(Guid applicationId, List<Guid> nodeTypeOrNodeIds, bool value)
         {
             List<Guid> retList = new List<Guid>();
-            return DataProvider.HasUniqueAdminMember(applicationId, ref retList, nodeTypeOrNodeIds, value);
+            return _has_unique_admin_member(applicationId, ref retList, nodeTypeOrNodeIds, value);
         }
 
         public static bool has_unique_admin_member(Guid applicationId, Guid nodeTypeOrNodeId, bool value)
         {
-            List<Guid> lst = new List<Guid>();
-            lst.Add(nodeTypeOrNodeId);
-            List<Guid> retList = new List<Guid>();
-            return DataProvider.HasUniqueAdminMember(applicationId, ref retList, lst, value);
+            return has_unique_admin_member(applicationId, new List<Guid>() { nodeTypeOrNodeId }, value);
+        }
+
+        private static bool _abstract_and_keywords_disabled(Guid applicationId,
+            ref List<Guid> retIds, List<Guid> nodeTypeOrNodeIds, bool? value)
+        {
+            if (value.HasValue)
+                return DBConnector.succeed(applicationId, GetFullyQualifiedName("AbstractAndKeywordsDisabled"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', value);
+            else
+            {
+                retIds = DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("AbstractAndKeywordsDisabled"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', value);
+                return true;
+            }
         }
 
         public static List<Guid> abstract_and_keywords_disabled(Guid applicationId, List<Guid> nodeTypeOrNodeIds)
         {
             List<Guid> retList = new List<Guid>();
-            DataProvider.AbstractAndKeywordsDisabled(applicationId, ref retList, nodeTypeOrNodeIds, null);
+            _abstract_and_keywords_disabled(applicationId, ref retList, nodeTypeOrNodeIds, value: null);
             return retList;
         }
 
         public static bool abstract_and_keywords_disabled(Guid applicationId, Guid nodeTypeIdOrNodeId)
         {
-            List<Guid> lst = new List<Guid>();
-            return abstract_and_keywords_disabled(applicationId, lst).Count > 0;
+            return abstract_and_keywords_disabled(applicationId, new List<Guid>() { nodeTypeIdOrNodeId }).Count > 0;
         }
 
         public static bool abstract_and_keywords_disabled(Guid applicationId, List<Guid> nodeTypeOrNodeIds, bool value)
         {
             List<Guid> retList = new List<Guid>();
-            return DataProvider.AbstractAndKeywordsDisabled(applicationId, ref retList, nodeTypeOrNodeIds, value);
+            return _abstract_and_keywords_disabled(applicationId, ref retList, nodeTypeOrNodeIds, value);
         }
 
         public static bool abstract_and_keywords_disabled(Guid applicationId, Guid nodeTypeOrNodeId, bool value)
         {
-            List<Guid> lst = new List<Guid>();
-            lst.Add(nodeTypeOrNodeId);
-            List<Guid> retList = new List<Guid>();
-            return DataProvider.AbstractAndKeywordsDisabled(applicationId, ref retList, lst, value);
+            return abstract_and_keywords_disabled(applicationId, new List<Guid>() { nodeTypeOrNodeId }, value);
+        }
+
+        private static bool _file_upload_disabled(Guid applicationId,
+            ref List<Guid> retIds, List<Guid> nodeTypeOrNodeIds, bool? value)
+        {
+            if (value.HasValue)
+                return DBConnector.succeed(applicationId, GetFullyQualifiedName("FileUploadDisabled"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', value);
+            else
+            {
+                retIds = DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("FileUploadDisabled"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', value);
+                return true;
+            }
         }
 
         public static List<Guid> file_upload_disabled(Guid applicationId, List<Guid> nodeTypeOrNodeIds)
         {
             List<Guid> retList = new List<Guid>();
-            DataProvider.FileUploadDisabled(applicationId, ref retList, nodeTypeOrNodeIds, null);
+            _file_upload_disabled(applicationId, ref retList, nodeTypeOrNodeIds, value: null);
             return retList;
         }
 
         public static bool file_upload_disabled(Guid applicationId, Guid nodeTypeIdOrNodeId)
         {
-            List<Guid> lst = new List<Guid>();
-            return file_upload_disabled(applicationId, lst).Count > 0;
+            return file_upload_disabled(applicationId, new List<Guid>() { nodeTypeIdOrNodeId }).Count > 0;
         }
 
         public static bool file_upload_disabled(Guid applicationId, List<Guid> nodeTypeOrNodeIds, bool value)
         {
             List<Guid> retList = new List<Guid>();
-            return DataProvider.FileUploadDisabled(applicationId, ref retList, nodeTypeOrNodeIds, value);
+            return _file_upload_disabled(applicationId, ref retList, nodeTypeOrNodeIds, value);
         }
 
         public static bool file_upload_disabled(Guid applicationId, Guid nodeTypeOrNodeId, bool value)
         {
-            List<Guid> lst = new List<Guid>();
-            lst.Add(nodeTypeOrNodeId);
-            List<Guid> retList = new List<Guid>();
-            return DataProvider.FileUploadDisabled(applicationId, ref retList, lst, value);
+            return file_upload_disabled(applicationId, new List<Guid>() { nodeTypeOrNodeId }, value);
+        }
+
+        private static bool _related_nodes_select_disabled(Guid applicationId,
+            ref List<Guid> retIds, List<Guid> nodeTypeOrNodeIds, bool? value)
+        {
+            if (value.HasValue)
+                return DBConnector.succeed(applicationId, GetFullyQualifiedName("RelatedNodesSelectDisabled"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', value);
+            else
+            {
+                retIds = DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("RelatedNodesSelectDisabled"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeOrNodeIds), ',', value);
+                return true;
+            }
         }
 
         public static List<Guid> related_nodes_select_disabled(Guid applicationId, List<Guid> nodeTypeOrNodeIds)
         {
             List<Guid> retList = new List<Guid>();
-            DataProvider.RelatedNodesSelectDisabled(applicationId, ref retList, nodeTypeOrNodeIds, null);
+            _related_nodes_select_disabled(applicationId, ref retList, nodeTypeOrNodeIds, value: null);
             return retList;
         }
 
         public static bool related_nodes_select_disabled(Guid applicationId, Guid nodeTypeIdOrNodeId)
         {
-            List<Guid> lst = new List<Guid>();
-            return related_nodes_select_disabled(applicationId, lst).Count > 0;
+            return related_nodes_select_disabled(applicationId, new List<Guid>() { nodeTypeIdOrNodeId }).Count > 0;
         }
 
         public static bool related_nodes_select_disabled(Guid applicationId, List<Guid> nodeTypeOrNodeIds, bool value)
         {
             List<Guid> retList = new List<Guid>();
-            return DataProvider.RelatedNodesSelectDisabled(applicationId, ref retList, nodeTypeOrNodeIds, value);
+            return _related_nodes_select_disabled(applicationId, ref retList, nodeTypeOrNodeIds, value);
         }
 
         public static bool related_nodes_select_disabled(Guid applicationId, Guid nodeTypeOrNodeId, bool value)
         {
-            List<Guid> lst = new List<Guid>();
-            lst.Add(nodeTypeOrNodeId);
-            List<Guid> retList = new List<Guid>();
-            return DataProvider.RelatedNodesSelectDisabled(applicationId, ref retList, lst, value);
+            return related_nodes_select_disabled(applicationId, new List<Guid>() { nodeTypeOrNodeId }, value);
         }
 
         public static bool editable_for_admin(Guid applicationId, Guid nodeTypeId, bool editable)
         {
-            return DataProvider.EditableForAdmin(applicationId, nodeTypeId, editable);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("EditableForAdmin"), applicationId, nodeTypeId, editable);
         }
 
         public static bool editable_for_creator(Guid applicationId, Guid nodeTypeId, bool editable)
         {
-            return DataProvider.EditableForCreator(applicationId, nodeTypeId, editable);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("EditableForCreator"), applicationId, nodeTypeId, editable);
         }
 
         public static bool editable_for_owners(Guid applicationId, Guid nodeTypeId, bool editable)
         {
-            return DataProvider.EditableForOwners(applicationId, nodeTypeId, editable);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("EditableForOwners"), applicationId, nodeTypeId, editable);
         }
 
         public static bool editable_for_experts(Guid applicationId, Guid nodeTypeId, bool editable)
         {
-            return DataProvider.EditableForExperts(applicationId, nodeTypeId, editable);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("EditableForExperts"), applicationId, nodeTypeId, editable);
         }
 
         public static bool editable_for_members(Guid applicationId, Guid nodeTypeId, bool editable)
         {
-            return DataProvider.EditableForMembers(applicationId, nodeTypeId, editable);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("EditableForMembers"), applicationId, nodeTypeId, editable);
         }
 
         public static bool edit_suggestion(Guid applicationId, Guid nodeTypeId, bool enable)
         {
-            return DataProvider.EditSuggestion(applicationId, nodeTypeId, enable);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("EditSuggestion"), applicationId, nodeTypeId, enable);
         }
 
         public static bool add_free_user(Guid applicationId, Guid nodeTypeId, Guid userId, Guid currentUserId)
         {
-            return DataProvider.AddFreeUser(applicationId, nodeTypeId, userId, currentUserId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddFreeUser"),
+                applicationId, nodeTypeId, userId, currentUserId, DateTime.Now);
         }
 
         public static bool remove_free_user(Guid applicationId, Guid nodeTypeId, Guid userId, Guid currentUserId)
         {
-            return DataProvider.ArithmeticDeleteFreeUser(applicationId, nodeTypeId, userId, currentUserId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteFreeUser"),
+                applicationId, nodeTypeId, userId, currentUserId, DateTime.Now);
         }
 
         public static List<User> get_free_users(Guid applicationId, Guid nodeTypeId)
@@ -2482,17 +2542,19 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static bool is_free_user(Guid applicationId, Guid nodeTypeIdOrNodeId, Guid userId)
         {
-            return DataProvider.IsFreeUser(applicationId, nodeTypeIdOrNodeId, userId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("IsFreeUser"), applicationId, nodeTypeIdOrNodeId, userId);
         }
 
         public static bool add_service_admin(Guid applicationId, Guid nodeTypeId, Guid userId, Guid currentUserId)
         {
-            return DataProvider.AddServiceAdmin(applicationId, nodeTypeId, userId, currentUserId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddServiceAdmin"),
+                applicationId, nodeTypeId, userId, currentUserId, DateTime.Now);
         }
 
         public static bool remove_service_admin(Guid applicationId, Guid nodeTypeId, Guid userId, Guid currentUserId)
         {
-            return DataProvider.ArithmeticDeleteServiceAdmin(applicationId, nodeTypeId, userId, currentUserId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteServiceAdmin"),
+                applicationId, nodeTypeId, userId, currentUserId, DateTime.Now);
         }
 
         public static List<User> get_service_admins(Guid applicationId, Guid nodeTypeId)
@@ -2504,12 +2566,13 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<Guid> is_service_admin(Guid applicationId, List<Guid> nodeTypeIdOrNodeIds, Guid userId)
         {
-            return DataProvider.IsServiceAdmin(applicationId, nodeTypeIdOrNodeIds, userId);
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("IsServiceAdmin"),
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeIdOrNodeIds), ',', userId);
         }
 
         public static bool is_service_admin(Guid applicationId, Guid nodeTypeIdOrNodeId, Guid userId)
         {
-            return DataProvider.IsServiceAdmin(applicationId, new List<Guid>() { nodeTypeIdOrNodeId }, userId).Count > 0;
+            return is_service_admin(applicationId, new List<Guid>() { nodeTypeIdOrNodeId }, userId).Count > 0;
         }
 
         public static bool register_new_node(Guid applicationId, Node nodeObject, Guid? workflowId, Guid? formInstanceId,
@@ -2529,7 +2592,7 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static bool set_admin_area(Guid applicationId, Guid nodeId, Guid? areaId)
         {
-            return DataProvider.SetAdminArea(applicationId, nodeId, areaId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetAdminArea"), applicationId, nodeId, areaId);
         }
 
         public static bool set_contributors(Guid applicationId, Node info, ref string errorMessage)
