@@ -255,6 +255,8 @@
     <Compile Include="DataProvider.cs" />
     <Compile Include="DBHelper\CompositeTypes\FormFilterTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\GuidTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\StringPairTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\StringTableType.cs" />
     <Compile Include="DBHelper\ITableType.cs" />
     <Compile Include="DBHelper\DBCompositeType.cs" />
     <Compile Include="DBHelper\MSSQLConnector.cs" />

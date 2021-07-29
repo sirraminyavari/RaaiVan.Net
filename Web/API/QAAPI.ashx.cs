@@ -1749,13 +1749,12 @@ namespace RaaiVan.Web.API
 
             if (result)
             {
-                knowledgeableUsers = 
-                    QAController.find_knowledgeable_user_ids(paramsContainer.Tenant.Id, questionId, 50, 0);
+                knowledgeableUsers = QAController.find_knowledgeable_user_ids(paramsContainer.Tenant.Id, questionId, 50, 0);
                 
                 long totalCount = 0;
 
                 List<Expert> experts = 
-                    CNController.get_experts(paramsContainer.Tenant.Id, ref nodeIds, null, 20, 0, ref totalCount);
+                    CNController.get_experts(paramsContainer.Tenant.Id, nodeIds, null, 20, 0, ref totalCount);
 
                 List<NodeMember> members = CNController.get_members(paramsContainer.Tenant.Id, 
                     nodeIds, false, null, null, 20, 0, ref totalCount);

@@ -4447,7 +4447,7 @@ namespace RaaiVan.Web.API
             long totalCount = 0;
 
             List<Expert> experts = nodeIds.Count == 0 ? new List<Expert>() :
-                CNController.get_experts(paramsContainer.Tenant.Id, ref nodeIds, searchText, count, lowerBoundary, 
+                CNController.get_experts(paramsContainer.Tenant.Id, nodeIds, searchText, count, lowerBoundary, 
                 ref totalCount, hierarchy: hierarchy.HasValue && hierarchy.Value);
 
             if (hierarchy.HasValue && hierarchy.Value)
@@ -4627,7 +4627,7 @@ namespace RaaiVan.Web.API
             if (!userId.HasValue) userId = paramsContainer.CurrentUserID;
 
             List<Guid> favorites = !userId.HasValue ? new List<Guid>() :
-                CNController.is_fan(paramsContainer.Tenant.Id, ref nodeIds, userId.Value);
+                CNController.is_fan(paramsContainer.Tenant.Id, nodeIds, userId.Value);
 
             responseText = "[" + ProviderUtil.list_to_string<string>(favorites
                 .Select(u => "\"" + u.ToString() + "\"").ToList()) + "]";

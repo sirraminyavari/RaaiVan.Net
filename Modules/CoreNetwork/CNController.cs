@@ -60,18 +60,24 @@ namespace RaaiVan.Modules.CoreNetwork
         
         public static List<NodeType> get_node_types(Guid applicationId, List<Guid> nodeTypeIds, bool grabSubNodeTypes = false)
         {
-            List<NodeType> retList = new List<NodeType>();
-            DataProvider.GetNodeTypes(applicationId, ref retList, nodeTypeIds, grabSubNodeTypes);
-            return retList;
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodeType"),
+                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeTypeIds), ',', grabSubNodeTypes);
+
+            long totalCount = 0;
+
+            return CNParsers.node_types(results, ref totalCount);
         }
 
         public static List<NodeType> get_node_types(Guid applicationId, string searchText, bool? isKnowledge,
             bool? isDocument, bool? archive, List<ExtensionType> extensions, int? count, long? lowerBoundary, ref long totalCount)
         {
-            List<NodeType> retList = new List<NodeType>();
-            DataProvider.GetNodeTypes(applicationId, ref retList, searchText, isKnowledge,
-                isDocument, archive, extensions, count, lowerBoundary, ref totalCount);
-            return retList;
+            if (extensions == null) extensions = new List<ExtensionType>();
+
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodeTypes"),
+                applicationId, ProviderUtil.get_search_text(searchText), isKnowledge, isDocument, 
+                archive, string.Join(",", extensions), ',', count, lowerBoundary);
+
+            return CNParsers.node_types(results, ref totalCount);
         }
 
         public static List<NodeType> get_node_types(Guid applicationId, 
@@ -81,26 +87,38 @@ namespace RaaiVan.Modules.CoreNetwork
             return CNController.get_node_types(applicationId, searchText, null, null, archive, extensions, null, null, ref totalCount);
         }
 
+        private static NodeType _get_node_type(Guid applicationId, Guid? nodeTypeId, NodeTypes? nodeType, Guid? nodeId)
+        {
+            string strNodeTypeAdditionalId = null;
+            if (nodeType.HasValue) strNodeTypeAdditionalId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
+
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodeType"),
+                applicationId, nodeTypeId, strNodeTypeAdditionalId, nodeId);
+
+            long totalCount = 0;
+
+            return CNParsers.node_types(results, ref totalCount).FirstOrDefault();
+        }
+
         public static NodeType get_node_type_by_node_id(Guid applicationId, Guid nodeId)
         {
-            return DataProvider.GetNodeType(applicationId, null, null, nodeId);
+            return _get_node_type(applicationId: applicationId, nodeTypeId: null, nodeType: null, nodeId: nodeId);
         }
 
         public static NodeType get_node_type(Guid applicationId, Guid nodeTypeId)
         {
-            return DataProvider.GetNodeType(applicationId, nodeTypeId, null, null);
+            return _get_node_type(applicationId: applicationId, nodeTypeId: nodeTypeId, nodeType: null, nodeId: null);
         }
 
         public static NodeType get_node_type(Guid applicationId, NodeTypes nodeType)
         {
-            return DataProvider.GetNodeType(applicationId, null, nodeType, null);
+            return _get_node_type(applicationId: applicationId, nodeTypeId: null, nodeType: nodeType, nodeId: null);
         }
 
         public static List<Guid> have_child_node_types(Guid applicationId, ref List<Guid> nodeTypeIds)
         {
-            List<Guid> retList = new List<Guid>();
-            DataProvider.HaveChildNodeTypes(applicationId, ref retList, ref nodeTypeIds);
-            return retList;
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("HaveChildNodeTypes"),
+                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeTypeIds), ',');
         }
 
         public static List<Guid> have_child_node_types(Guid applicationId, List<Guid> nodeTypeIds)
@@ -110,9 +128,12 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<NodeType> get_child_node_types(Guid applicationId, Guid? parentId, bool? archive = false)
         {
-            List<NodeType> retList = new List<NodeType>();
-            DataProvider.GetChildNodeTypes(applicationId, ref retList, parentId, archive);
-            return retList;
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetChildNodeTypes"),
+                applicationId, parentId, archive);
+
+            long totalCount = 0;
+
+            return CNParsers.node_types(results, ref totalCount);
         }
 
         public static bool remove_node_types(Guid applicationId, List<Guid> nodeTypeIds, bool? removeHierarchy, Guid currentUserId)
@@ -146,9 +167,7 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<RelationType> get_relation_types(Guid applicationId)
         {
-            List<RelationType> retList = new List<RelationType>();
-            DataProvider.GetRelationTypes(applicationId, ref retList);
-            return retList;
+            return CNParsers.relation_types(DBConnector.read(applicationId, GetFullyQualifiedName("GetRelationTypes"), applicationId));
         }
 
         public static bool remove_relation_type(Guid applicationId, RelationType Info)
@@ -303,7 +322,8 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<Guid> get_node_ids_that_will_be_expired_soon(Guid applicationId)
         {
-            return DataProvider.GetNodeIDsThatWillBeExpiredSoon(applicationId);
+            DateTime date = DateTime.Now.AddDays(RaaiVanSettings.Knowledge.AlertExpirationInDays(applicationId));
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetNodeIDsThatWillBeExpiredSoon"), applicationId, date);
         }
 
         public static bool notify_node_expiration(Guid applicationId, Guid nodeId, Guid userId, ref List<Dashboard> retDashboards)
@@ -318,19 +338,16 @@ namespace RaaiVan.Modules.CoreNetwork
                 applicationId, nodeId, previousVersionId, currentUserId, DateTime.Now);
         }
 
-        public static List<Node> get_previous_versions(Guid applicationId, 
+        public static List<Node> get_previous_versions(Guid applicationId,
             Guid nodeId, Guid? currentUserId = null, bool? checkPrivacy = false)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetPreviousVersions(applicationId, ref retList, nodeId, currentUserId, checkPrivacy);
-            return retList;
+            return CNParsers.nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetPreviousVersions"),
+                applicationId, nodeId, currentUserId, checkPrivacy, DateTime.Now, RaaiVanSettings.DefaultPrivacy(applicationId)));
         }
 
         public static List<Node> get_new_versions(Guid applicationId, Guid nodeId)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetNewVersions(applicationId, ref retList, nodeId);
-            return retList;
+            return CNParsers.nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetNewVersions"), applicationId, nodeId));
         }
 
         public static bool modify_node_tags(Guid applicationId, Node info)
@@ -388,10 +405,12 @@ namespace RaaiVan.Modules.CoreNetwork
             ref List<Guid> nodeTypeIds, NodeTypes? nodeType, DateTime? lowerCreationDateLimit = null, 
             DateTime? upperCreationDateLimit = null, bool? archive = false, bool? root = null)
         {
-            List<NodesCount> retList = new List<NodesCount>();
-            DataProvider.GetNodesCount(applicationId, ref retList, ref nodeTypeIds, nodeType, 
-                lowerCreationDateLimit, upperCreationDateLimit, root, archive);
-            return retList;
+            string strAdditionalId = null;
+            if (nodeType.HasValue) strAdditionalId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
+
+            return CNParsers.nodes_count(DBConnector.read(applicationId, GetFullyQualifiedName("GetNodesCount"),
+                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeTypeIds), ',',
+                strAdditionalId, lowerCreationDateLimit, upperCreationDateLimit, root, archive));
         }
 
         public static List<NodesCount> get_nodes_count(Guid applicationId, DateTime? lowerCreationDateLimit = null,
@@ -432,9 +451,8 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<NodesCount> get_most_populated_node_types(Guid applicationId, 
             int? count = null, int? lowerBoundary = null)
         {
-            List<NodesCount> lst = new List<NodesCount>();
-            DataProvider.GetMostPopulatedNodeTypes(applicationId, ref lst, count, lowerBoundary);
-            return lst;
+            return CNParsers.nodes_count(DBConnector.read(applicationId, GetFullyQualifiedName("GetMostPopulatedNodeTypes"),
+                applicationId, count, lowerBoundary));
         }
 
         public static int get_node_records_count(Guid applicationId)
@@ -444,7 +462,8 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<Guid> get_node_type_ids(Guid applicationId, List<string> nodeTypeAdditionalIds)
         {
-            return DataProvider.GetNodeTypeIDs(applicationId, nodeTypeAdditionalIds);
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetNodeTypeIDs"),
+                applicationId, string.Join(",", nodeTypeAdditionalIds), ',');
         }
 
         public static Guid? get_node_type_id(Guid applicationId, string nodeTypeAdditionalId)
@@ -456,11 +475,19 @@ namespace RaaiVan.Modules.CoreNetwork
         }
 
         private static List<Guid> _get_node_ids(Guid applicationId, List<string> nodeAdditionalIds, 
-            Guid? nodeTypeId, NodeTypes? nodeType, string strNodeTypeAdditionalId)
+            Guid? nodeTypeId, NodeTypes? nodeType, string nodeTypeAdditionalId)
         {
-            List<Guid> retList = new List<Guid>();
-            DataProvider.GetNodeIDs(applicationId, ref retList, nodeAdditionalIds, nodeTypeId, nodeType, strNodeTypeAdditionalId);
-            return retList;
+            //prepare
+            if (!nodeTypeId.HasValue && !nodeType.HasValue && string.IsNullOrEmpty(nodeTypeAdditionalId)) return new List<Guid>();
+            if (nodeType.HasValue) nodeTypeAdditionalId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
+            if (nodeAdditionalIds == null) nodeAdditionalIds = new List<string>();
+            //end of prepare
+
+            DBCompositeType<StringTableType> addIds = new DBCompositeType<StringTableType>()
+                .add(nodeAdditionalIds.Select(id => new StringTableType(id)).ToList());
+
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetNodeIDs"),
+                applicationId, addIds, nodeTypeId, nodeTypeAdditionalId);
         }
 
         public static List<Guid> get_node_ids(Guid applicationId, List<string> nodeAdditionalIds, Guid nodeTypeId)
@@ -499,29 +526,31 @@ namespace RaaiVan.Modules.CoreNetwork
             return _get_node_ids(applicationId, _aIds, null, null, nodeTypeAdditionalId).FirstOrDefault();
         }
 
-        public static List<Guid> get_node_ids(Guid applicationId, ref List<Node> nodes)
-        {
-            List<Guid> retList = new List<Guid>();
-            DataProvider.GetNodeIDs(applicationId, ref retList, ref nodes);
-            return retList;
-        }
-
         public static List<Guid> get_node_ids(Guid applicationId, List<Node> nodes)
         {
-            return get_node_ids(applicationId, ref nodes);
+            if (nodes == null) nodes = new List<Node>();
+
+            DBCompositeType<StringPairTableType> addIds = new DBCompositeType<StringPairTableType>()
+                .add(nodes.Select(nd => new StringPairTableType(nd.AdditionalID, nd.TypeAdditionalID)).ToList());
+
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetNodeIDsByAdditionalIDs"), applicationId, addIds);
         }
 
         public static Dictionary<string, Guid> get_node_ids(Guid applicationId, Guid nodeTypeId, List<string> additionalIds)
         {
-            return DataProvider.GetNodeIDs(applicationId, nodeTypeId, additionalIds);
+            return CNParsers.node_ids(DBConnector.read(applicationId, GetFullyQualifiedName("GetNodeIDsByAdditionalID"),
+                applicationId, nodeTypeId, string.Join("~", additionalIds), '~'));
         }
 
         public static List<Node> get_nodes(Guid applicationId, 
             List<Guid> nodeIds, bool? full = null, Guid? currentUserId = null)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetNodes(applicationId, ref retList, ref nodeIds, full, currentUserId);
-            return retList;
+            if (nodeIds.Count == 0) return new List<Node>();
+
+            DBResultSet resutls = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodesByIDs"),
+                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', full, currentUserId);
+
+            return CNParsers.nodes(resutls, full: full);
         }
 
         public static Node get_node(Guid applicationId, 
@@ -686,10 +715,10 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<Node> get_most_popular_nodes(Guid applicationId, List<Guid> nodeTypeIds, Guid? parentNodeId,
             int count, long? lowerBoundary, ref long totalCount, bool? archive = false, bool? searchable = true)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetMostPopularNodes(applicationId, ref retList, nodeTypeIds, parentNodeId, count, 
-                lowerBoundary, ref totalCount);
-            return retList;
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetMostPopularNodes"),
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',', parentNodeId, count, lowerBoundary);
+
+            return CNParsers.popular_nodes(results, ref totalCount);
         }
 
         public static List<Node> get_most_popular_nodes(Guid applicationId, Guid? nodeTypeId, Guid? parentNodeId, 
@@ -702,47 +731,24 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<Node> get_parent_nodes(Guid applicationId, Guid nodeId)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetParentNodes(applicationId, ref retList, nodeId);
-            return retList;
+            return CNParsers.nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetParentNodes"), applicationId, nodeId));
         }
 
         public static List<Node> get_child_nodes(Guid applicationId, Guid nodeId)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetChildNodes(applicationId, ref retList, nodeId);
-            return retList;
+            return CNParsers.nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetChildNodes"), applicationId, nodeId));
         }
 
-        public static List<Node> get_default_related_nodes(Guid applicationId, Guid nodeId)
-        {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetDefaultRelatedNodes(applicationId, ref retList, nodeId);
-            return retList;
-        }
-
-        public static List<Node> get_default_connected_nodes(Guid applicationId, Guid nodeId)
-        {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetDefaultConnectedNodes(applicationId, ref retList, nodeId);
-            return retList;
-        }
-
-        public static List<Node> get_brother_nodes(Guid applicationId, Guid nodeId)
-        {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetBrotherNodes(applicationId, ref retList, nodeId);
-            return retList;
-        }
-        
         public static List<Node> get_direct_childs(Guid applicationId, Guid? nodeId, Guid? nodeTypeId, 
             string nodeTypeAdditionalId, bool? searchable, double? lowerBoundary, int? count, 
             string orderBy, bool? orderByDesc, string searchText, bool? checkAccess, Guid? currentUserId, ref long totalCount)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetDirectChilds(applicationId, ref retList, nodeId, nodeTypeId, nodeTypeAdditionalId, searchable,
-                lowerBoundary, count, orderBy, orderByDesc, searchText, checkAccess, currentUserId, ref totalCount);
-            return retList;
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetDirectChilds"),
+                applicationId, nodeId, nodeTypeId, nodeTypeAdditionalId, searchable, lowerBoundary, count,
+                orderBy, orderByDesc, ProviderUtil.get_search_text(searchText), checkAccess,
+                currentUserId, DateTime.Now, RaaiVanSettings.DefaultPrivacy(applicationId));
+
+            return CNParsers.nodes(results, full: false, totalCount: ref totalCount);
         }
 
         public static List<Node> get_direct_childs(Guid applicationId, Guid nodeId)
@@ -753,7 +759,8 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static Node get_direct_parent(Guid applicationId, Guid nodeId)
         {
-            return DataProvider.GetDirectParent(applicationId, nodeId);
+            return CNParsers.nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetDirectParent"),
+                applicationId, nodeId)).FirstOrDefault();
         }
 
         public static bool set_direct_parent(Guid applicationId, 
@@ -771,9 +778,8 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<Guid> have_childs(Guid applicationId, ref List<Guid> nodeIds)
         {
-            List<Guid> retList = new List<Guid>();
-            DataProvider.HaveChilds(applicationId, ref retList, ref nodeIds);
-            return retList;
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("HaveChilds"),
+                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',');
         }
 
         public static List<Guid> have_childs(Guid applicationId, List<Guid> nodeIds)
@@ -793,39 +799,39 @@ namespace RaaiVan.Modules.CoreNetwork
             string searchText, bool? inRelations, bool? outRelations,
             bool? inTagRelations = null, bool? outTagRelations = null, int? count = null, int? lowerBoundary = null)
         {
-            List<Guid> retList = new List<Guid>();
-            DataProvider.GetRelatedNodeIDs(applicationId, ref retList, nodeId, nodeTypeId, 
-                searchText, inRelations, outRelations, inTagRelations, outTagRelations, count, lowerBoundary);
-            return retList;
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetRelatedNodeIDs"),
+                applicationId, nodeId, nodeTypeId, ProviderUtil.get_search_text(searchText),
+                inRelations, outRelations, inTagRelations, outTagRelations, count, lowerBoundary);
         }
         
         public static List<Node> get_related_nodes(Guid applicationId, Guid nodeId, Guid? nodeTypeId, 
             string searchText, bool? inRelations, bool? outRelations,
             bool? inTagRelations = null, bool? outTagRelations = null, int? count = null, int? lowerBoundary = null)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetRelatedNodes(applicationId, ref retList, nodeId, nodeTypeId,
-                searchText, inRelations, outRelations, inTagRelations, outTagRelations, count, lowerBoundary);
-            return retList;
+            if (string.IsNullOrEmpty(searchText)) searchText = null;
+
+            return CNParsers.nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetRelatedNodes"),
+                applicationId, nodeId, nodeTypeId, ProviderUtil.get_search_text(searchText), 
+                inRelations, outRelations, inTagRelations, outTagRelations, count, lowerBoundary));
         }
 
         public static List<NodesCount> get_related_nodes_count(Guid applicationId, Guid nodeId, Guid? nodeTypeId,
             string searchText, bool? inRelations, bool? outRelations,
             bool? inTagRelations = null, bool? outTagRelations = null, int? count = null, int? lowerBoundary = null)
         {
-            List<NodesCount> retList = new List<NodesCount>();
-            DataProvider.GetRelatedNodesCount(applicationId, ref retList, nodeId, nodeTypeId,
-                searchText, inRelations, outRelations, inTagRelations, outTagRelations, count, lowerBoundary);
-            return retList;
+            if (string.IsNullOrEmpty(searchText)) searchText = null;
+
+            return CNParsers.nodes_count(DBConnector.read(applicationId, GetFullyQualifiedName("GetRelatedNodesCount"),
+                applicationId, nodeId, nodeTypeId, ProviderUtil.get_search_text(searchText), 
+                inRelations, outRelations, inTagRelations, outTagRelations, count, lowerBoundary));
         }
 
         public static List<Node> get_related_nodes_partitioned(Guid applicationId, Guid nodeId, List<Guid> nodeTypeIds,
             bool? inRelations, bool? outRelations, bool? inTagRelations = null, bool? outTagRelations = null, int? count = null)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetRelatedNodesPartitioned(applicationId, ref retList, nodeId, nodeTypeIds,
-                inRelations, outRelations, inTagRelations, outTagRelations, count);
-            return retList;
+            return CNParsers.nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetRelatedNodesPartitioned"),
+                applicationId, nodeId, string.Join(",", nodeTypeIds), ',',
+                inRelations, outRelations, inTagRelations, outTagRelations, count));
         }
 
         public static bool relation_exists(Guid applicationId, 
@@ -908,9 +914,7 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<Guid> get_complex_admins(Guid applicationId, Guid listIdOrNodeId)
         {
-            List<Guid> retList = new List<Guid>();
-            DataProvider.GetComplexAdmins(applicationId, ref retList, listIdOrNodeId);
-            return retList;
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetComplexAdmins"), applicationId, listIdOrNodeId);
         }
 
         public static bool is_complex_admin(Guid applicationId, Guid nodeId, Guid userId)
@@ -1062,12 +1066,10 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid? nodeTypeId = null;
             Guid? areaId = null;
 
-            if (!DataProvider.GetUser2NodeStatus(applicationId, userId, nodeId, ref nodeTypeId, ref areaId, 
-                ref isCreator, ref isContributor, ref isExpert, ref isMember, ref isAdminMember, ref isServiceAdmin))
-            {
-                editSuggestion = false;
-                return false;
-            }
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetUser2NodeStatus"), userId, nodeId);
+
+            CNParsers.user2node_status(results, ref nodeTypeId, ref areaId, ref isCreator, ref isContributor,
+                ref isExpert, ref isMember, ref isAdminMember, ref isServiceAdmin);
 
             if (service == null) service = CNController.get_service(applicationId, nodeTypeId.Value);
             if (service == null) service = new Service();
@@ -1193,16 +1195,14 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<Hierarchy> get_node_hierarchy(Guid applicationId, Guid nodeId, bool? sameType = true)
         {
-            List<Hierarchy> retList = new List<Hierarchy>();
-            DataProvider.GetNodeHierarchy(applicationId, ref retList, nodeId, sameType);
-            return retList;
+            return DBConnector.get_hierarchy(applicationId, GetFullyQualifiedName("GetNodeHierarchy"),
+                applicationId, nodeId, sameType);
         }
 
         public static List<Hierarchy> get_node_types_hierarchy(Guid applicationId, List<Guid> nodeTypeIds)
         {
-            List<Hierarchy> retList = new List<Hierarchy>();
-            DataProvider.GetNodeTypesHierarchy(applicationId, ref retList, nodeTypeIds);
-            return retList;
+            return DBConnector.get_hierarchy(applicationId, GetFullyQualifiedName("GetNodeTypesHierarchy"),
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',');
         }
 
         public static List<Hierarchy> get_node_type_hierarchy(Guid applicationId, Guid nodeTypeId)
@@ -1217,9 +1217,8 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<HierarchyAdmin> get_hierarchy_admins(Guid applicationId, Guid nodeId, bool? sameType = true)
         {
-            List<HierarchyAdmin> retList = new List<HierarchyAdmin>();
-            DataProvider.GetHierarchyAdmins(applicationId, ref retList, nodeId, sameType);
-            return retList;
+            return CNParsers.hierarchy_admins(DBConnector.read(applicationId, GetFullyQualifiedName("GetNodeHierarchyAdminIDs"),
+                applicationId, nodeId, sameType));
         }
 
         public static bool is_hierarchy_admin(Guid applicationId, 
@@ -1245,46 +1244,53 @@ namespace RaaiVan.Modules.CoreNetwork
             return is_hierarchy_admin(applicationId, nodeId, userId, maxLevel);
         }
 
-        public static List<NodeMember> get_members(Guid applicationId, 
-            List<Guid> nodeIds, bool? pending, bool? admin, string searchText, int? count, long? lowerBoundary, ref long totalCount)
+        public static List<NodeMember> get_members(Guid applicationId, List<Guid> nodeIds, 
+            bool? pending, bool? admin, string searchText, int? count, long? lowerBoundary, ref long totalCount)
         {
-            List<NodeMember> retList = new List<NodeMember>();
-            DataProvider.GetMembers(applicationId, ref retList, nodeIds,
-                pending, admin, searchText, count, lowerBoundary, ref totalCount);
-            return retList;
+            if (nodeIds == null || nodeIds.Count == 0) return new List<NodeMember>();
+
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetMembers"),
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',',
+                pending, admin, ProviderUtil.get_search_text(searchText), count, lowerBoundary);
+
+            return CNParsers.node_members(results, parseNode: false, parseUser: true, totalCount: ref totalCount);
         }
 
         public static List<NodeMember> get_members(Guid applicationId, List<Guid> nodeIds, bool? pending, bool? admin)
         {
             long totalCount = 0;
-            return CNController.get_members(applicationId, nodeIds, pending, admin, null, null, null, ref totalCount);
+            return get_members(applicationId, nodeIds, pending, admin, null, null, null, ref totalCount);
         }
 
         public static List<NodeMember> get_members(Guid applicationId, 
             Guid nodeId, bool? pending, bool? admin, string searchText, int? count, long? lowerBoundary, ref long totalCount)
         {
-            List<Guid> nIds = new List<Guid>();
-            nIds.Add(nodeId);
-            return CNController.get_members(applicationId, nIds, pending, admin, searchText, count, lowerBoundary, ref totalCount);
+            return get_members(applicationId, new List<Guid>() { nodeId },
+                pending, admin, searchText, count, lowerBoundary, ref totalCount);
         }
 
         public static List<NodeMember> get_members(Guid applicationId, Guid nodeId, bool? pending, bool? admin)
         {
             long totalCount = 0;
-            return CNController.get_members(applicationId, nodeId, pending, admin, null, null, null, ref totalCount);
+            return get_members(applicationId, nodeId, pending, admin, null, null, null, ref totalCount);
         }
 
         public static NodeMember get_member(Guid applicationId, Guid nodeId, Guid userId)
         {
-            return DataProvider.GetMember(applicationId, nodeId, userId);
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetMember"),
+                applicationId, nodeId, userId);
+
+            return CNParsers.node_members(results, parseNode: false, parseUser: true).FirstOrDefault();
         }
 
         public static List<Guid> get_member_user_ids(Guid applicationId, 
             ref List<Guid> nodeIds, NodeMemberStatuses? status = null, bool? admin = null)
         {
-            List<Guid> retList = new List<Guid>();
-            DataProvider.GetMemberUserIDs(applicationId, ref retList, ref nodeIds, status, admin);
-            return retList;
+            string strStatus = status.ToString();
+            if (string.IsNullOrEmpty(strStatus)) strStatus = null;
+
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetMemberUserIDs"),
+                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', strStatus, admin);
         }
 
         public static List<Guid> get_member_user_ids(Guid applicationId, 
@@ -1307,28 +1313,32 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<NodesCount> get_membership_domains_count(Guid applicationId, Guid userId, Guid? nodeTypeId,
             Guid? nodeId, string additionalId, DateTime? lowerDateLimit, DateTime? upperDateLimit)
         {
-            List<NodesCount> retList = new List<NodesCount>();
-            DataProvider.GetMembershipDomainsCount(applicationId, ref retList, userId, nodeTypeId, 
-                nodeId, additionalId, lowerDateLimit, upperDateLimit);
-            return retList;
+            return CNParsers.nodes_count(DBConnector.read(applicationId, GetFullyQualifiedName("GetMembershipDomainsCount"),
+                applicationId, userId, nodeTypeId, nodeId, additionalId, lowerDateLimit, upperDateLimit));
         }
 
         public static List<Node> get_membership_domains(Guid applicationId, Guid userId, List<Guid> nodeTypeIds, 
             Guid? nodeId, string additionalId, string searchText, DateTime? lowerDateLimit, 
             DateTime? upperDateLimit, int? lowerBoundary, int? count, ref long totalCount)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetMembershipDomains(applicationId, ref retList, userId, nodeTypeIds, nodeId, 
-                additionalId, searchText, lowerDateLimit, upperDateLimit, lowerBoundary, count, ref totalCount);
-            return retList;
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetMembershipDomains"),
+                applicationId, userId, string.Join(",", nodeTypeIds), ',', nodeId, additionalId, 
+                ProviderUtil.get_search_text(searchText), lowerDateLimit, upperDateLimit, lowerBoundary, count);
+
+            return CNParsers.nodes(results, full: null, totalCount: ref totalCount);
         }
 
         private static List<NodeMember> _get_member_nodes(Guid applicationId, List<Guid> userIds, 
             ref List<Guid> nodeTypeIds, NodeTypes? nodeType, bool? admin = null)
         {
-            List<NodeMember> retList = new List<NodeMember>();
-            DataProvider.GetMemberNodes(applicationId, ref retList, userIds, ref nodeTypeIds, nodeType, admin);
-            return retList;
+            string additionalTypeId = null;
+            if (nodeType != null) additionalTypeId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
+
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetMemberNodes"),
+                applicationId, ProviderUtil.list_to_string<Guid>(userIds),
+                ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',', additionalTypeId, admin);
+
+            return CNParsers.node_members(results, parseNode: true, parseUser: false);
         }
 
         public static List<NodeMember> get_member_nodes(Guid applicationId, 
@@ -1375,24 +1385,23 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<Guid> get_child_hierarchy_member_ids(Guid applicationId,
             Guid nodeId, string searchText, int? count, long? lowerBoundary, ref long totalCount)
         {
-            List<Guid> lst = new List<Guid>();
-            DataProvider.GetChildHierarchyMemberIDs(applicationId, ref lst, nodeId, searchText, count, lowerBoundary, ref totalCount);
-            return lst;
+            return DBConnector.get_guid_list(applicationId, ref totalCount, GetFullyQualifiedName("GetChildHierarchyMemberIDs"),
+                applicationId, nodeId, ProviderUtil.get_search_text(searchText), count, lowerBoundary);
         }
 
         public static List<Guid> get_child_hierarchy_expert_ids(Guid applicationId,
             Guid nodeId, string searchText, int? count, long? lowerBoundary, ref long totalCount)
         {
-            List<Guid> lst = new List<Guid>();
-            DataProvider.GetChildHierarchyExpertIDs(applicationId, ref lst, nodeId, searchText, count, lowerBoundary, ref totalCount);
-            return lst;
+            return DBConnector.get_guid_list(applicationId, ref totalCount, GetFullyQualifiedName("GetChildHierarchyExpertIDs"),
+                applicationId, nodeId, ProviderUtil.get_search_text(searchText), count, lowerBoundary);
         }
 
         public static List<NodeMember> get_users_departments(Guid applicationId, List<Guid> userIds)
         {
-            List<NodeMember> retList = new List<NodeMember>();
-            DataProvider.GetUsersDepartments(applicationId, ref retList, ref userIds);
-            return retList;
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetUsersDepartments"),
+                applicationId, ProviderUtil.list_to_string<Guid>(ref userIds), ',');
+
+            return CNParsers.node_members(results, parseNode: true, parseUser: false);
         }
 
         public static NodeMember get_user_department(Guid applicationId, Guid userId)
@@ -1424,32 +1433,24 @@ namespace RaaiVan.Modules.CoreNetwork
             return unlike_nodes(applicationId, new List<Guid>() { nodeId }, userId);
         }
 
-        public static List<Guid> is_fan(Guid applicationId, ref List<Guid> nodeIds, Guid userId)
-        {
-            List<Guid> retIds = new List<Guid>();
-            DataProvider.IsFan(applicationId, ref retIds, ref nodeIds, userId);
-            return retIds;
-        }
-
         public static List<Guid> is_fan(Guid applicationId, List<Guid> nodeIds, Guid userId)
         {
-            return is_fan(applicationId, ref nodeIds, userId);
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("IsFan"),
+                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', userId);
         }
 
         public static bool is_fan(Guid applicationId, Guid nodeId, Guid userId)
         {
-            List<Guid> _nIds = new List<Guid>();
-            _nIds.Add(nodeId);
-            Guid? n = is_fan(applicationId, ref _nIds, userId).FirstOrDefault();
-            return n.HasValue && n == nodeId;
+            return is_fan(applicationId, new List<Guid>() { nodeId }, userId).Count > 0;
         }
 
         public static List<Guid> get_node_fans_user_ids(Guid applicationId, Guid nodeId, 
             int? count, long? lowerBoundary, ref long totalCount)
         {
-            List<Guid> retList = new List<Guid>();
-            DataProvider.GetNodeFansUserIDs(applicationId, ref retList, nodeId, count, lowerBoundary, ref totalCount);
-            return retList;
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodeFansUserIDs"),
+                applicationId, nodeId, count, lowerBoundary);
+
+            return CNParsers.fan_user_ids(results, ref totalCount);
         }
 
         public static List<Guid> get_node_fans_user_ids(Guid applicationId, 
@@ -1469,16 +1470,14 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<NodesCount> get_favorite_nodes_count(Guid applicationId, Guid userId, Guid? nodeTypeId,
             Guid? nodeId, string additionalId, bool? isDocument, DateTime? lowerDateLimit, DateTime? upperDateLimit)
         {
-            List<NodesCount> retList = new List<NodesCount>();
-            DataProvider.GetFavoriteNodesCount(applicationId, ref retList, userId, 
-                nodeTypeId, nodeId, additionalId, isDocument, lowerDateLimit, upperDateLimit);
-            return retList;
+            return CNParsers.nodes_count(DBConnector.read(applicationId, GetFullyQualifiedName("GetFavoriteNodesCount"),
+                applicationId, userId, nodeTypeId, nodeId, additionalId, isDocument, lowerDateLimit, upperDateLimit));
         }
 
         public static NodesCount get_favorite_nodes_count(Guid applicationId, Guid userId, Guid nodeTypeId,
             bool? isDocument, DateTime? lowerDateLimit, DateTime? upperDateLimit)
         {
-            return CNController.get_favorite_nodes_count(applicationId,
+            return get_favorite_nodes_count(applicationId,
                 userId, nodeTypeId, null, null, isDocument, lowerDateLimit, upperDateLimit).FirstOrDefault();
         }
 
@@ -1487,11 +1486,33 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid? creatorUserId, Guid? relatedToNodeId, List<FormFilter> filters, bool? matchAllFilters,
             DateTime? lowerDateLimit, DateTime? upperDateLimit, int? lowerBoundary, int? count, ref long totalCount)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetFavoriteNodes(applicationId, ref retList, userId, nodeTypeIds, useNodeTypeHierarchy, nodeId, 
-                additionalId, searchText, isDocument, creatorUserId, relatedToNodeId, filters, matchAllFilters, 
-                lowerDateLimit, upperDateLimit, lowerBoundary, count, ref totalCount);
-            return retList;
+            if (nodeTypeIds == null) nodeTypeIds = new List<Guid>();
+
+            if (filters == null) filters = new List<FormFilter>();
+
+            DBCompositeType<FormFilterTableType> formFilters = new DBCompositeType<FormFilterTableType>()
+                .add(filters.Select(f => new FormFilterTableType(
+                    elementId: f.ElementID,
+                    ownerId: f.OwnerID,
+                    text: f.Text,
+                    textItems: ProviderUtil.list_to_string<string>(f.TextItems),
+                    or: f.Or,
+                    exact: f.Exact,
+                    dateFrom: f.DateFrom,
+                    dateTo: f.DateTo,
+                    floatFrom: f.FloatFrom,
+                    floatTo: f.FloatTo,
+                    bit: f.Bit,
+                    guid: f.Guid,
+                    guidItems: ProviderUtil.list_to_string<Guid>(f.GuidItems),
+                    compulsory: f.Compulsory)).ToList());
+
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetFavoriteNodes"),
+                applicationId, userId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',', useNodeTypeHierarchy,
+                nodeId, additionalId, ProviderUtil.get_search_text(searchText), isDocument, creatorUserId,
+                relatedToNodeId, formFilters, matchAllFilters, lowerDateLimit, upperDateLimit, lowerBoundary, count);
+
+            return CNParsers.nodes(results, full: false, totalCount: ref totalCount);
         }
 
         public static bool add_complex(Guid applicationId, NodeList info)
@@ -1534,26 +1555,25 @@ namespace RaaiVan.Modules.CoreNetwork
                 applicationId, listId, userId, currentUserId, DateTime.Now);
         }
 
-        public static List<NodeList> get_lists(Guid applicationId, ref List<Guid> listIds)
+        public static List<NodeList> get_lists(Guid applicationId, List<Guid> listIds)
         {
-            List<NodeList> retList = new List<NodeList>();
-            DataProvider.GetLists(applicationId, ref retList, ref listIds);
-            return retList;
+            return CNParsers.lists(DBConnector.read(applicationId, GetFullyQualifiedName("GetListsByIDs"),
+                applicationId, ProviderUtil.list_to_string<Guid>(ref listIds), ','));
         }
 
         public static NodeList get_list(Guid applicationId, Guid listId)
         {
-            List<Guid> _nIds = new List<Guid>();
-            _nIds.Add(listId);
-            return get_lists(applicationId, ref _nIds).FirstOrDefault();
+            return get_lists(applicationId, new List<Guid>() { listId }).FirstOrDefault();
         }
         
         private static List<NodeList> _get_lists(Guid applicationId, 
             Guid? nodeTypeId, NodeTypes? nodeType, string searchText, Guid? minId, int? count)
         {
-            List<NodeList> retList = new List<NodeList>();
-            DataProvider.GetLists(applicationId, ref retList, nodeTypeId, nodeType, searchText, count, minId);
-            return retList;
+            string strNodeTypeAdditionalId = null;
+            if (nodeType.HasValue) strNodeTypeAdditionalId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
+
+            return CNParsers.lists(DBConnector.read(applicationId, GetFullyQualifiedName("GetLists"),
+                applicationId, nodeTypeId, strNodeTypeAdditionalId, ProviderUtil.get_search_text(searchText), count, minId));
         }
 
         public static List<NodeList> get_lists(Guid applicationId, 
@@ -1592,9 +1612,11 @@ namespace RaaiVan.Modules.CoreNetwork
 
         private static List<Node> _get_list_nodes(Guid applicationId, Guid listId, Guid? nodeTypeId, NodeTypes? nodeType)
         {
-            List<Node> lstNodes = new List<Node>();
-            DataProvider.GetListNodes(applicationId, ref lstNodes, listId, nodeTypeId, nodeType);
-            return lstNodes;
+            string strNodeTypeAdditionalId = null;
+            if (nodeType.HasValue) strNodeTypeAdditionalId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
+
+            return CNParsers.nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetListNodes"),
+                applicationId, listId, nodeTypeId, strNodeTypeAdditionalId));
         }
 
         public static List<Node> get_list_nodes(Guid applicationId, Guid listId)
@@ -1612,49 +1634,40 @@ namespace RaaiVan.Modules.CoreNetwork
             return _get_list_nodes(applicationId, listId, null, nodeType);
         }
         
-        private static void _save_tags(object obj)
+        public static Guid? add_tags(Guid applicationId, List<Tag> tags, Guid? currentUserId)
         {
-            DataProvider.AddTags((Guid)((Pair)(((Pair)obj).Second)).First,
-                (List<Tag>)((Pair)obj).First, (Guid)((Pair)(((Pair)obj).Second)).Second);
-        }
+            if (tags == null) tags = new List<Tag>();
+            
+            DBCompositeType<StringTableType> tagsList = new DBCompositeType<StringTableType>()
+                .add(tags.Select(t => new StringTableType(t.Text)).ToList());
 
-        public static void save_tags(Guid applicationId, List<string> tags, Guid currentUserId)
-        {
-            if (tags.Count == 0) return;
-            List<Tag> tagObjects = new List<Tag>();
-            foreach (string tg in tags)
-                tagObjects.Add(new Tag() { Text = tg });
-            Pair obj = new Pair(tagObjects, new Pair(applicationId, currentUserId));
-            ThreadPool.QueueUserWorkItem(new WaitCallback(_save_tags), obj);
+            return DBConnector.get_guid(applicationId, GetFullyQualifiedName("AddTags"),
+                applicationId, tagsList, currentUserId, DateTime.Now);
         }
 
         public static Guid? add_tag(Guid applicationId, Tag info)
         {
-            List<Tag> lst = new List<Tag>();
-            lst.Add(info);
-            return DataProvider.AddTags(applicationId, lst, info.CreatorUserID);
+            return info == null ? null : add_tags(applicationId, new List<Tag>() { info }, info.CreatorUserID);
         }
 
-        public static List<Tag> search_tags(Guid applicationId, 
-            string searchText, int? count = null, int? lowerBoundary = null)
+        public static List<Tag> search_tags(Guid applicationId, string searchText, int? count = null, int? lowerBoundary = null)
         {
-            List<Tag> tags = new List<Tag>();
-            DataProvider.SearchTags(applicationId, ref tags, searchText, count, lowerBoundary);
-            return tags;
+            return CNParsers.tags(DBConnector.read(applicationId, GetFullyQualifiedName("SearchTags"),
+                applicationId, ProviderUtil.get_search_text(searchText), count, lowerBoundary));
         }
 
         public static List<NodeCreator> get_node_creators(Guid applicationId, Guid nodeId, bool? full = null)
         {
-            List<NodeCreator> retList = new List<NodeCreator>();
-            DataProvider.GetNodeCreators(applicationId, ref retList, nodeId, full);
-            return retList;
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodeCreators"), 
+                applicationId, nodeId, full);
+
+            return CNParsers.node_creators(results, full);
         }
 
         private static List<Node> _get_creator_nodes(Guid applicationId, Guid userId, Guid? nodeTypeId)
         {
-            List<Node> retList = new List<Node>();
-            DataProvider.GetCreatorNodes(applicationId, ref retList, userId, nodeTypeId);
-            return retList;
+            return CNParsers.nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetCreatorNodes"),
+                applicationId, userId, nodeTypeId));
         }
 
         public static List<Node> get_creator_nodes(Guid applicationId, Guid userId)
@@ -1691,26 +1704,27 @@ namespace RaaiVan.Modules.CoreNetwork
             return remove_experts(applicationId, nodeId, new List<Guid>() { userId });
         }
 
-        public static List<Expert> get_experts(Guid applicationId, 
-            ref List<Guid> nodeIds, string searchText, int? count, long? lowerBoundary, ref long totalCount, bool hierarchy = false)
+        public static List<Expert> get_experts(Guid applicationId, List<Guid> nodeIds, 
+            string searchText, int? count, long? lowerBoundary, ref long totalCount, bool hierarchy = false)
         {
-            List<Expert> retList = new List<Expert>();
-            DataProvider.GetExperts(applicationId, ref retList, nodeIds, searchText, hierarchy, count, lowerBoundary, ref totalCount);
-            return retList;
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetExperts"),
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',',
+                ProviderUtil.get_search_text(searchText), hierarchy, count, lowerBoundary);
+
+            return CNParsers.experts(results, ref totalCount);
         }
 
-        public static List<Expert> get_experts(Guid applicationId, ref List<Guid> nodeIds, bool hierarchy = false)
+        public static List<Expert> get_experts(Guid applicationId, List<Guid> nodeIds, bool hierarchy = false)
         {
             long totalCount = 0;
-            return CNController.get_experts(applicationId, ref nodeIds, null, null, null, ref totalCount, hierarchy: hierarchy);
+            return CNController.get_experts(applicationId, nodeIds, null, null, null, ref totalCount, hierarchy: hierarchy);
         }
 
-        public static List<Expert> get_experts(Guid applicationId, 
-            Guid nodeId, string searchText, int? count, long? lowerBoundary, ref long totalCount, bool hierarchy = false)
+        public static List<Expert> get_experts(Guid applicationId, Guid nodeId, 
+            string searchText, int? count, long? lowerBoundary, ref long totalCount, bool hierarchy = false)
         {
-            List<Guid> _nIds = new List<Guid>();
-            _nIds.Add(nodeId);
-            return CNController.get_experts(applicationId, ref _nIds, searchText, count, lowerBoundary, ref totalCount, hierarchy: hierarchy);
+            return CNController.get_experts(applicationId, new List<Guid>() { nodeId }, 
+                searchText, count, lowerBoundary, ref totalCount, hierarchy: hierarchy);
         }
 
         public static List<Expert> get_experts(Guid applicationId, Guid nodeId, bool hierarchy = false)
@@ -1722,10 +1736,8 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<NodesCount> get_expertise_domains_count(Guid applicationId, Guid userId, Guid? nodeTypeId,
             Guid? nodeId, string additionalId, DateTime? lowerDateLimit, DateTime? upperDateLimit)
         {
-            List<NodesCount> retList = new List<NodesCount>();
-            DataProvider.GetExpertiseDomainsCount(applicationId,
-                ref retList, userId, nodeTypeId, nodeId, additionalId, lowerDateLimit, upperDateLimit);
-            return retList;
+            return CNParsers.nodes_count(DBConnector.read(applicationId, GetFullyQualifiedName("GetExpertiseDomainsCount"),
+                applicationId, userId, nodeTypeId, nodeId, additionalId, lowerDateLimit, upperDateLimit));
         }
 
         public static NodesCount get_expertise_domains_count(Guid applicationId, Guid userId, Guid nodeTypeId,
