@@ -415,53 +415,16 @@ namespace RaaiVan.Modules.Users
 
     public class Friend
     {
-        private User _User;
-        private DateTime _RequestDate;
-        private DateTime? _AcceptionDate;
-        private bool? _AreFriends;
-        private bool? _IsSender;
-        private int? _MutualFriendsCount;
-
+        public User User;
+        public DateTime? RequestDate;
+        public DateTime? AcceptionDate;
+        public bool? AreFriends;
+        public bool? IsSender;
+        public int? MutualFriendsCount;
 
         public Friend()
         {
-            _User = new User();
-        }
-
-        public User User
-        {
-            get { return _User; }
-            set { _User = value; }
-        }
-
-        public DateTime RequestDate
-        {
-            get { return _RequestDate; }
-            set { _RequestDate = value; }
-        }
-
-        public DateTime? AcceptionDate
-        {
-            get { return _AcceptionDate; }
-            set { _AcceptionDate = value; }
-        }
-
-        public bool? AreFriends
-        {
-            get { return _AreFriends; }
-            set { _AreFriends = value; }
-        }
-
-        public bool? IsSender
-        {
-            get { return _IsSender; }
-            set { _IsSender = value; }
-        }
-
-        public int? MutualFriendsCount
-        {
-            get { return _MutualFriendsCount; }
-            set { _MutualFriendsCount = value; }
+            User = new User();
         }
     }
     
