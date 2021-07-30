@@ -253,8 +253,10 @@
     <Compile Include="CallWebService.cs" />
     <Compile Include="CephStorage.cs" />
     <Compile Include="DataProvider.cs" />
+    <Compile Include="DBHelper\CompositeTypes\CNExtensionTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\FormFilterTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\GuidTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\GuidFloatTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\StringPairTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\StringTableType.cs" />
     <Compile Include="DBHelper\ITableType.cs" />

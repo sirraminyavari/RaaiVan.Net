@@ -41,6 +41,11 @@ namespace RaaiVan.Modules.CoreNetwork
             return nodeTypes;
         }
 
+        public static List<NodeType> node_types(DBResultSet results) {
+            long totalCount = 0;
+            return node_types(results, ref totalCount);
+        }
+
         public static List<RelationType> relation_types(DBResultSet results)
         {
             List<RelationType> relationTypes = new List<RelationType>();
@@ -409,6 +414,11 @@ namespace RaaiVan.Modules.CoreNetwork
             }
 
             return retList;
+        }
+
+        public static List<Expert> experts(DBResultSet results) {
+            long totalCount = 0;
+            return experts(results, ref totalCount); 
         }
 
         public static List<Expert> expertise_suggestions(DBResultSet results)
