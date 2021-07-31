@@ -114,7 +114,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             return (RVDataTable)tbl;
         }
 
-        public static DBResultSet read(string procedureName, params object[] parameters)
+        public static DBResultSet read(Func<DBResultSet, bool> action, string procedureName, params object[] parameters)
         {
             procedureName = MSSQL2PostgreSQL.resolve_table_name(procedureName);
 
@@ -165,7 +165,14 @@ namespace RaaiVan.Modules.GlobalUtilities
                             throw ex;
                         }
 
-                        tran.Commit();
+                        if (action != null)
+                        {
+                            if (!action(ret)) tran.Rollback();
+                            else tran.Commit();
+                        }
+                        else tran.Commit();
+
+                        tran.Dispose();
                         con.Close();
                     }
                 }

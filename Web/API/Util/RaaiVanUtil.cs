@@ -276,8 +276,8 @@ namespace RaaiVan.Web.API
 
                 if (username.ToLower() == "system") return false;
 
-                User theUser = new User();
-                UsersController.locked(applicationId, username, ref theUser);
+                User theUser = UsersController.locked(applicationId, username);
+                if (theUser == null) theUser = new User();
                 
                 if (theUser.UserID.HasValue)
                 {

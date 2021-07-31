@@ -17,14 +17,14 @@ namespace RaaiVan.Modules.GlobalUtilities
             return !ProviderUtil.reader2table(ref reader, ref tbl, closeReader: false) ? null : tbl;
         }
 
-        public static DBResultSet read(string procedureName, params object[] parameters)
+        public static DBResultSet read(Func<DBResultSet, bool> action, string procedureName, params object[] parameters)
         {
             procedureName = "[dbo].[" + procedureName + "]";
 
             try
             {
-                if (parameters.Any(p => p != null && typeof(IDBCompositeType).IsAssignableFrom(p.GetType())))
-                    return read_structured(procedureName, parameters);
+                if (action != null || parameters.Any(p => p != null && typeof(IDBCompositeType).IsAssignableFrom(p.GetType())))
+                    return read_structured(action, procedureName, parameters);
 
                 DBResultSet ret = new DBResultSet();
 
@@ -46,7 +46,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
         }
 
-        private static DBResultSet read_structured(string procedureName, params object[] parameters)
+        private static DBResultSet read_structured(Func<DBResultSet, bool> action, string procedureName, params object[] parameters)
         {
             DBResultSet ret = new DBResultSet();
 
@@ -82,6 +82,9 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                 con.Open();
 
+                SqlTransaction tran = action == null ? null : con.BeginTransaction();
+                if (tran != null) cmd.Transaction = tran;
+
                 using (IDataReader reader = (IDataReader)cmd.ExecuteReader())
                 {
                     do
@@ -90,6 +93,14 @@ namespace RaaiVan.Modules.GlobalUtilities
                     } while (reader.NextResult());
 
                     if (!reader.IsClosed) reader.Close();
+                }
+
+                if(action != null && tran != null)
+                {
+                    if (!action(ret)) tran.Rollback();
+                    else tran.Commit();
+
+                    tran.Dispose();
                 }
 
                 return ret;

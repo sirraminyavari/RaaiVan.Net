@@ -997,8 +997,10 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static bool? parse_bool(string input, bool? defaultValue = null)
         {
+            int intValue = 0;
+
             if (string.IsNullOrEmpty(input)) return defaultValue;
-            else if (input.ToLower() == "true" || input == "1") return true;
+            else if (input.ToLower() == "true" || (int.TryParse(input, out intValue) && intValue > 0)) return true;
             else if (input.ToLower() == "false" || input == "0") return false;
             else return defaultValue;
         }

@@ -270,7 +270,7 @@ namespace RaaiVan.Modules.Users
             return retList;
         }
 
-        public static List<HonorsAndAwards> honors_and_awards_experiences(DBResultSet results)
+        public static List<HonorsAndAwards> honors_and_awards(DBResultSet results)
         {
             List<HonorsAndAwards> retList = new List<HonorsAndAwards>();
 
@@ -373,6 +373,11 @@ namespace RaaiVan.Modules.Users
             }
 
             return retList;
+        }
+
+        public static List<Invitation> invitations(DBResultSet results) {
+            long totalCount = 0;
+            return invitations(results, ref totalCount);
         }
 
         public static void password(DBResultSet results, ref string password, ref string passwordSalt)
@@ -507,7 +512,7 @@ namespace RaaiVan.Modules.Users
             return retList;
         }
 
-        public static User lockout_date(DBResultSet results, ref bool isLockedOut)
+        public static User lockout_date(DBResultSet results)
         {
             RVDataTable table = results.get_table();
 
@@ -518,8 +523,6 @@ namespace RaaiVan.Modules.Users
                 LastLockoutDate = table.GetDate(0, "LastLockoutDate"),
                 IsApproved = table.GetBool(0, "IsApproved")
             };
-
-            isLockedOut = usr.IsLockedOut.HasValue && usr.IsLockedOut.Value;
 
             return usr;
         }

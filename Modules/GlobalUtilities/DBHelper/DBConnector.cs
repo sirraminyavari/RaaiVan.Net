@@ -23,7 +23,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             try
             {
-                return PostgreSQLConnector.read(procedureName, parameters);
+                return PostgreSQLConnector.read(action: null, procedureName, parameters);
             }
             catch {
                 return new DBResultSet();
@@ -31,7 +31,8 @@ namespace RaaiVan.Modules.GlobalUtilities
         }
         //end of to be removed
 
-        public static DBResultSet read(Guid? applicationId, string procedureName, params object[] parameters)
+        public static DBResultSet read(Func<DBResultSet, bool> action,
+            Guid? applicationId, string procedureName, params object[] parameters)
         {
             if (procedureName.ToLower().StartsWith("[dbo].["))
                 procedureName = procedureName.Substring("[dbo].[".Length, procedureName.Length - "[dbo].[".Length - 1);
@@ -45,8 +46,8 @@ namespace RaaiVan.Modules.GlobalUtilities
             try
             {
                 return RaaiVanSettings.UsePostgreSQL ?
-                    PostgreSQLConnector.read(procedureName, parameters) :
-                    MSSQLConnector.read(procedureName, parameters);
+                    PostgreSQLConnector.read(action, procedureName, parameters) :
+                    MSSQLConnector.read(action, procedureName, parameters);
             }
             catch (Exception ex)
             {
@@ -70,6 +71,11 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                 return new DBResultSet();
             }
+        }
+
+        public static DBResultSet read(Guid? applicationId, string procedureName, params object[] parameters)
+        {
+            return read(action: null, applicationId, procedureName, parameters);
         }
 
         public static bool succeed(Guid? applicationId, ref string errorMessage, 
