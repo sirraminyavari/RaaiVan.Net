@@ -199,6 +199,7 @@
     </Reference>
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.IO.FileSystem.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.IO.FileSystem.Primitives.4.3.0\lib\net46\System.IO.FileSystem.Primitives.dll</HintPath>
       <Private>True</Private>
@@ -254,6 +255,7 @@
     <Compile Include="CephStorage.cs" />
     <Compile Include="DataProvider.cs" />
     <Compile Include="DBHelper\CompositeTypes\CNExtensionTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\DocFileInfoTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\FormFilterTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\GuidTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\GuidFloatTableType.cs" />
@@ -263,6 +265,9 @@
     <Compile Include="DBHelper\DBCompositeType.cs" />
     <Compile Include="DBHelper\MSSQLConnector.cs" />
     <Compile Include="DBHelper\PostgreSQLConnector.cs" />
+    <Compile Include="Documents\DCTParsers.cs" />
+    <Compile Include="Documents\DocumentObjects.cs" />
+    <Compile Include="Documents\DocumentsController.cs" />
     <Compile Include="DocumentUtilities.cs" />
     <Compile Include="DownloadedFileMeta.cs" />
     <Compile Include="EmailQueue.cs" />
@@ -292,6 +297,9 @@
     <Compile Include="RVLang.cs" />
     <Compile Include="SMSSender.cs" />
     <Compile Include="USBToken.cs" />
+    <Compile Include="Users\UserObjects.cs" />
+    <Compile Include="Users\UsersController.cs" />
+    <Compile Include="Users\USRParsers.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

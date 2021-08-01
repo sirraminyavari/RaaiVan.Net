@@ -1253,7 +1253,7 @@ namespace RaaiVan.Web.API
                 .Select(x => x.ElementID.Value).ToList();
 
             List<DocFileInfo> attachedFiles =
-                DocumentsController.get_owner_files(paramsContainer.Tenant.Id, ref elementIds);
+                DocumentsController.get_owner_files(paramsContainer.Tenant.Id, elementIds);
             //end of get attached files
 
             //Remove elements which current user is not permited to view

@@ -1004,7 +1004,7 @@ namespace RaaiVan.Web.API
             foreach (StateConnection sc in connections)
                 if (sc.ID.HasValue) attIds.Add(sc.ID.Value);
 
-            List<DocFileInfo> attachedFiles = DocumentsController.get_owner_files(paramsContainer.Tenant.Id, ref attIds);
+            List<DocFileInfo> attachedFiles = DocumentsController.get_owner_files(paramsContainer.Tenant.Id, attIds);
 
             foreach (StateConnection conn in connections)
             {
@@ -2731,7 +2731,7 @@ namespace RaaiVan.Web.API
 
             List<Guid> histIds = history.Where(u => u.HistoryID.HasValue).Select(u => u.HistoryID.Value).ToList();
 
-            List<DocFileInfo> attachedFiles = DocumentsController.get_owner_files(paramsContainer.Tenant.Id, ref histIds);
+            List<DocFileInfo> attachedFiles = DocumentsController.get_owner_files(paramsContainer.Tenant.Id, histIds);
             List<HistoryFormInstance> histFormInstances =
                 WFController.get_history_form_instances(paramsContainer.Tenant.Id, ref histIds, true);
 
@@ -2906,7 +2906,7 @@ namespace RaaiVan.Web.API
             List<Guid> _attIds = connections.Select(u => u.ID.Value).ToList();
             _attIds.AddRange(dataNeedInstances.Select(u => u.InstanceID.Value).ToList());
             List<DocFileInfo> attachedFiles = optionsNotNeeded ? new List<DocFileInfo>() :
-                DocumentsController.get_owner_files(paramsContainer.Tenant.Id, ref _attIds);
+                DocumentsController.get_owner_files(paramsContainer.Tenant.Id, _attIds);
 
             List<StateConnectionForm> connectionForms = !isDirector || isTerminated ? new List<StateConnectionForm>() :
                 WFController.get_workflow_connection_forms(paramsContainer.Tenant.Id,

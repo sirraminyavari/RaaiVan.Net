@@ -96,9 +96,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataProvider.cs" />
-    <Compile Include="DocumentObjects.cs" />
-    <Compile Include="DocumentsController.cs" />
     <Compile Include="ExtractFileContents.cs" />
     <Compile Include="PDFUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

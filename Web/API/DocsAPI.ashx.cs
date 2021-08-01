@@ -693,7 +693,7 @@ namespace RaaiVan.Web.API
 
             bool result = destinationId.HasValue && copiedIds.Count > 0 &&
                 DocumentsController.copy_trees_or_tree_nodes(paramsContainer.Tenant.Id, destinationId.Value,
-                    copiedIds, paramsContainer.CurrentUserID.Value, ref createdIds);
+                    copiedIds, paramsContainer.CurrentUserID.Value).Count > 0;
 
             List<TreeNode> treeNodes = !result ? new List<TreeNode>() :
                 DocumentsController.get_tree_nodes(paramsContainer.Tenant.Id, createdIds);
@@ -716,12 +716,13 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            List<Guid> rootIds = new List<Guid>();
             string errorMessage = string.Empty;
 
-            bool result = destinationId.HasValue && movedIds.Count > 0 &&
+            List<Guid> rootIds = !destinationId.HasValue || movedIds.Count == 0 ? new List<Guid>() :
                 DocumentsController.move_trees_or_tree_nodes(paramsContainer.Tenant.Id, destinationId.Value,
-                    movedIds, paramsContainer.CurrentUserID.Value, ref rootIds, ref errorMessage);
+                    movedIds, paramsContainer.CurrentUserID.Value, ref errorMessage);
+
+            bool result = rootIds.Count > 0;
 
             List<TreeNode> treeNodes = !result ? new List<TreeNode>() :
                 DocumentsController.get_tree_nodes(paramsContainer.Tenant.Id, rootIds);

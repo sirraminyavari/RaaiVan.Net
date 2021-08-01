@@ -18,16 +18,16 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static bool initialize(Guid applicationId)
         {
-            return DBConnector.succeed(applicationId, GetFullyQualifiedName("Initialize"));
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("Initialize"), applicationId);
         }
 
-        public static bool add_node_type(Guid applicationId, NodeType Info, Guid? templateFormId = null)
+        public static bool add_node_type(Guid applicationId, NodeType info, Guid? templateFormId = null)
         {
-            if (Info.AdditionalID.HasValue) Info.NodeTypeAdditionalID = Info.AdditionalID.Value.ToString();
+            if (info.AdditionalID.HasValue) info.NodeTypeAdditionalID = info.AdditionalID.Value.ToString();
 
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddNodeType"),
-                applicationId, Info.NodeTypeID, Info.NodeTypeAdditionalID, Info.Name, Info.ParentID,
-                Info.IsService, Info.TemplateTypeID, templateFormId, Info.CreatorUserID, DateTime.Now);
+                applicationId, info.NodeTypeID, info.NodeTypeAdditionalID, info.Name, info.ParentID,
+                info.IsService, info.TemplateTypeID, templateFormId, info.CreatorUserID, DateTime.Now);
         }
 
         public static bool rename_node_type(Guid applicationId, NodeType Info)
@@ -81,7 +81,7 @@ namespace RaaiVan.Modules.CoreNetwork
             string searchText, List<ExtensionType> extensions, bool? archive = false)
         {
             long totalCount = 0;
-            return CNController.get_node_types(applicationId, searchText, null, null, archive, extensions, null, null, ref totalCount);
+            return get_node_types(applicationId, searchText, null, null, archive, extensions, null, null, ref totalCount);
         }
 
         private static NodeType _get_node_type(Guid applicationId, Guid? nodeTypeId, NodeTypes? nodeType, Guid? nodeId)
@@ -177,15 +177,14 @@ namespace RaaiVan.Modules.CoreNetwork
         {
             List<KeyValuePair<KeyValuePair<Guid, Guid>, Guid>> _lstRelations = new List<KeyValuePair<KeyValuePair<Guid, Guid>, Guid>>();
 
-            foreach (Relation _item in relations)
-            {
+            relations.Where(r => r.Source.NodeID.HasValue && r.Destination.NodeID.HasValue).ToList().ForEach(r => {
                 Guid relTypeId = Guid.Empty;
-                if (_item.RelationType.RelationTypeID.HasValue) relTypeId = _item.RelationType.RelationTypeID.Value;
+                if (r.RelationType.RelationTypeID.HasValue) relTypeId = r.RelationType.RelationTypeID.Value;
 
                 _lstRelations.Add(new KeyValuePair<KeyValuePair<Guid, Guid>, Guid>(
-                    new KeyValuePair<Guid, Guid>(_item.Source.NodeID.Value, _item.Destination.NodeID.Value),
+                    new KeyValuePair<Guid, Guid>(r.Source.NodeID.Value, r.Destination.NodeID.Value),
                     relTypeId));
-            }
+            });
 
             string strRelations = ProviderUtil.triple_list_to_string<Guid, Guid, Guid>(ref _lstRelations, '|', ',');
 
@@ -202,8 +201,10 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool make_correlations(Guid applicationId, ref List<Relation> relations, Guid creatorUserId)
         {
             List<KeyValuePair<Guid, Guid>> _lstRelations = new List<KeyValuePair<Guid, Guid>>();
-            foreach (Relation _item in relations)
-                _lstRelations.Add(new KeyValuePair<Guid, Guid>(_item.Source.NodeID.Value, _item.Destination.NodeID.Value));
+
+            relations.Where(r => r.Source.NodeID.HasValue && r.Destination.NodeID.HasValue).ToList().ForEach(r => {
+                _lstRelations.Add(new KeyValuePair<Guid, Guid>(r.Source.NodeID.Value, r.Destination.NodeID.Value));
+            });
 
             string strRelations = ProviderUtil.pair_list_to_string<Guid, Guid>(ref _lstRelations, '|', ',');
 
@@ -215,8 +216,10 @@ namespace RaaiVan.Modules.CoreNetwork
             List<Relation> relations, Guid? relationTypeId, Guid lastModifierUserId, bool? reverseAlso = null)
         {
             List<KeyValuePair<Guid, Guid>> _lstRelations = new List<KeyValuePair<Guid, Guid>>();
-            foreach (Relation _item in relations)
-                _lstRelations.Add(new KeyValuePair<Guid, Guid>(_item.Source.NodeID.Value, _item.Destination.NodeID.Value));
+
+            relations.Where(r => r.Source.NodeID.HasValue && r.Destination.NodeID.HasValue).ToList().ForEach(r => {
+                _lstRelations.Add(new KeyValuePair<Guid, Guid>(r.Source.NodeID.Value, r.Destination.NodeID.Value));
+            });
 
             string strRelations = ProviderUtil.pair_list_to_string<Guid, Guid>(ref _lstRelations, '|', ',');
 
@@ -233,7 +236,7 @@ namespace RaaiVan.Modules.CoreNetwork
         private static bool _add_node(Guid applicationId, Node info, bool? addMember = null, 
             NodeTypes? nodeType = null, string nodeTypeAdditionalId = null)
         {
-            if (nodeType != null) nodeTypeAdditionalId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
+            if (nodeType.HasValue) nodeTypeAdditionalId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
             if (string.IsNullOrEmpty(info.AdditionalID)) info.AdditionalID = null;
 
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddNode"),
@@ -284,7 +287,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool set_document_tree_node_id(Guid applicationId, 
             Guid nodeId, Guid? documentTreeNodeId, Guid currentUserId)
         {
-            return CNController.set_document_tree_node_id(applicationId, new List<Guid>() { nodeId }, documentTreeNodeId, currentUserId);
+            return set_document_tree_node_id(applicationId, new List<Guid>() { nodeId }, documentTreeNodeId, currentUserId);
         }
 
         public static bool modify_node_name(Guid applicationId, Node info)
@@ -366,7 +369,7 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static bool set_node_searchability(Guid applicationId, Guid nodeId, bool searchable, Guid currentUserId)
         {
-            return CNController.set_nodes_searchability(applicationId, new List<Guid>() { nodeId }, searchable, currentUserId);
+            return set_nodes_searchability(applicationId, new List<Guid>() { nodeId }, searchable, currentUserId);
         }
 
         public static bool remove_nodes(Guid applicationId, List<Guid> nodeIds, bool? removeHierarchy, Guid lastModifierUserId)
@@ -572,7 +575,7 @@ namespace RaaiVan.Modules.CoreNetwork
             if (filters == null) filters = new List<FormFilter>();
 
             string strAddId = null;
-            if (nodeType != null) strAddId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
+            if (nodeType.HasValue) strAddId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
             //end of prepare
 
             DBCompositeType<FormFilterTableType> formFilters = new DBCompositeType<FormFilterTableType>()
@@ -927,7 +930,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<HierarchyAdmin> get_area_admins(Guid applicationId, 
             Guid nodeId, ref Node node, Service service = null)
         {
-            if (service == null) service = CNController.get_service(applicationId, 
+            if (service == null) service = get_service(applicationId, 
                 node != null && node.NodeTypeID.HasValue ? node.NodeTypeID.Value : nodeId);
             if (service == null) return new List<HierarchyAdmin>();
 
@@ -935,31 +938,33 @@ namespace RaaiVan.Modules.CoreNetwork
             {
                 case ServiceAdminType.AreaAdmin:
                 case ServiceAdminType.ComplexAdmin:
-                    if (node == null) node = CNController.get_node(applicationId, nodeId);
+                    if (node == null) node = get_node(applicationId, nodeId);
 
                     if (node == null || !node.AdminAreaID.HasValue)
                         return new List<HierarchyAdmin>();
                     else if (service.AdminType == ServiceAdminType.ComplexAdmin)
-                        return CNController.get_complex_admins(applicationId, node.AdminAreaID.Value)
+                        return !node.AdminAreaID.HasValue ? new List<HierarchyAdmin>() : 
+                            get_complex_admins(applicationId, node.AdminAreaID.Value)
                             .Select(u => new HierarchyAdmin() { User = new User() { UserID = u }, Level = 0 }).ToList();
                     else
-                        return CNController.get_hierarchy_admins(applicationId, node.AdminAreaID.Value).Where(
+                        return !node.AdminAreaID.HasValue ? new List<HierarchyAdmin>() : 
+                            get_hierarchy_admins(applicationId, node.AdminAreaID.Value).Where(
                             u => !service.MaxAcceptableAdminLevel.HasValue || service.MaxAcceptableAdminLevel < 0 ||
                                 u.Level <= service.MaxAcceptableAdminLevel).Select(u => new HierarchyAdmin()
                                 {
-                                    User = new User() { UserID = u.User.UserID.Value },
+                                    User = new User() { UserID = u.User.UserID },
                                     Level = u.Level
                                 }).ToList();
                 case ServiceAdminType.SpecificNode:
                     return !service.AdminNode.NodeID.HasValue ? new List<HierarchyAdmin>() :
-                        CNController.get_members(applicationId, service.AdminNode.NodeID.Value,
+                        get_members(applicationId, service.AdminNode.NodeID.Value,
                             pending: false, admin: true).Select(u => new HierarchyAdmin()
                             {
-                                User = new User() { UserID = u.Member.UserID.Value },
+                                User = new User() { UserID = u.Member.UserID },
                                 Level = 0
                             }).ToList();
                 case ServiceAdminType.Registerer:
-                    if (node == null) node = CNController.get_node(applicationId, nodeId);
+                    if (node == null) node = get_node(applicationId, nodeId);
                     List<Guid> retList = new List<Guid>();
                     if (node != null && node.Creator.UserID.HasValue) retList.Add(node.Creator.UserID.Value);
                     return retList.Select(u => new HierarchyAdmin() { User = new User() { UserID = u }, Level = 0 }).ToList();
@@ -971,9 +976,9 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<HierarchyAdmin> get_node_admins(Guid applicationId, 
             Guid nodeId, Node nodeObject = null, Service service = null)
         {
-            if (nodeObject == null && (nodeObject = CNController.get_node(applicationId, nodeId)) == null)
+            if (nodeObject == null && (nodeObject = get_node(applicationId, nodeId)) == null)
                 nodeObject = new Node();
-            if (service == null && (service = CNController.get_service(applicationId, 
+            if (service == null && (service = get_service(applicationId, 
                 nodeObject != null && nodeObject.NodeTypeID.HasValue ? nodeObject.NodeTypeID.Value : nodeId)) == null)
                 service = new Service();
             
@@ -983,20 +988,20 @@ namespace RaaiVan.Modules.CoreNetwork
             {
                 case ServiceAdminType.AreaAdmin:
                     if (nodeObject.AdminAreaID.HasValue)
-                        admins = CNController.get_area_admins(applicationId, nodeId, ref nodeObject);
+                        admins = get_area_admins(applicationId, nodeId, ref nodeObject);
                     break;
                 case ServiceAdminType.ComplexAdmin:
                     if (nodeObject.AdminAreaID.HasValue)
-                        admins = CNController.get_complex_admins(applicationId, nodeObject.AdminAreaID.Value)
+                        admins = get_complex_admins(applicationId, nodeObject.AdminAreaID.Value)
                             .Select(u => new HierarchyAdmin() { User = new User() { UserID = u }, Level = 0 }).ToList(); 
                     break;
                 case ServiceAdminType.SpecificNode:
                     if (service.AdminNode.NodeID.HasValue)
                     {
-                        admins = CNController.get_members(applicationId, service.AdminNode.NodeID.Value,
+                        admins = get_members(applicationId, service.AdminNode.NodeID.Value,
                             pending: false, admin: true).Select(u => new HierarchyAdmin()
                             {
-                                User = new User() { UserID = u.Member.UserID.Value },
+                                User = new User() { UserID = u.Member.UserID },
                                 Level = 0
                             }).ToList();
                     }
@@ -1004,7 +1009,7 @@ namespace RaaiVan.Modules.CoreNetwork
                 case ServiceAdminType.Registerer:
                     if (nodeObject.Creator.UserID.HasValue) admins.Add(new HierarchyAdmin()
                     {
-                        User = new User() { UserID = nodeObject.Creator.UserID.Value },
+                        User = new User() { UserID = nodeObject.Creator.UserID },
                         Level = 0
                     });
                     break;
@@ -1017,13 +1022,13 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid? areaId, bool? isCreator, Service service = null, List<NodeCreator> contributors = null)
         {
             if (service == null)
-                service = CNController.get_service(applicationId, nodeTypeId.HasValue ? nodeTypeId.Value : nodeId);
+                service = get_service(applicationId, nodeTypeId.HasValue ? nodeTypeId.Value : nodeId);
             if (service == null) service = new Service();
 
             if (!areaId.HasValue && 
                 (service.AdminType == ServiceAdminType.AreaAdmin || service.AdminType == ServiceAdminType.ComplexAdmin))
             {
-                Node nd = CNController.get_node(applicationId, nodeId);
+                Node nd = get_node(applicationId, nodeId);
                 if (nd != null) areaId = nd.AdminAreaID;
             }
             
@@ -1033,21 +1038,24 @@ namespace RaaiVan.Modules.CoreNetwork
                     if (!areaId.HasValue) return false;
                     else
                     {
-                        if (contributors == null) contributors = CNController.get_node_creators(applicationId, nodeId);
+                        if (contributors == null) contributors = get_node_creators(applicationId, nodeId);
+
+                        List<Guid> contributorIds = contributors
+                            .Where(c => c.User.UserID.HasValue).Select(u => u.User.UserID.Value).ToList();
+                        int maxLevel = !service.MaxAcceptableAdminLevel.HasValue ? 0 : service.MaxAcceptableAdminLevel.Value;
 
                         return service.MaxAcceptableAdminLevel.HasValue ? 
-                            CNController.is_hierarchy_admin(applicationId, areaId.Value, userId,
-                            contributors.Select(u => u.User.UserID.Value).ToList(), service.MaxAcceptableAdminLevel.Value) :
-                            CNController.is_hierarchy_admin(applicationId, areaId.Value, userId, contributors.Select(u => u.User.UserID.Value).ToList());
+                            is_hierarchy_admin(applicationId, areaId.Value, userId, contributorIds, maxLevel) :
+                            is_hierarchy_admin(applicationId, areaId.Value, userId, contributorIds);
                     }
                 case ServiceAdminType.ComplexAdmin:
-                    return !areaId.HasValue ? false : CNController.is_complex_admin(applicationId, areaId.Value, userId);
+                    return !areaId.HasValue ? false : is_complex_admin(applicationId, areaId.Value, userId);
                 case ServiceAdminType.SpecificNode:
                     return !service.AdminNode.NodeID.HasValue ? false :
-                        CNController.is_admin_member(applicationId, service.AdminNode.NodeID.Value, userId);
+                        is_admin_member(applicationId, service.AdminNode.NodeID.Value, userId);
                 case ServiceAdminType.Registerer:
                     return isCreator.HasValue ? isCreator.Value : 
-                        CNController.is_node_creator(applicationId, nodeId, userId);
+                        is_node_creator(applicationId, nodeId, userId);
             }
 
             return false;
@@ -1063,10 +1071,13 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid? nodeTypeId = null;
             Guid? areaId = null;
 
-            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetUser2NodeStatus"), userId, nodeId);
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetUser2NodeStatus"), 
+                applicationId, userId, nodeId);
 
             CNParsers.user2node_status(results, ref nodeTypeId, ref areaId, ref isCreator, ref isContributor,
                 ref isExpert, ref isMember, ref isAdminMember, ref isServiceAdmin);
+
+            if (!nodeTypeId.HasValue) return false;
 
             if (service == null) service = CNController.get_service(applicationId, nodeTypeId.Value);
             if (service == null) service = new Service();
@@ -1125,7 +1136,7 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid userId, Guid nodeId, bool defaultPermissionForExperts)
         {
             bool editSuggestion = false;
-            return CNController.has_edit_permission(applicationId, 
+            return has_edit_permission(applicationId, 
                 userId, nodeId, defaultPermissionForExperts, ref editSuggestion);
         }
 
@@ -1139,7 +1150,7 @@ namespace RaaiVan.Modules.CoreNetwork
         {
             List<Guid> retList = new List<Guid>();
 
-            Service service = CNController.get_service(applicationId, nodeId);
+            Service service = get_service(applicationId, nodeId);
 
             editSuggestion = service == null || !service.EditSuggestion.HasValue || service.EditSuggestion.Value;
 
@@ -1152,26 +1163,28 @@ namespace RaaiVan.Modules.CoreNetwork
                 )
             )
             {
-                return CNController.get_experts(applicationId, nodeId).Select(u => u.User.UserID.Value).ToList();
+                return get_experts(applicationId, nodeId)
+                    .Where(u => u.User.UserID.HasValue)
+                    .Select(u => u.User.UserID.Value).ToList();
             }
             else if (service == null) return new List<Guid>();
 
             Node node = null;
 
             if (service.EditableForAdmin.HasValue && service.EditableForAdmin.Value)
-                CNController.get_area_admins(applicationId, nodeId, ref node, service);
+                get_area_admins(applicationId, nodeId, ref node, service);
 
             if (service.EditableForContributors.HasValue && service.EditableForContributors.Value)
-                retList.AddRange(CNController.get_node_creators(applicationId, nodeId).Select(u => u.User.UserID.Value));
+                retList.AddRange(get_node_creators(applicationId, nodeId).Select(u => u.User.UserID.Value));
 
             if (service.EditableForCreator.HasValue && service.EditableForCreator.Value)
-                retList.Add(CNController.get_node(applicationId, nodeId).Creator.UserID.Value);
+                retList.Add(get_node(applicationId, nodeId).Creator.UserID.Value);
 
             if (service.EditableForExperts.HasValue && service.EditableForExperts.Value)
-                retList.AddRange(CNController.get_experts(applicationId, nodeId).Select(u => u.User.UserID.Value));
+                retList.AddRange(get_experts(applicationId, nodeId).Select(u => u.User.UserID.Value));
 
             if (service.EditableForMembers.HasValue && service.EditableForMembers.Value)
-                retList.AddRange(CNController.get_members(applicationId, nodeId, pending: false, admin: null)
+                retList.AddRange(get_members(applicationId, nodeId, pending: false, admin: null)
                     .Select(u => u.Member.UserID.Value));
 
             return retList.Distinct().ToList();
@@ -1181,7 +1194,7 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid nodeId, bool defaultPermissionForExperts)
         {
             bool editSuggestion = false;
-            return CNController.get_users_with_edit_permission(applicationId,
+            return get_users_with_edit_permission(applicationId,
                 nodeId, defaultPermissionForExperts, ref editSuggestion);
         }
 
@@ -1329,7 +1342,7 @@ namespace RaaiVan.Modules.CoreNetwork
             ref List<Guid> nodeTypeIds, NodeTypes? nodeType, bool? admin = null)
         {
             string additionalTypeId = null;
-            if (nodeType != null) additionalTypeId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
+            if (nodeType.HasValue) additionalTypeId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
 
             DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetMemberNodes"),
                 applicationId, ProviderUtil.list_to_string<Guid>(userIds),
@@ -1454,13 +1467,13 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid nodeId, int? count = null, long? lowerBoundary = null)
         {
             long totalCount = 0;
-            return CNController.get_node_fans_user_ids(applicationId, nodeId, count, lowerBoundary, ref totalCount);
+            return get_node_fans_user_ids(applicationId, nodeId, count, lowerBoundary, ref totalCount);
         }
 
         public static List<User> get_node_fans(Guid applicationId, 
             Guid nodeId, int? count, long? lowerBoundary, ref long totalCount)
         {
-            return UsersController.get_users(applicationId, CNController.get_node_fans_user_ids(applicationId,
+            return UsersController.get_users(applicationId, get_node_fans_user_ids(applicationId,
                 nodeId, count, lowerBoundary, ref totalCount));
         }
 
@@ -1576,13 +1589,13 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<NodeList> get_lists(Guid applicationId, 
             Guid nodeTypeId, string searchText = null, Guid? minId = null, int? count = 1000)
         {
-            return CNController._get_lists(applicationId, nodeTypeId, null, searchText, minId, count);
+            return _get_lists(applicationId, nodeTypeId, null, searchText, minId, count);
         }
 
         public static List<NodeList> get_lists(Guid applicationId, 
             NodeTypes nodeType, string searchText = null, Guid? minId = null, int count = 1000)
         {
-            return CNController._get_lists(applicationId, null, nodeType, searchText, minId, count);
+            return _get_lists(applicationId, null, nodeType, searchText, minId, count);
         }
 
         public static bool add_nodes_to_complex(Guid applicationId, Guid listId, List<Guid> nodeIds, Guid creatorUserId)
@@ -1714,20 +1727,20 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<Expert> get_experts(Guid applicationId, List<Guid> nodeIds, bool hierarchy = false)
         {
             long totalCount = 0;
-            return CNController.get_experts(applicationId, nodeIds, null, null, null, ref totalCount, hierarchy: hierarchy);
+            return get_experts(applicationId, nodeIds, null, null, null, ref totalCount, hierarchy: hierarchy);
         }
 
         public static List<Expert> get_experts(Guid applicationId, Guid nodeId, 
             string searchText, int? count, long? lowerBoundary, ref long totalCount, bool hierarchy = false)
         {
-            return CNController.get_experts(applicationId, new List<Guid>() { nodeId }, 
+            return get_experts(applicationId, new List<Guid>() { nodeId }, 
                 searchText, count, lowerBoundary, ref totalCount, hierarchy: hierarchy);
         }
 
         public static List<Expert> get_experts(Guid applicationId, Guid nodeId, bool hierarchy = false)
         {
             long totalCount = 0;
-            return CNController.get_experts(applicationId, nodeId, null, null, null, ref totalCount, hierarchy: hierarchy);
+            return get_experts(applicationId, nodeId, null, null, null, ref totalCount, hierarchy: hierarchy);
         }
 
         public static List<NodesCount> get_expertise_domains_count(Guid applicationId, Guid userId, Guid? nodeTypeId,
@@ -1740,7 +1753,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static NodesCount get_expertise_domains_count(Guid applicationId, Guid userId, Guid nodeTypeId,
             DateTime? lowerDateLimit, DateTime? upperDateLimit)
         {
-            return CNController.get_expertise_domains_count(applicationId, 
+            return get_expertise_domains_count(applicationId, 
                 userId, nodeTypeId, null, null, lowerDateLimit, upperDateLimit).FirstOrDefault();
         }
 
@@ -1911,7 +1924,7 @@ namespace RaaiVan.Modules.CoreNetwork
         {
             List<Guid> nIds = new List<Guid>();
             nIds.Add(nodeId);
-            return CNController.get_node_info(applicationId, nIds, currentUserId, tags, description, creator, 
+            return get_node_info(applicationId, nIds, currentUserId, tags, description, creator, 
                 contributorsCount, likesCount, visitsCount, expertsCount, membersCount, childsCount, 
                 relatedNodesCount, likeStatus).FirstOrDefault();
         }
@@ -2021,7 +2034,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static NodesCount get_intellectual_properties_count(Guid applicationId, Guid userId, Guid nodeTypeId,
             Guid? currentUserId, bool? isDocument, DateTime? lowerDateLimit, DateTime? upperDateLimit)
         {
-            return CNController.get_intellectual_properties_count(applicationId,
+            return get_intellectual_properties_count(applicationId,
                 userId, nodeTypeId, null, null, currentUserId, isDocument, lowerDateLimit, upperDateLimit).FirstOrDefault();
         }
 
@@ -2608,7 +2621,7 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid? wfDirectorNodeId, Guid? wfDirectorUserId, ref string message)
         {
             List<Dashboard> lst = new List<Dashboard>();
-            return CNController.register_new_node(applicationId, nodeObject, workflowId, formInstanceId, 
+            return register_new_node(applicationId, nodeObject, workflowId, formInstanceId, 
                 wfDirectorNodeId, wfDirectorUserId, ref lst, ref message);
         }
 
