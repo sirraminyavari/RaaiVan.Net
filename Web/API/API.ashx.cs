@@ -672,7 +672,7 @@ namespace RaaiVan.Web.API
             }
 
             bool result = FGController.save_form_instance_elements(paramsContainer.Tenant.Id, 
-                ref toBeSaved, new List<Guid>(), currentUserId);
+                toBeSaved, new List<Guid>(), currentUserId);
 
             res["Result"] = result ? "ok" : "nok";
             res["Message"] = result ? "form saved successfully" : "saving form failed";

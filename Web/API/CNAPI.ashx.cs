@@ -6288,7 +6288,7 @@ namespace RaaiVan.Web.API
                 //Save instance elements
                 PublicMethods.split_list<FormElement>(formElements, SIZE, elems => {
                     FGController.save_form_instance_elements(paramsContainer.Tenant.Id,
-                        ref elems, new List<Guid>(), paramsContainer.CurrentUserID.Value);
+                        elems, new List<Guid>(), paramsContainer.CurrentUserID.Value);
                 });
                 //end of Save instance elements
 

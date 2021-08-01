@@ -210,7 +210,7 @@ namespace RaaiVan.Modules.FormGenerator
                 FGController.create_form_instances(applicationId, newFormInstances, currentUserId);
             
             result = result && FGController.save_form_instance_elements(applicationId, 
-                ref newElements, new List<Guid>(), currentUserId, ref errorMessage);
+                newElements, new List<Guid>(), currentUserId, ref errorMessage);
 
             if(!result && newFiles != null)
                 newFiles.ForEach(f => f.move(applicationId, FolderNames.Attachments, FolderNames.TemporaryFiles));

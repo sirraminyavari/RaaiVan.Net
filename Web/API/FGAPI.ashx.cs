@@ -1425,7 +1425,7 @@ namespace RaaiVan.Web.API
             string errorMessage = string.Empty;
 
             bool result = FGController.save_form_instance_elements(paramsContainer.Tenant.Id,
-                ref elements, elementsToClear, paramsContainer.CurrentUserID.Value, ref errorMessage);
+                elements, elementsToClear, paramsContainer.CurrentUserID.Value, ref errorMessage);
 
             if (!result && attachedFiles != null)
                 attachedFiles.ForEach(f => f.move(paramsContainer.Tenant.Id, FolderNames.Attachments, FolderNames.TemporaryFiles));
@@ -1687,7 +1687,7 @@ namespace RaaiVan.Web.API
             if (!paramsContainer.GBEdit) return;
 
             bool result = ownerId.HasValue && FGController.set_element_limits(paramsContainer.Tenant.Id,
-                ownerId.Value, ref elementIds, paramsContainer.CurrentUserID.Value);
+                ownerId.Value, elementIds, paramsContainer.CurrentUserID.Value);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";

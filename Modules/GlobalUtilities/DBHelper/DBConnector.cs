@@ -332,8 +332,8 @@ namespace RaaiVan.Modules.GlobalUtilities
             return retDic;
         }
 
-        public static Dictionary<Guid, bool> get_items_status_bool(Guid? applicationId, string procedureName,
-            ref long totalCount, params object[] parameters)
+        public static Dictionary<Guid, bool> get_items_status_bool(Guid? applicationId, ref long totalCount, 
+            string procedureName, params object[] parameters)
         {
             RVDataTable table = read(applicationId, procedureName, parameters).get_table();
 

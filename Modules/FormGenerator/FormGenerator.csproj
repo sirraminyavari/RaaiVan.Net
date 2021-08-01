@@ -75,9 +75,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataProvider.cs" />
-    <Compile Include="FGController.cs" />
-    <Compile Include="FGObjects.cs" />
     <Compile Include="FGImport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

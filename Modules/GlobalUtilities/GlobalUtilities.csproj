@@ -256,7 +256,10 @@
     <Compile Include="DataProvider.cs" />
     <Compile Include="DBHelper\CompositeTypes\CNExtensionTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\DocFileInfoTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\FormInstanceTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\FormElementTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\FormFilterTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\GuidPairTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\GuidTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\GuidFloatTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\StringPairTableType.cs" />
@@ -273,6 +276,9 @@
     <Compile Include="EmailQueue.cs" />
     <Compile Include="EmailTemplates.cs" />
     <Compile Include="ErrorHandler.cs" />
+    <Compile Include="Forms\FGController.cs" />
+    <Compile Include="Forms\FGObjects.cs" />
+    <Compile Include="Forms\FGParsers.cs" />
     <Compile Include="GlobalController.cs" />
     <Compile Include="GlobalUtilities.cs" />
     <Compile Include="DBHelper\MSSQL2PostgreSQL.cs" />
