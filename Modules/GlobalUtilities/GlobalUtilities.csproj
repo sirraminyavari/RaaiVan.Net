@@ -256,6 +256,9 @@
     <Compile Include="DBCall\CoreNetwork\CNController.cs" />
     <Compile Include="DBCall\CoreNetwork\CNObjects.cs" />
     <Compile Include="DBCall\CoreNetwork\CNParsers.cs" />
+    <Compile Include="DBCall\DataExchange\DEController.cs" />
+    <Compile Include="DBCall\DataExchange\DEObjects.cs" />
+    <Compile Include="DBCall\DataExchange\DEParsers.cs" />
     <Compile Include="DBCall\Privacy\PrivacyController.cs" />
     <Compile Include="DBCall\Privacy\PrivacyObjects.cs" />
     <Compile Include="DBCall\Privacy\PRVCParsers.cs" />
@@ -263,6 +266,12 @@
     <Compile Include="DBCall\Wiki\WikiController.cs" />
     <Compile Include="DBCall\Wiki\WikiObjects.cs" />
     <Compile Include="DBCall\Wiki\WikiParsers.cs" />
+    <Compile Include="DBHelper\CompositeTypes\ExchangeAuthorTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\ExchangePermissionTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\ExchangeRelationTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\ExchangeMemberTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\ExchangeUserTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\ExchangeNodeTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\GuidPairBitTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\PrivacyAudienceTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\CNExtensionTableType.cs" />

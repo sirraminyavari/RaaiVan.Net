@@ -68,7 +68,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
@@ -76,32 +75,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataProvider.cs" />
-    <Compile Include="DEController.cs" />
-    <Compile Include="DEObjects.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GlobalUtilities\GlobalUtilities.csproj">
-      <Project>{2B4F83EF-6E5D-49B7-A54E-6C72D0B3B9A4}</Project>
-      <Name>GlobalUtilities</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Log\Log.csproj">
-      <Project>{6861294c-2a08-4c7b-9cdd-af2f9b3dd13c}</Project>
-      <Name>Log</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Privacy\Privacy.csproj">
-      <Project>{a9ec2a73-025c-4c50-975a-b44f0618f4b0}</Project>
-      <Name>Privacy</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Users\Users.csproj">
-      <Project>{b2f7609d-fe8d-4518-85bc-d03f081362da}</Project>
-      <Name>Users</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
