@@ -315,7 +315,7 @@ namespace RaaiVan.Web.API
             if (!isAdmin) creatorUserId = paramsContainer.CurrentUserID;
             List<Change> changes = !paramsContainer.IsAuthenticated ? new List<Change>() :
                 WikiController.get_changes(paramsContainer.Tenant.Id,
-                    ref paragraphIds, creatorUserId, WikiStatuses.Pending, false);
+                    paragraphIds, creatorUserId, WikiStatuses.Pending, false);
 
             paragraphIds.AddRange(changes.Select(v => v.ChangeID.Value).ToList());
             List<DocFileInfo> attachedFiles = DocumentsController.get_owner_files(paramsContainer.Tenant.Id, paragraphIds);

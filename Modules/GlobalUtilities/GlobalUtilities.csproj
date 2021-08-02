@@ -253,9 +253,21 @@
   <ItemGroup>
     <Compile Include="CallWebService.cs" />
     <Compile Include="CephStorage.cs" />
+    <Compile Include="DBCall\CoreNetwork\CNController.cs" />
+    <Compile Include="DBCall\CoreNetwork\CNObjects.cs" />
+    <Compile Include="DBCall\CoreNetwork\CNParsers.cs" />
+    <Compile Include="DBCall\Privacy\PrivacyController.cs" />
+    <Compile Include="DBCall\Privacy\PrivacyObjects.cs" />
+    <Compile Include="DBCall\Privacy\PRVCParsers.cs" />
     <Compile Include="DBCall\RV\RVParsers.cs" />
+    <Compile Include="DBCall\Wiki\WikiController.cs" />
+    <Compile Include="DBCall\Wiki\WikiObjects.cs" />
+    <Compile Include="DBCall\Wiki\WikiParsers.cs" />
+    <Compile Include="DBHelper\CompositeTypes\GuidPairBitTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\PrivacyAudienceTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\CNExtensionTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\DocFileInfoTableType.cs" />
+    <Compile Include="DBHelper\CompositeTypes\GuidStringPairTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\TaggedItemTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\EmailQueueItemTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\FormInstanceTableType.cs" />

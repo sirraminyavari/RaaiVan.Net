@@ -71,7 +71,6 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
@@ -85,43 +84,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CNController.cs" />
-    <Compile Include="CNObjects.cs" />
-    <Compile Include="CNParsers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FormGenerator\FormGenerator.csproj">
-      <Project>{9bd7f493-2515-4884-96b4-7b9912c38593}</Project>
-      <Name>FormGenerator</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GlobalUtilities\GlobalUtilities.csproj">
-      <Project>{2b4f83ef-6e5d-49b7-a54e-6c72d0b3b9a4}</Project>
-      <Name>GlobalUtilities</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Log\Log.csproj">
-      <Project>{6861294c-2a08-4c7b-9cdd-af2f9b3dd13c}</Project>
-      <Name>Log</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Privacy\Privacy.csproj">
-      <Project>{a9ec2a73-025c-4c50-975a-b44f0618f4b0}</Project>
-      <Name>Privacy</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RaaiVanConfig\RaaiVanConfig.csproj">
-      <Project>{d54aebe3-5826-4a94-bfd9-4029612a89b1}</Project>
-      <Name>RaaiVanConfig</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Users\Users.csproj">
-      <Project>{b2f7609d-fe8d-4518-85bc-d03f081362da}</Project>
-      <Name>Users</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
