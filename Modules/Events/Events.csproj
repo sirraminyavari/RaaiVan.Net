@@ -63,7 +63,6 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
@@ -76,36 +75,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataProvider.cs" />
-    <Compile Include="EventObjects.cs" />
-    <Compile Include="EventsController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CoreNetwork\CoreNetwork.csproj">
-      <Project>{064B0EBE-7A12-4082-9A1C-5F96F3C2E990}</Project>
-      <Name>CoreNetwork</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GlobalUtilities\GlobalUtilities.csproj">
-      <Project>{2b4f83ef-6e5d-49b7-a54e-6c72d0b3b9a4}</Project>
-      <Name>GlobalUtilities</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Knowledge\Knowledge.csproj">
-      <Project>{EB97C3A4-7D4A-47AF-9CA1-3D56A075DD30}</Project>
-      <Name>Knowledge</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Log\Log.csproj">
-      <Project>{6861294c-2a08-4c7b-9cdd-af2f9b3dd13c}</Project>
-      <Name>Log</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Users\Users.csproj">
-      <Project>{B2F7609D-FE8D-4518-85BC-D03F081362DA}</Project>
-      <Name>Users</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -259,6 +259,9 @@
     <Compile Include="DBCall\DataExchange\DEController.cs" />
     <Compile Include="DBCall\DataExchange\DEObjects.cs" />
     <Compile Include="DBCall\DataExchange\DEParsers.cs" />
+    <Compile Include="DBCall\Events\EventObjects.cs" />
+    <Compile Include="DBCall\Events\EventsController.cs" />
+    <Compile Include="DBCall\Events\EVTParsers.cs" />
     <Compile Include="DBCall\Knowledge\KnowledgeController.cs" />
     <Compile Include="DBCall\Knowledge\KnowledgeObjects.cs" />
     <Compile Include="DBCall\Knowledge\KWParsers.cs" />
