@@ -467,7 +467,7 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            bool result = SharingController.arithmetic_delete_post(paramsContainer.Tenant.Id, postId);
+            bool result = SharingController.remove_post(paramsContainer.Tenant.Id, postId);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully.ToString() + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed.ToString() + "\"}";
@@ -1001,7 +1001,7 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            bool result = SharingController.arithmetic_delete_comment(paramsContainer.Tenant.Id, commentId);
+            bool result = SharingController.remove_comment(paramsContainer.Tenant.Id, commentId);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully.ToString() + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed.ToString() + "\"}";

@@ -10,15 +10,49 @@ using RaaiVan.Modules.Sharing;
 using RaaiVan.Modules.GlobalUtilities;
 using RaaiVan.Modules.Users;
 using RaaiVan.Modules.Log;
+using RaaiVan.Modules.GlobalUtilities.DBCompositeTypes;
 
 namespace RaaiVan.Modules.NotificationCenter
 {
     public class NotificationController
     {
-        private static List<Guid> __get_audience_user_ids(ref Notification notification, UserStatus status)
+        private static string GetFullyQualifiedName(string name)
+        {
+            return "[dbo]." + "[NTFN_" + name + "]"; //'[dbo].' is database owner and 'NTFN_' is module qualifier
+        }
+
+        private static List<Guid> _get_audience_user_ids(ref Notification notification, UserStatus status)
         {
             if (notification.Audience.ContainsKey(status)) return notification.Audience[status];
             else return null;
+        }
+
+        private static bool _send_notification(Guid applicationId, List<KeyValuePair<Guid, UserStatus>> users, Notification notification)
+        {
+            if (users == null) users = new List<KeyValuePair<Guid, UserStatus>>();
+
+            //users param
+            List<Guid> userIds = new List<Guid>();
+
+            DBCompositeType<GuidStringTableType> usersParam = new DBCompositeType<GuidStringTableType>();
+
+            users.ForEach(usr => {
+                if (!userIds.Exists(u => u == usr.Key))
+                {
+                    userIds.Add(usr.Key);
+                    usersParam.add(new GuidStringTableType(usr.Key, usr.Value.ToString()));
+                }
+            });
+            //end of users param
+
+            string subjectName = string.IsNullOrEmpty(notification.SubjectName) ? null : notification.SubjectName;
+            DateTime sendDate = notification.SendDate.HasValue ? notification.SendDate.Value : DateTime.Now;
+            string description = string.IsNullOrEmpty(notification.Description) ? null : notification.Description;
+            string info = string.IsNullOrEmpty(notification.Info) ? null : notification.Info;
+
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SendNotification"),
+                applicationId, usersParam, notification.SubjectID, notification.RefItemID, notification.SubjectType.ToString(),
+                subjectName, notification.Action.ToString(), notification.Sender.UserID, sendDate, description, info);
         }
 
         private static void _send_notification(Guid applicationId, Notification info)
@@ -27,13 +61,15 @@ namespace RaaiVan.Modules.NotificationCenter
 
             if (!info.Action.HasValue || info.Action.Value == ActionType.None ||
                 !info.SubjectType.HasValue || info.SubjectType.Value == SubjectType.None) return;
-            
-            List<Pair> users = new List<Pair>();
-            if (info.UserID.HasValue && info.UserID != info.Sender.UserID) users.Add(new Pair(info.UserID.Value, UserStatus.Owner));
+
+            List<KeyValuePair<Guid, UserStatus>> users = new List<KeyValuePair<Guid, UserStatus>>();
+            if (info.UserID.HasValue && info.UserID != info.Sender.UserID)
+                users.Add(new KeyValuePair<Guid, UserStatus>(info.UserID.Value, UserStatus.Owner));
 
             List<Guid> userIds = new List<Guid>();
 
-            List<Guid> mentionedUserIds = info.Action == ActionType.Post || info.Action == ActionType.Share || info.Action == ActionType.Comment ?
+            List<Guid> mentionedUserIds = info.Action == ActionType.Post || info.Action == ActionType.Share || 
+                info.Action == ActionType.Comment ?
                 Expressions.get_tagged_items(info.Description, "User").Where(u => u.ID.HasValue && u.ID != info.UserID)
                 .Select(u => u.ID.Value).ToList() : new List<Guid>();
 
@@ -46,20 +82,20 @@ namespace RaaiVan.Modules.NotificationCenter
                     switch (info.SubjectType.Value)
                     {
                         case SubjectType.Node:
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                                 userIds = CNController.get_node_creators(applicationId, info.RefItemID.Value).Select(
                                     u => u.User.UserID.Value).ToList();
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
 
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Member)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Member)) == null)
                                 userIds = CNController.get_member_user_ids(applicationId, 
                                     info.RefItemID.Value, NodeMemberStatuses.Accepted);
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Member));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Member));
 
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Expert)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Expert)) == null)
                                 userIds = CNController.get_experts(applicationId, info.RefItemID.Value).Select(
                                     u => u.User.UserID.Value).ToList();
-                            foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Expert));
+                            foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Expert));
 
                             Node node = CNController.get_node(applicationId, info.RefItemID.Value, true);
                             if (node != null)
@@ -70,13 +106,13 @@ namespace RaaiVan.Modules.NotificationCenter
                             }
                             break;
                         case SubjectType.Question:
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                             {
                                 userIds = new List<Guid>() { };
                                 Guid? id = QAController.get_question_asker_id(applicationId, info.RefItemID.Value);
                                 if (id.HasValue) userIds.Add(id.Value);
                             }
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
 
                             Question question = QAController.get_question(applicationId, info.RefItemID.Value, null);
                             if (question != null)
@@ -86,26 +122,26 @@ namespace RaaiVan.Modules.NotificationCenter
                             }
                             break;
                         case SubjectType.Post:
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                             {
                                 userIds = new List<Guid>();
                                 Guid? id = SharingController.get_post_sender_id(applicationId, info.RefItemID.Value);
                                 if(id.HasValue) userIds.Add(id.Value);
                             }
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
 
                             Post post = SharingController.get_post(applicationId, info.RefItemID.Value, null);
                             info.Description = string.IsNullOrEmpty(post.Description) ? 
                                 post.OriginalDescription : post.Description;
                             break;
                         case SubjectType.Comment:
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                             {
                                 userIds = new List<Guid>();
                                 Guid? id = SharingController.get_comment_sender_id(applicationId, info.SubjectID.Value);
                                 if (id.HasValue) userIds.Add(id.Value);
                             }
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
 
                             Sharing.Comment comment = SharingController.get_comment(applicationId, info.SubjectID.Value, null);
                             info.RefItemID = comment.PostID;
@@ -117,25 +153,25 @@ namespace RaaiVan.Modules.NotificationCenter
                     switch (info.SubjectType.Value)
                     {
                         case SubjectType.Post:
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                             {
                                 userIds = new List<Guid>();
                                 Guid? id = SharingController.get_post_sender_id(applicationId, info.RefItemID.Value);
                                 if (id.HasValue) userIds.Add(id.Value);
                             }
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
 
                             Post post = SharingController.get_post(applicationId, info.RefItemID.Value, null);
                             info.Description = string.IsNullOrEmpty(post.Description) ? post.OriginalDescription : post.Description;
                             break;
                         case SubjectType.Comment:
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                             {
                                 userIds = new List<Guid>();
                                 Guid? id = SharingController.get_comment_sender_id(applicationId, info.SubjectID.Value);
                                 if (id.HasValue) userIds.Add(id.Value);
                             }
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
 
                             Sharing.Comment comment = SharingController.get_comment(applicationId, info.SubjectID.Value, null);
                             info.RefItemID = comment.PostID;
@@ -150,7 +186,7 @@ namespace RaaiVan.Modules.NotificationCenter
                             if(info.ReceiverUserIDs != null && info.ReceiverUserIDs.Count > 0)
                             {
                                 userIds = info.ReceiverUserIDs;
-                                foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Contributor));
+                                foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Contributor));
                             }
                             break;
                     }
@@ -159,21 +195,21 @@ namespace RaaiVan.Modules.NotificationCenter
                     switch (info.SubjectType.Value)
                     {
                         case SubjectType.Answer:
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                             {
                                 userIds = new List<Guid>();
                                 Guid? id = QAController.get_question_asker_id(applicationId, info.RefItemID.Value);
                                 if (id.HasValue) userIds.Add(id.Value);
                             }
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
 
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Fan)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Fan)) == null)
                                 userIds = GlobalController.get_fan_ids(applicationId, info.RefItemID.Value).ToList();
-                            foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Fan));
+                            foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Fan));
 
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Contributor)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Contributor)) == null)
                                 userIds = QAController.get_answer_sender_ids(applicationId, info.RefItemID.Value).ToList();
-                            foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Contributor));
+                            foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Contributor));
 
                             info.SubjectName = QAController.get_question(applicationId, info.RefItemID.Value, null).Title;
                             break;
@@ -184,31 +220,31 @@ namespace RaaiVan.Modules.NotificationCenter
                     switch (info.SubjectType.Value)
                     {
                         case SubjectType.Post:
-                            foreach (Guid _usr in mentionedUserIds) users.Add(new Pair(_usr, UserStatus.Mentioned));
+                            foreach (Guid _usr in mentionedUserIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Mentioned));
 
                             Node node = null;
 
                             bool isNode = info.RefItemID.HasValue && 
                                 CNController.is_node(applicationId, info.RefItemID.Value);
 
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Director)) != null)
-                                foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Owner));
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Director)) != null)
+                                foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Owner));
 
                             if (isNode)
                             {
-                                if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                                if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                                     userIds = CNController.get_node_creators(applicationId, info.RefItemID.Value).Select(
                                         u => u.User.UserID.Value).ToList();
-                                foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Owner));
+                                foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Owner));
 
-                                if ((userIds = __get_audience_user_ids(ref info, UserStatus.Member)) == null)
+                                if ((userIds = _get_audience_user_ids(ref info, UserStatus.Member)) == null)
                                     userIds = CNController.get_members(applicationId, info.RefItemID.Value,
                                         pending: false, admin: null).Select(u => u.Member.UserID.Value).ToList();
-                                foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Member));
+                                foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Member));
 
-                                if ((userIds = __get_audience_user_ids(ref info, UserStatus.Fan)) == null)
+                                if ((userIds = _get_audience_user_ids(ref info, UserStatus.Fan)) == null)
                                     userIds = CNController.get_node_fans_user_ids(applicationId, info.RefItemID.Value).ToList();
-                                foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Fan));
+                                foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Fan));
 
                                 node = CNController.get_node(applicationId, info.RefItemID.Value);
                                 if (node != null) info.SubjectName = node.Name;
@@ -244,23 +280,24 @@ namespace RaaiVan.Modules.NotificationCenter
                     switch (info.SubjectType.Value)
                     {
                         case SubjectType.Comment:
-                            foreach (Guid _usr in mentionedUserIds) users.Add(new Pair(_usr, UserStatus.Mentioned));
+                            foreach (Guid _usr in mentionedUserIds)
+                                users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Mentioned));
 
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                             {
                                 userIds = new List<Guid>();
                                 Guid? id = SharingController.get_post_sender_id(applicationId, info.RefItemID.Value);
                                 if (id.HasValue) userIds.Add(id.Value);
                             }
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
 
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Fan)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Fan)) == null)
                                 userIds = SharingController.get_post_fan_ids(applicationId, info.RefItemID.Value).ToList();
-                            foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Fan));
+                            foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Fan));
 
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Contributor)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Contributor)) == null)
                                 userIds = SharingController.get_comment_sender_ids(applicationId, info.RefItemID.Value).ToList();
-                            foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Contributor));
+                            foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Contributor));
 
                             if (RaaiVanConfig.Modules.SMSEMailNotifier(applicationId))
                             {
@@ -279,23 +316,23 @@ namespace RaaiVan.Modules.NotificationCenter
 
                             break;
                         case SubjectType.Question:
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                             {
                                 userIds = new List<Guid>();
                                 Guid? id = QAController.get_question_asker_id(applicationId, info.RefItemID.Value);
                                 if (id.HasValue) userIds.Add(id.Value);
                             }
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
                             
                             break;
                         case SubjectType.Answer:
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                             {
                                 userIds = new List<Guid>();
                                 Guid? commentId = QAController.get_comment_owner_id(applicationId, info.SubjectID.Value);
                                 if(commentId.HasValue) userIds.Add(commentId.Value);
                             }
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
 
                             break;
                     }
@@ -308,26 +345,26 @@ namespace RaaiVan.Modules.NotificationCenter
 
                             if (node != null && node.NodeID.HasValue)
                             {
-                                if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                                if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                                     userIds = CNController.get_node_creators(applicationId, info.RefItemID.Value).Select(
                                         u => u.User.UserID.Value).ToList();
-                                foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Owner));
+                                foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Owner));
 
-                                if ((userIds = __get_audience_user_ids(ref info, UserStatus.Fan)) == null) userIds = 
+                                if ((userIds = _get_audience_user_ids(ref info, UserStatus.Fan)) == null) userIds = 
                                         CNController.get_node_fans_user_ids(applicationId, info.RefItemID.Value).ToList();
-                                foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Fan));
+                                foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Fan));
 
-                                if ((userIds = __get_audience_user_ids(ref info, UserStatus.Expert)) == null)
+                                if ((userIds = _get_audience_user_ids(ref info, UserStatus.Expert)) == null)
                                     userIds = CNController.get_experts(applicationId, info.RefItemID.Value).Select(
                                         u => u.User.UserID.Value).ToList();
-                                foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Expert));
+                                foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Expert));
 
-                                if ((userIds = __get_audience_user_ids(ref info, UserStatus.Member)) == null)
+                                if ((userIds = _get_audience_user_ids(ref info, UserStatus.Member)) == null)
                                     userIds = CNController.get_member_user_ids(applicationId, info.RefItemID.Value);
-                                foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Member));
+                                foreach (Guid _usr in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Member));
 
-                                if (!users.Exists(u => (UserStatus)u.Second == UserStatus.Owner))
-                                    users.Add(new Pair(node.Creator.UserID.Value, UserStatus.Owner));
+                                if (!users.Exists(u => u.Value == UserStatus.Owner))
+                                    users.Add(new KeyValuePair<Guid, UserStatus>(node.Creator.UserID.Value, UserStatus.Owner));
 
                                 info.SubjectName = node.Name;
                                 info.Info = "{\"NodeType\":\"" + Base64.encode(node.NodeType) + "\"}";
@@ -357,7 +394,7 @@ namespace RaaiVan.Modules.NotificationCenter
                     {
                         case SubjectType.User:
                             users.Clear();
-                            users.Add(new Pair(info.UserID, UserStatus.Mentioned));
+                            users.Add(new KeyValuePair<Guid, UserStatus>(info.UserID.Value, UserStatus.Mentioned));
 
                             info.UserStatus = UserStatus.Mentioned;
 
@@ -380,7 +417,7 @@ namespace RaaiVan.Modules.NotificationCenter
                     {
                         case SubjectType.User:
                             users.Clear();
-                            users.Add(new Pair(info.UserID, UserStatus.Mentioned));
+                            users.Add(new KeyValuePair<Guid, UserStatus>(info.UserID.Value, UserStatus.Mentioned));
 
                             info.UserStatus = UserStatus.Mentioned;
 
@@ -403,7 +440,7 @@ namespace RaaiVan.Modules.NotificationCenter
                     {
                         case SubjectType.Node:
                             {
-                                if ((userIds = __get_audience_user_ids(ref info, UserStatus.Member)) == null && 
+                                if ((userIds = _get_audience_user_ids(ref info, UserStatus.Member)) == null && 
                                     info.RefItemID.HasValue)
                                 {
                                     List<Guid> nIds = CNController.get_related_node_ids(applicationId, info.RefItemID.Value,
@@ -417,7 +454,9 @@ namespace RaaiVan.Modules.NotificationCenter
                                         pending: false, admin: null).Select(u => u.Member.UserID.Value)
                                         .Distinct().Where(x => !creatorIds.Any(a => a == x)).ToList();
                                 }
-                                foreach (Guid _usr in userIds) users.Add(new Pair(_usr, UserStatus.Member));
+
+                                foreach (Guid _usr in userIds)
+                                    users.Add(new KeyValuePair<Guid, UserStatus>(_usr, UserStatus.Member));
                             }
                             break;
                     }
@@ -426,22 +465,23 @@ namespace RaaiVan.Modules.NotificationCenter
                     switch (info.SubjectType)
                     {
                         case SubjectType.Question:
-                            if ((userIds = __get_audience_user_ids(ref info, UserStatus.Owner)) == null)
+                            if ((userIds = _get_audience_user_ids(ref info, UserStatus.Owner)) == null)
                             {
                                 userIds = new List<Guid>();
                                 Guid? id = QAController.get_question_asker_id(applicationId, info.RefItemID.Value);
                                 if (id.HasValue) userIds.Add(id.Value);
                             }
-                            foreach (Guid _uid in userIds) users.Add(new Pair(_uid, UserStatus.Owner));
+
+                            foreach (Guid _uid in userIds) users.Add(new KeyValuePair<Guid, UserStatus>(_uid, UserStatus.Owner));
 
                             break;
                     }
                     break;
             }
 
-            users = users.Except(users.Where(u => info.Sender.UserID.HasValue && (Guid)u.First == info.Sender.UserID)).ToList();
+            users = users.Except(users.Where(u => info.Sender.UserID.HasValue && u.Key == info.Sender.UserID)).ToList();
 
-            DataProvider.SendNotification(applicationId, ref users, info);
+            _send_notification(applicationId, users, info);
 
             if (RaaiVanConfig.Modules.SMSEMailNotifier(applicationId))
                 NotificationController._send_notification_message(applicationId, users, info);
@@ -464,37 +504,45 @@ namespace RaaiVan.Modules.NotificationCenter
                 ThreadPool.QueueUserWorkItem(new WaitCallback(_transfer_dashboards), new Pair(applicationId, dashboards));
         }
 
-        public static bool set_notifications_as_seen(Guid applicationId, Guid userId, ref List<long> notificationIds)
-        {
-            return DataProvider.SetNotificationsAsSeen(applicationId, userId, ref notificationIds);
-        }
-
         public static bool set_notifications_as_seen(Guid applicationId, Guid userId, List<long> notificationIds)
         {
-            return set_notifications_as_seen(applicationId, userId, ref notificationIds);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetNotificationsAsSeen"),
+                applicationId, userId, ProviderUtil.list_to_string<long>(notificationIds), ',', DateTime.Now);
         }
 
         public static bool set_notification_as_seen(Guid applicationId, Guid userId, long notificationId)
         {
-            List<long> _nIds = new List<long>() { notificationId };
-            return set_notifications_as_seen(applicationId, userId, ref _nIds);
+            return set_notifications_as_seen(applicationId, userId, new List<long>() { notificationId });
         }
 
         public static bool set_user_notifications_as_seen(Guid applicationId, Guid userId)
         {
-            return DataProvider.SetUserNotificationsAsSeen(applicationId, userId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetUserNotificationsAsSeen"),
+                applicationId, userId, DateTime.Now);
         }
 
         public static bool remove_notification(Guid applicationId, long notificationId, Guid userId)
         {
-            return DataProvider.ArithmeticDeleteNotification(applicationId, notificationId, userId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteNotification"),
+                applicationId, notificationId, userId);
         }
 
         public static void remove_notifications(Guid applicationId, Notification info, List<string> actions)
         {
             if (!RaaiVanConfig.Modules.Notifications(applicationId)) return;
 
-            PublicMethods.set_timeout(() => DataProvider.ArithmeticDeleteNotifications(applicationId, info, actions), 0);
+            if (!string.IsNullOrEmpty(info.Action.ToString())) actions.Add(info.Action.ToString());
+            actions = actions.Distinct().ToList();
+
+            if (info.SubjectID.HasValue) info.SubjectIDs.Add(info.SubjectID.Value);
+            if (info.RefItemID.HasValue) info.RefItemIDs.Add(info.RefItemID.Value);
+
+            PublicMethods.set_timeout(() => {
+                DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteNotifications"),
+                    applicationId, ProviderUtil.list_to_string<Guid>(info.SubjectIDs),
+                    ProviderUtil.list_to_string<Guid>(info.RefItemIDs), info.Sender.UserID, 
+                    ProviderUtil.list_to_string<string>(actions), ',');
+            }, 0);
         }
 
         public static void remove_notifications(Guid applicationId, Notification info)
@@ -504,34 +552,65 @@ namespace RaaiVan.Modules.NotificationCenter
 
         public static int get_user_notifications_count(Guid applicationId, Guid userId, bool? seen = false)
         {
-            return DataProvider.GetUserNotificationsCount(applicationId, userId, seen);
+            return DBConnector.get_int(applicationId, GetFullyQualifiedName("GetUserNotificationsCount"), applicationId, userId, seen);
         }
 
         public static List<Notification> get_user_notifications(Guid applicationId, Guid userId, bool? seen = null, 
             long? lastNotSeenId = null, long? lastSeenId = null,DateTime? lastViewDate = null, 
             DateTime? lowerDateLimit = null, DateTime? upperDateLimit = null, int? count = null)
         {
-            List<Notification> nots = new List<Notification>();
-            DataProvider.GetUserNotifications(applicationId, ref nots, userId, seen, lastNotSeenId, lastSeenId, 
-                lastViewDate, lowerDateLimit, upperDateLimit, count);
-            return nots;
+            return NTFNParsers.notifications(DBConnector.read(applicationId, GetFullyQualifiedName("GetUserNotifications"),
+                applicationId, userId, seen, lastNotSeenId, lastSeenId, lastViewDate, lowerDateLimit, upperDateLimit, count));
         }
 
         public static bool set_dashboards_as_seen(Guid applicationId, Guid userId, List<long> dashboardIds)
         {
-            return DataProvider.SetDashboardsAsSeen(applicationId, userId, dashboardIds);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetDashboardsAsSeen"),
+                applicationId, userId, ProviderUtil.list_to_string<long>(dashboardIds), ',', DateTime.Now);
         }
 
         public static bool remove_dashboards(Guid applicationId, Guid userId, List<long> dashboardIds)
         {
-            return DataProvider.ArithmeticDeleteDashboards(applicationId, userId, dashboardIds);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteDashboards"),
+                applicationId, userId, ProviderUtil.list_to_string<long>(dashboardIds), ',');
         }
 
         public static List<DashboardCount> get_dashboards_count(Guid applicationId, Guid userId, 
             Guid? nodeTypeId, Guid? nodeId, string nodeAdditionalId, DashboardType type)
         {
-            List<DashboardCount> retList = new List<DashboardCount>();
-            DataProvider.GetDashboardsCount(applicationId, ref retList, userId, nodeTypeId, nodeId, nodeAdditionalId, type);
+            string strType = type == DashboardType.NotSet ? null : type.ToString();
+
+            return DBConnector.get_dashboards_count(applicationId, GetFullyQualifiedName("GetDashboardsCount"),
+                applicationId, userId, nodeTypeId, nodeId, nodeAdditionalId, strType);
+        }
+
+        private static List<Guid> _get_dashboards(Guid applicationId, ref List<Dashboard> retDashboards, Guid? userId,
+            Guid? nodeTypeId, Guid? nodeId, string nodeAdditionalId, DashboardType dashboardType, DashboardSubType subType,
+            string subTypeTitle, bool? done, DateTime? dateFrom, DateTime? dateTo, string searchText, bool? getDistinctItems,
+            bool? inWorkFlowState, int? lowerBoundary, int? count, ref long totalCount)
+        {
+            string spName = GetFullyQualifiedName("GetDashboards");
+
+            List<Guid> retList = new List<Guid>();
+
+            if (lowerBoundary == 0) lowerBoundary = null;
+            if (!count.HasValue || count <= 0) count = 50;
+
+            if (!string.IsNullOrEmpty(nodeAdditionalId)) nodeAdditionalId = nodeAdditionalId.Trim();
+            if (string.IsNullOrEmpty(nodeAdditionalId)) nodeAdditionalId = null;
+
+            string strDashboardType = dashboardType == DashboardType.NotSet ? null : dashboardType.ToString();
+            string strSubType = subType == DashboardSubType.NotSet ?
+                (string.IsNullOrEmpty(subTypeTitle) ? null : subTypeTitle) : subType.ToString();
+
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetDashboards"),
+                applicationId, userId, nodeTypeId, nodeId, nodeAdditionalId, strDashboardType, strSubType, done,
+                dateFrom, dateTo, ProviderUtil.get_search_text(searchText), getDistinctItems, inWorkFlowState, lowerBoundary, count);
+
+            if (!getDistinctItems.HasValue || !getDistinctItems.Value)
+                retDashboards = DBConnector.parse_dashboards(results.get_table(), ref totalCount);
+            else retList = DBConnector.parse_guid_list(results, ref totalCount);
+
             return retList;
         }
 
@@ -540,7 +619,7 @@ namespace RaaiVan.Modules.NotificationCenter
             DateTime? dateFrom, DateTime? dateTo, string searchText, int? lowerBoundary, int? count, ref long totalCount)
         {
             List<Dashboard> retList = new List<Dashboard>();
-            DataProvider.GetDashboards(applicationId, ref retList, userId, nodeTypeId, nodeId, nodeAdditionalId, dashboardType, 
+            _get_dashboards(applicationId, ref retList, userId, nodeTypeId, nodeId, nodeAdditionalId, dashboardType, 
                 subType, subTypeTitle, done, dateFrom, dateTo, searchText, false, null, lowerBoundary, count, ref totalCount);
             return retList;
         }
@@ -554,38 +633,48 @@ namespace RaaiVan.Modules.NotificationCenter
                 subTypeTitle, done, dateFrom, dateTo, searchText, lowerBoundary, count, ref totalCount);
         }
 
-        public static List<Guid> get_dashboards(Guid applicationId, Guid? userId, Guid? nodeTypeId, Guid? nodeId, 
-            DashboardType dashboardType, DashboardSubType subType, string subTypeTitle, string searchText, bool? inWorkFlowState, 
+        public static List<Guid> get_dashboards(Guid applicationId, Guid? userId, Guid? nodeTypeId, Guid? nodeId,
+            DashboardType dashboardType, DashboardSubType subType, string subTypeTitle, string searchText, bool? inWorkFlowState,
             int? lowerBoundary, int? count, ref long totalCount)
         {
             List<Dashboard> retList = new List<Dashboard>();
-            return DataProvider.GetDashboards(applicationId, ref retList, userId, nodeTypeId, nodeId, null,
-                dashboardType, subType, subTypeTitle, null, null, null, searchText, true, inWorkFlowState, lowerBoundary, count, ref totalCount);
+            return _get_dashboards(applicationId, ref retList, userId, nodeTypeId, nodeId, null, dashboardType, subType,
+                subTypeTitle, null, null, null, searchText, true, inWorkFlowState, lowerBoundary, count, ref totalCount);
         }
 
         public static bool dashboard_exists(Guid applicationId, Guid? userId = null, Guid? nodeId = null, 
             DashboardType? type = null, DashboardSubType? subType = null, bool? seen = null, bool? done = null,
             DateTime? lowerDataLimit = null, DateTime? upperDateLimit = null)
         {
-            return DataProvider.DashboardExists(applicationId,
-                userId, nodeId, type, subType, seen, done, lowerDataLimit, upperDateLimit);
+            string strType = null;
+            if (type.HasValue && type.Value != DashboardType.NotSet) strType = type.Value.ToString();
+
+            string strSubType = null;
+            if (subType.HasValue && subType.Value != DashboardSubType.NotSet) strSubType = subType.Value.ToString();
+
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("DashboardExists"),
+                applicationId, userId, nodeId, strType, strSubType, seen, done, lowerDataLimit, upperDateLimit);
         }
 
         public static bool set_message_template(Guid applicationId, MessageTemplate info)
         {
-            return DataProvider.SetMessageTemplate(applicationId, info);
+            if (info.AudienceType == AudienceType.NotSet) return false;
+
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetMessageTemplate"),
+                applicationId, info.TemplateID, info.OwnerID, info.BodyText, info.AudienceType.ToString(), 
+                info.AudienceRefOwnerID, info.AudienceNodeID, info.AudienceNodeAdmin, info.CreatorUserID, DateTime.Now);
         }
 
         public static bool remove_message_template(Guid applicationId, Guid templateId, Guid currentUserId)
         {
-            return DataProvider.ArithmeticDeleteMessageTemplate(applicationId, templateId, currentUserId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteMessageTemplate"),
+                 applicationId, templateId, currentUserId, DateTime.Now);
         }
 
         public static List<MessageTemplate> get_owner_message_templates(Guid applicationId, List<Guid> ownerIds)
         {
-            List<MessageTemplate> retList = new List<MessageTemplate>();
-            DataProvider.GetOwnerMessageTemplates(applicationId, ref retList, ref ownerIds);
-            return retList;
+            return NTFNParsers.message_templates(DBConnector.read(applicationId, GetFullyQualifiedName("GetOwnerMessageTemplates"),
+                applicationId, ProviderUtil.list_to_string<Guid>(ownerIds), ','));
         }
 
         public static List<MessageTemplate> get_owner_message_templates(Guid applicationId, Guid ownerId)
@@ -597,7 +686,7 @@ namespace RaaiVan.Modules.NotificationCenter
 
         //Notification Messages
 
-        private static void _send_notification_message(Guid applicationId, List<Pair> users, Notification not)
+        private static void _send_notification_message(Guid applicationId, List<KeyValuePair<Guid, UserStatus>> users, Notification not)
         {
             try
             {
@@ -632,7 +721,7 @@ namespace RaaiVan.Modules.NotificationCenter
                             m.RefItemID = not.RefItemID.Value;
                             m.SubjectType = not.SubjectType.Value;
                             m.UserStatus =
-                                users.Where(u => (Guid)u.First == m.ReceiverUserID).Select(u => (UserStatus)u.Second).First();
+                                users.Where(u => u.Key == m.ReceiverUserID).Select(u => u.Value).First();
                             m.EmailAddress = emailList.Where(e => e.UserID == m.ReceiverUserID).First();
 
                             ThreadPool.QueueUserWorkItem(new WaitCallback(m.send_email), applicationId);
@@ -647,7 +736,7 @@ namespace RaaiVan.Modules.NotificationCenter
                             m.RefItemID = not.RefItemID.Value;
                             m.SubjectType = not.SubjectType.Value;
                             m.UserStatus =
-                                users.Where(u => (Guid)u.First == m.ReceiverUserID).Select(u => (UserStatus)u.Second).First();
+                                users.Where(u => u.Key == m.ReceiverUserID).Select(u => u.Value).First();
                             m.PhoneNumber = phoneList.Where(p => p.UserID == m.ReceiverUserID).First();
                             ThreadPool.QueueUserWorkItem(new WaitCallback(m.send_sms));
 
@@ -662,48 +751,52 @@ namespace RaaiVan.Modules.NotificationCenter
         }
 
         private static List<NotificationMessage> _get_notification_messages_info(Guid applicationId, 
-            List<Pair> userStatusPairList, SubjectType subjectType, ActionType action)
+            List<KeyValuePair<Guid, UserStatus>> userStatusPairList, SubjectType subjectType, ActionType action)
         {
-            List<NotificationMessage> retMessageList = new List<NotificationMessage>();
-            DataProvider.GetNotificationMessagesInfo(applicationId, 
-                userStatusPairList, subjectType, action, ref retMessageList);
-            return retMessageList;
+            if (userStatusPairList == null) userStatusPairList = new List<KeyValuePair<Guid, UserStatus>>();
+
+            DBCompositeType<GuidStringTableType> usersParam = new DBCompositeType<GuidStringTableType>()
+                .add(userStatusPairList.Select(i => new GuidStringTableType(i.Key, i.Value.ToString())).ToList());
+
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNotificationMessagesInfo"),
+                applicationId, RaaiVanSettings.ReferenceTenantID, usersParam, subjectType.ToString(), action.ToString());
+
+            return NTFNParsers.notification_messages_info(results, applicationId);
         }
 
         public static bool set_admin_messaging_activation(Guid applicationId, Guid templateId, Guid currentUserId, 
             SubjectType subjectType, ActionType action, Media media, UserStatus userStatus, string lang, bool enable)
         {
-            return DataProvider.SetAdminMessagingActivation(applicationId,
-                templateId, currentUserId, subjectType, action, media, userStatus, lang, enable);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetAdminMessagingActivation"),
+                applicationId, templateId, currentUserId, DateTime.Now, subjectType, action, media, userStatus, lang, enable);
         }
 
         public static bool set_notification_message_template_text(Guid applicationId, 
             Guid templateId, Guid currentUserId, string subject, string text)
         {
-            return DataProvider.SetNotificationMessageTemplateText(applicationId, 
-                templateId, currentUserId, subject, text);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetNotificationMessageTemplateText"),
+                applicationId, templateId, currentUserId, DateTime.Now, subject, text);
         }
 
         public static bool set_user_messaging_activation(Guid applicationId, Guid optionId, 
             Guid userId, Guid currentUserId, SubjectType subjectType, UserStatus userStatus, 
             ActionType action, Media media, string lang, bool enable)
         {
-            return DataProvider.SetUserMessagingActivation(applicationId,
-                optionId, userId, currentUserId, subjectType, userStatus, action, media, lang, enable);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetUserMessagingActivation"),
+                applicationId, optionId, userId, currentUserId, DateTime.Now, subjectType, userStatus, action, media, lang, enable);
         }
 
         public static List<NotificationMessageTemplate> get_notification_message_templates_info(Guid applicationId)
         {
-            List<NotificationMessageTemplate> retMessagetemplates = new List<NotificationMessageTemplate>();
-            DataProvider.GetNotificationMessageTemplatesInfo(applicationId, ref retMessagetemplates);
-            return retMessagetemplates;
+            return NTFNParsers.notification_message_template(
+                DBConnector.read(applicationId, GetFullyQualifiedName("GetNotificationMessageTemplatesInfo"), applicationId));
         }
 
         public static List<MessagingActivationOption> get_user_messaging_activation(Guid applicationId, Guid userId)
         {
-            List<MessagingActivationOption> retSendOption = new List<MessagingActivationOption>();
-            DataProvider.GetUserMessagingActivation(applicationId, userId, ref retSendOption);
-            return retSendOption;
+            return NTFNParsers.messaging_activation_option(
+                DBConnector.read(applicationId, GetFullyQualifiedName("GetUserMessagingActivation"),
+                applicationId, RaaiVanSettings.ReferenceTenantID, userId));
         }
 
         //end of Notification Messages

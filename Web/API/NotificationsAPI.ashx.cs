@@ -267,7 +267,7 @@ namespace RaaiVan.Web.API
             if (!paramsContainer.GBEdit) return;
 
             bool result = NotificationController.set_notifications_as_seen(paramsContainer.Tenant.Id,
-                paramsContainer.CurrentUserID.Value, ref notificationIds);
+                paramsContainer.CurrentUserID.Value, notificationIds);
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
         }

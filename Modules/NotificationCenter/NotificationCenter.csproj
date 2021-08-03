@@ -68,7 +68,6 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
@@ -76,51 +75,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataProvider.cs" />
-    <Compile Include="NotificationController.cs" />
-    <Compile Include="NotificationObjects.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CoreNetwork\CoreNetwork.csproj">
-      <Project>{064B0EBE-7A12-4082-9A1C-5F96F3C2E990}</Project>
-      <Name>CoreNetwork</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Documents\Documents.csproj">
-      <Project>{DCC8E88F-B8AC-41C8-BA0D-B0537C15ED56}</Project>
-      <Name>Documents</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GlobalUtilities\GlobalUtilities.csproj">
-      <Project>{2b4f83ef-6e5d-49b7-a54e-6c72d0b3b9a4}</Project>
-      <Name>GlobalUtilities</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Knowledge\Knowledge.csproj">
-      <Project>{EB97C3A4-7D4A-47AF-9CA1-3D56A075DD30}</Project>
-      <Name>Knowledge</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Log\Log.csproj">
-      <Project>{6861294c-2a08-4c7b-9cdd-af2f9b3dd13c}</Project>
-      <Name>Log</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\QA\QA.csproj">
-      <Project>{2aafef43-5fe9-4de2-9a1d-635de68e3347}</Project>
-      <Name>QA</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RaaiVanConfig\RaaiVanConfig.csproj">
-      <Project>{D54AEBE3-5826-4A94-BFD9-4029612A89B1}</Project>
-      <Name>RaaiVanConfig</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Sharing\Sharing.csproj">
-      <Project>{6ac05ae3-e4e1-49fd-8c65-2a1401243d8f}</Project>
-      <Name>Sharing</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Users\Users.csproj">
-      <Project>{b2f7609d-fe8d-4518-85bc-d03f081362da}</Project>
-      <Name>Users</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

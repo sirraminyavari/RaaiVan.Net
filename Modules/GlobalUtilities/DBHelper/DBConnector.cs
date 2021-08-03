@@ -157,13 +157,8 @@ namespace RaaiVan.Modules.GlobalUtilities
             return Enumerable.Range(0, table.Rows.Count).Select(r => table.GetString(row: r, column: 0)).ToList();
         }
 
-        public static List<Guid> get_guid_list(Guid? applicationId, ref long totalCount, ref string errorMessage,
-            string procedureName, params object[] parameters)
+        public static List<Guid> parse_guid_list(RVDataTable table)
         {
-            DBResultSet result = read(applicationId, procedureName, parameters);
-
-            RVDataTable table = result.get_table();
-
             List<Guid> lst = new List<Guid>();
 
             for (int i = 0, lnt = table.Rows.Count; i < lnt; ++i)
@@ -171,6 +166,15 @@ namespace RaaiVan.Modules.GlobalUtilities
                 Guid? val = table.GetGuid(row: i, column: 0);
                 if (val.HasValue) lst.Add(val.Value);
             }
+
+            return lst;
+        }
+
+        public static List<Guid> parse_guid_list(DBResultSet result, ref long totalCount, ref string errorMessage)
+        {
+            RVDataTable table = result.get_table();
+
+            List<Guid> lst = parse_guid_list(table);
 
             if (result.TablesCount > 1)
             {
@@ -181,6 +185,18 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
 
             return lst;
+        }
+
+        public static List<Guid> parse_guid_list(DBResultSet result, ref long totalCount) {
+            string errorMessage = string.Empty;
+            return parse_guid_list(result, ref totalCount, ref errorMessage);
+        }
+
+        public static List<Guid> get_guid_list(Guid? applicationId, ref long totalCount, ref string errorMessage,
+            string procedureName, params object[] parameters)
+        {
+            DBResultSet result = read(applicationId, procedureName, parameters);
+            return parse_guid_list(result, ref totalCount, ref errorMessage);
         }
 
         public static List<Guid> get_guid_list(Guid? applicationId, string procedureName, params object[] parameters)
@@ -310,6 +326,72 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             string msg = string.Empty;
             return get_dashboards(applicationId, ref msg, ref retDashboards, procedureName, parameters);
+        }
+
+        public static List<DashboardCount> get_dashboards_count(Guid? applicationId, string procedureName, params object[] parameters)
+        {
+            RVDataTable table = read(applicationId, procedureName, parameters).get_table();
+
+            List<DashboardCount> retList = new List<DashboardCount>();
+
+            for (int i = 0; i < table.Rows.Count; i++)
+            {
+                DashboardType type = table.GetEnum<DashboardType>(i, "Type", defaultValue: DashboardType.NotSet);
+                string subTypeTitle = table.GetString(i, "SubType");
+                DashboardSubType subType = table.GetEnum<DashboardSubType>(i, "SubType", defaultValue: DashboardSubType.NotSet);
+                Guid? nodeTypeId = table.GetGuid(i, "NodeTypeID");
+                string nodeType = table.GetString(i, "NodeType");
+
+                if (subType != DashboardSubType.NotSet) subTypeTitle = string.Empty;
+
+                if (type == DashboardType.NotSet || (subType == DashboardSubType.NotSet && !nodeTypeId.HasValue)) continue;
+
+                DashboardCount item = retList.Where(u => u.Type == type).FirstOrDefault();
+
+                if (item == null)
+                {
+                    item = new DashboardCount() { Type = type };
+                    retList.Add(item);
+                }
+
+                DashboardCount subItem = new DashboardCount()
+                {
+                    Type = type,
+                    SubType = subType,
+                    SubTypeTitle = subTypeTitle,
+                    NodeTypeID = nodeTypeId,
+                    NodeType = nodeType
+                };
+
+                if (nodeTypeId.HasValue)
+                {
+                    DashboardCount ntCount = item.Sub.Where(u => u.NodeTypeID == nodeTypeId.Value).FirstOrDefault();
+
+                    if (ntCount == null)
+                    {
+                        ntCount = new DashboardCount()
+                        {
+                            Type = type,
+                            NodeTypeID = nodeTypeId,
+                            NodeType = nodeType
+                        };
+
+                        item.Sub.Add(ntCount);
+                    }
+
+                    ntCount.Sub.Add(subItem);
+                }
+                else item.Sub.Add(subItem);
+
+                subItem.DateOfEffect = table.GetDate(i, "DateOfEffect");
+                subItem.ToBeDone = table.GetInt(i, "ToBeDone", defaultValue: 0).Value;
+                subItem.NotSeen = table.GetInt(i, "NotSeen", defaultValue: 0).Value;
+                subItem.Done = table.GetInt(i, "Done", defaultValue: 0).Value;
+                subItem.Done = table.GetInt(i, "Done", defaultValue: 0).Value;
+                subItem.DoneAndNotInWorkFlow = table.GetInt(i, "DoneAndNotInWorkFlow", defaultValue: 0).Value;
+            }
+
+            return retList;
         }
 
         public static List<KeyValuePair<Guid, int>> get_items_count_list(Guid? applicationId, 

@@ -164,7 +164,7 @@
                             var _newDimensions = {
                                 X: dimensions.X, Y: dimensions.Y,
                                 Width: dimensions.Width, Height: dimensions.Height
-                            }
+                            };
 
                             DocsAPI.CropIcon(GlobalUtilities.extend({}, _newDimensions, {
                                 IconID: objectId, Type: iconType,
