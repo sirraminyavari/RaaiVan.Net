@@ -69,7 +69,6 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
@@ -77,31 +76,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataProvider.cs" />
-    <Compile Include="MSGController.cs" />
-    <Compile Include="MSGObjects.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Documents\Documents.csproj">
-      <Project>{DCC8E88F-B8AC-41C8-BA0D-B0537C15ED56}</Project>
-      <Name>Documents</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GlobalUtilities\GlobalUtilities.csproj">
-      <Project>{2B4F83EF-6E5D-49B7-A54E-6C72D0B3B9A4}</Project>
-      <Name>GlobalUtilities</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Log\Log.csproj">
-      <Project>{6861294c-2a08-4c7b-9cdd-af2f9b3dd13c}</Project>
-      <Name>Log</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Users\Users.csproj">
-      <Project>{b2f7609d-fe8d-4518-85bc-d03f081362da}</Project>
-      <Name>Users</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

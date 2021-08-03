@@ -265,6 +265,9 @@
     <Compile Include="DBCall\Knowledge\KnowledgeController.cs" />
     <Compile Include="DBCall\Knowledge\KnowledgeObjects.cs" />
     <Compile Include="DBCall\Knowledge\KWParsers.cs" />
+    <Compile Include="DBCall\Messaging\MSGController.cs" />
+    <Compile Include="DBCall\Messaging\MSGObjects.cs" />
+    <Compile Include="DBCall\Messaging\MSGParsers.cs" />
     <Compile Include="DBCall\Privacy\PrivacyController.cs" />
     <Compile Include="DBCall\Privacy\PrivacyObjects.cs" />
     <Compile Include="DBCall\Privacy\PRVCParsers.cs" />
@@ -275,6 +278,7 @@
     <Compile Include="DBCall\Wiki\WikiController.cs" />
     <Compile Include="DBCall\Wiki\WikiObjects.cs" />
     <Compile Include="DBCall\Wiki\WikiParsers.cs" />
+    <Compile Include="DBHelper\CompositeTypes\MessageTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\ExchangeAuthorTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\ExchangePermissionTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\ExchangeRelationTableType.cs" />
