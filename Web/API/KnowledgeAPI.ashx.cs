@@ -1188,7 +1188,7 @@ namespace RaaiVan.Web.API
             }
 
             bool result = KnowledgeController.set_candidate_relations(paramsContainer.Tenant.Id,
-                knowledgeTypeId.Value, ref nodeTypeIds, ref nodeIds, paramsContainer.CurrentUserID.Value);
+                knowledgeTypeId.Value, nodeTypeIds, nodeIds, paramsContainer.CurrentUserID.Value);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -2681,9 +2681,9 @@ namespace RaaiVan.Web.API
                 PublicMethods.is_system_admin(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID.Value);
 
             List<FeedBack> feedBacks = (!userId.HasValue || userId == Guid.Empty) ?
-                KnowledgeController.get_knowledge_feedbacks(paramsContainer.Tenant.Id, knowledgeId.Value, feedbackType) :
+                KnowledgeController.get_knowledge_feedbacks(paramsContainer.Tenant.Id, knowledgeId.Value, feedbackType: feedbackType) :
                 KnowledgeController.get_knowledge_feedbacks(paramsContainer.Tenant.Id,
-                knowledgeId.Value, userId.Value, feedbackType);
+                    knowledgeId.Value, userId: userId.Value, feedbackType: feedbackType);
 
             responseText = "{\"FeedBacks\":[";
 

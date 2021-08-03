@@ -1257,7 +1257,7 @@ namespace RaaiVan.Web.API
             }
 
             bool result = workflowId.HasValue && QAController.set_candidate_relations(paramsContainer.Tenant.Id,
-                workflowId.Value, ref nodeTypeIds, ref nodeIds, paramsContainer.CurrentUserID.Value);
+                workflowId.Value, nodeTypeIds, nodeIds, paramsContainer.CurrentUserID.Value);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";

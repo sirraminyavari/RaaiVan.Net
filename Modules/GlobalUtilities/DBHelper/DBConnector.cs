@@ -93,7 +93,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                 if (error != null && error.GetType() == typeof(string))
                     errorMessage += error;
                 
-                if (result.TablesCount > 0) parse_dashboards(ref retDashboards, result.get_table(1));
+                if (result.TablesCount > 0) retDashboards = parse_dashboards(result.get_table(1));
 
                 if (value == null) return false;
 
@@ -224,50 +224,48 @@ namespace RaaiVan.Modules.GlobalUtilities
             return ret;
         }
 
-        public static void parse_dashboards(ref List<Dashboard> retDashboards, RVDataTable table, ref long totalCount)
+        public static List<Dashboard> parse_dashboards(RVDataTable table, ref long totalCount)
         {
-            if (retDashboards == null) retDashboards = new List<Dashboard>();
-            if (table == null) return;
+            List<Dashboard> retList = new List<Dashboard>();
+
+            if (table == null) return retList;
 
             for(int i = 0; i < table.Rows.Count; i++)
             {
-                Dashboard e = new Dashboard();
-
                 totalCount = table.GetLong(i, "TotalCount", defaultValue: 0).Value;
 
-                e.DashboardID = table.GetLong(i, "ID");
-                e.UserID = table.GetGuid(i, "UserID");
-                e.NodeID = table.GetGuid(i, "NodeID");
-                e.NodeAdditionalID = table.GetString(i, "NodeAdditionalID");
-                e.NodeName = table.GetString(i, "NodeName");
-                e.NodeType = table.GetString(i, "NodeType");
-                e.Type = table.GetEnum<DashboardType>(i, "Type", DashboardType.NotSet);
-                e.SubType = table.GetEnum<DashboardSubType>(i, "SubType", DashboardSubType.NotSet);
-                e.Info = table.GetString(i, "Info");
-                e.Removable = table.GetBool(i, "Removable");
-                e.SenderUserID = table.GetGuid(i, "SenderUserID");
-                e.SendDate = table.GetDate(i, "SendDate");
-                e.ExpirationDate = table.GetDate(i, "ExpirationDate");
-                e.Seen = table.GetBool(i, "Seen");
-                e.ViewDate = table.GetDate(i, "ViewDate");
-                e.Done = table.GetBool(i, "Done");
-                e.ActionDate = table.GetDate(i, "ActionDate");
-
-                if (e.DashboardID.HasValue) retDashboards.Add(e);
+                retList.Add(new Dashboard()
+                {
+                    DashboardID = table.GetLong(i, "ID"),
+                    UserID = table.GetGuid(i, "UserID"),
+                    NodeID = table.GetGuid(i, "NodeID"),
+                    NodeAdditionalID = table.GetString(i, "NodeAdditionalID"),
+                    NodeName = table.GetString(i, "NodeName"),
+                    NodeType = table.GetString(i, "NodeType"),
+                    Type = table.GetEnum<DashboardType>(i, "Type", DashboardType.NotSet),
+                    SubType = table.GetEnum<DashboardSubType>(i, "SubType", DashboardSubType.NotSet),
+                    Info = table.GetString(i, "Info"),
+                    Removable = table.GetBool(i, "Removable"),
+                    SenderUserID = table.GetGuid(i, "SenderUserID"),
+                    SendDate = table.GetDate(i, "SendDate"),
+                    ExpirationDate = table.GetDate(i, "ExpirationDate"),
+                    Seen = table.GetBool(i, "Seen"),
+                    ViewDate = table.GetDate(i, "ViewDate"),
+                    Done = table.GetBool(i, "Done"),
+                    ActionDate = table.GetDate(i, "ActionDate")
+                });
             };
+
+            return retList.Where(itm => itm.DashboardID.HasValue).ToList();
         }
 
-        public static void parse_dashboards(ref List<Dashboard> retDashboards, RVDataTable table) {
+        public static List<Dashboard> parse_dashboards(RVDataTable table) {
             long totalCount = 0;
-            parse_dashboards(ref retDashboards, table, ref totalCount);
+            return parse_dashboards(table, ref totalCount);
         }
 
-        public static int get_dashboards(Guid? applicationId, ref string errorMessage, ref List<Dashboard> retDashboards,
-            string procedureName, params object[] parameters)
+        public static int get_dashboards(RVDataTable table, ref string errorMessage, ref List<Dashboard> retDashboards)
         {
-            DBResultSet result = read(applicationId, procedureName, parameters);
-            RVDataTable table = result.get_table();
-
             if (table.Columns.Count <= 2)
             {
                 try
@@ -290,9 +288,21 @@ namespace RaaiVan.Modules.GlobalUtilities
                 }
             }
 
-            parse_dashboards(ref retDashboards, table);
+            retDashboards = parse_dashboards(table);
 
             return 1;
+        }
+
+        public static int get_dashboards(RVDataTable table, ref List<Dashboard> retDashboards) {
+            string errorMessage = string.Empty;
+            return get_dashboards(table, ref errorMessage, ref retDashboards);
+        }
+
+        public static int get_dashboards(Guid? applicationId, ref string errorMessage, ref List<Dashboard> retDashboards,
+            string procedureName, params object[] parameters)
+        {
+            DBResultSet result = read(applicationId, procedureName, parameters);
+            return get_dashboards(result.get_table(), ref errorMessage, ref retDashboards);
         }
 
         public static int get_dashboards(Guid? applicationId, ref List<Dashboard> retDashboards, 
