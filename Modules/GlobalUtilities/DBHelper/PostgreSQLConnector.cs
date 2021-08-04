@@ -24,7 +24,30 @@ namespace RaaiVan.Modules.GlobalUtilities
             {
                 if (!COMPOSITE_MAPPINGS_DONE)
                 {
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<BigIntTableType>("big_int_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<CNExtensionTableType>("cn_extension_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<DocFileInfoTableType>("doc_file_info_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<EmailQueueItemTableType>("email_queue_item_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<ExchangeAuthorTableType>("exchange_author_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<ExchangeMemberTableType>("exchange_member_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<ExchangeNodeTableType>("exchange_node_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<ExchangePermissionTableType>("exchange_permission_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<ExchangeRelationTableType>("exchange_relation_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<ExchangeUserTableType>("exchange_user_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<FormElementTableType>("form_element_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<FormFilterTableType>("form_filter_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<FormInstanceTableType>("form_instance_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<GuidFloatTableType>("guid_float_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<GuidPairBitTableType>("guid_pair_bit_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<GuidPairTableType>("guid_pair_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<GuidStringPairTableType>("guid_string_pair_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<GuidStringTableType>("guid_string_table_type");
                     NpgsqlConnection.GlobalTypeMapper.MapComposite<GuidTableType>("guid_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<MessageTableType>("message_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<PrivacyAudienceTableType>("privacy_audience_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<StringPairTableType>("string_pair_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<StringTableType>("string_table_type");
+                    NpgsqlConnection.GlobalTypeMapper.MapComposite<TaggedItemTableType>("tagged_item_table_type");
 
                     COMPOSITE_MAPPINGS_DONE = true;
                 }

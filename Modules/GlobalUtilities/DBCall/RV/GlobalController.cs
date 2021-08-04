@@ -318,7 +318,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static Dictionary<RVSettingsItem, string> get_system_settings(Guid applicationId, List<RVSettingsItem> names)
         {
-            names = names.Where(n => n != RVSettingsItem.UseLocalVariables).ToList();
+            names = names.Where(n => n != RVSettingsItem.UseLocalVariables && n != RVSettingsItem.UsePostgreSQL).ToList();
 
             if (applicationId == Guid.Empty && names.Count == 0) return new Dictionary<RVSettingsItem, string>();
 

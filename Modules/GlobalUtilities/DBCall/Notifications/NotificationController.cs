@@ -589,8 +589,6 @@ namespace RaaiVan.Modules.NotificationCenter
             string subTypeTitle, bool? done, DateTime? dateFrom, DateTime? dateTo, string searchText, bool? getDistinctItems,
             bool? inWorkFlowState, int? lowerBoundary, int? count, ref long totalCount)
         {
-            string spName = GetFullyQualifiedName("GetDashboards");
-
             List<Guid> retList = new List<Guid>();
 
             if (lowerBoundary == 0) lowerBoundary = null;
@@ -700,8 +698,8 @@ namespace RaaiVan.Modules.NotificationCenter
                 List<Guid> receiverIds = messageLst.Where(m => m != null && m.ReceiverUserID.HasValue)
                     .Select(m => m.ReceiverUserID.Value).Distinct().ToList();
 
-                List<EmailAddress> emailList = UsersController.get_users_main_email(receiverIds);
-                List<PhoneNumber> phoneList = UsersController.get_users_main_phone(receiverIds);
+                List<EmailAddress> emailList = UsersController.get_users_main_email(applicationId, receiverIds);
+                List<PhoneNumber> phoneList = UsersController.get_users_main_phone(applicationId, receiverIds);
 
                 List<NotificationMessage> sentMessages = new List<NotificationMessage>();
 

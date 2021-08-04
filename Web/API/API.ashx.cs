@@ -257,16 +257,16 @@ namespace RaaiVan.Web.API
             switch (command) {
                 case "abc123":
                     {
-                        DBCompositeType<GuidTableType> nodeIds = new DBCompositeType<GuidTableType>()
-                            .add(new GuidTableType(Guid.Parse("D0637BC1-80C5-47EA-BA23-002BCF0BE290")))
-                            .add(new GuidTableType(Guid.Parse("77CC8111-4163-4241-A68A-0046A15442B5")))
-                            .add(new GuidTableType(Guid.Parse("D6B3F272-11C9-4B48-B3D2-00985CACCF5B")))
-                            .add(new GuidTableType(Guid.Parse("7C80A672-D8C1-4F33-8B07-00AC05897E8E")))
-                            .add(new GuidTableType(Guid.Parse("DB0303F8-52E2-4B0E-BD1A-015EF4F3119B")));
+                        DBCompositeType<DocFileInfoTableType> nodeIds = new DBCompositeType<DocFileInfoTableType>()
+                            .add(new DocFileInfoTableType(Guid.NewGuid(), PublicMethods.random_string(10), "jpg", "", PublicMethods.get_random_number(), null, null))
+                            .add(new DocFileInfoTableType(Guid.NewGuid(), PublicMethods.random_string(10), "jpg", "", PublicMethods.get_random_number(), null, null))
+                            .add(new DocFileInfoTableType(Guid.NewGuid(), PublicMethods.random_string(10), "jpg", "", PublicMethods.get_random_number(), null, null))
+                            .add(new DocFileInfoTableType(Guid.NewGuid(), PublicMethods.random_string(10), "jpg", "", PublicMethods.get_random_number(), null, null))
+                            .add(new DocFileInfoTableType(Guid.NewGuid(), PublicMethods.random_string(10), "jpg", "", PublicMethods.get_random_number(), null, null))
+                            .add(new DocFileInfoTableType(Guid.NewGuid(), PublicMethods.random_string(10), "jpg", "", PublicMethods.get_random_number(), null, null));
 
-                        DBResultSet results = DBConnector.read(paramsContainer.ApplicationID, 
-                            "CN_XX_TEST", Guid.Parse("1BCF6425-580B-4F91-93FD-9CAD7150BAFF"), 
-                            nodeIds, false, null);
+                        DBResultSet results = DBConnector.read_postgre(paramsContainer.ApplicationID,
+                            "func_test_3", 22, nodeIds);
 
                         /*
                         DBCompositeType<GuidTableType> values = new DBCompositeType<GuidTableType>()
