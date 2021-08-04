@@ -609,8 +609,8 @@
 
 .rv-action-button-disabled {
     color: var(--rv-color-distant);
-    border-color: var(--rv-color-distant);
-    background-color: var(--rv-white-color);
+    border-color: var(--rv-color-freezed);
+    background-color: var(--rv-color-freezed);
     cursor: not-allowed;
 }
 
