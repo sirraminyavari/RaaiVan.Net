@@ -284,6 +284,9 @@
     <Compile Include="DBCall\Wiki\WikiController.cs" />
     <Compile Include="DBCall\Wiki\WikiObjects.cs" />
     <Compile Include="DBCall\Wiki\WikiParsers.cs" />
+    <Compile Include="DBCall\Workflow\WFController.cs" />
+    <Compile Include="DBCall\Workflow\WFObjects.cs" />
+    <Compile Include="DBCall\Workflow\WFParsers.cs" />
     <Compile Include="DBHelper\CompositeTypes\MessageTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\ExchangeAuthorTableType.cs" />
     <Compile Include="DBHelper\CompositeTypes\ExchangePermissionTableType.cs" />

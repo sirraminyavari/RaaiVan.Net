@@ -158,6 +158,16 @@ namespace RaaiVan.Modules.GlobalUtilities
             return GetByteArray(row, GetColumnIndex(column), defaultValue);
         }
 
+        public T? GetEnum<T>(int row, int column, T? defaultValue = null) where T : struct
+        {
+            return PublicMethods.parse_enum<T>(GetString(row, column), defaultValue);
+        }
+
+        public T? GetEnum<T>(int row, string column, T? defaultValue = null) where T : struct
+        {
+            return GetEnum<T>(row, GetColumnIndex(column), defaultValue);
+        }
+
         public T GetEnum<T>(int row, int column, T defaultValue) where T : struct
         {
             return PublicMethods.parse_enum<T>(GetString(row, column), defaultValue);

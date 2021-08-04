@@ -56,17 +56,14 @@ namespace RaaiVan.Modules.GlobalUtilities
                 if (!procedureName.ToLower().Contains("save") && !procedureName.ToLower().Contains("error") &&
                     !procedureName.ToLower().Contains("log") && index > 0)
                 {
-                    bool error = false;
-
-                    ModuleIdentifier mi = PublicMethods.parse_enum<ModuleIdentifier>(
-                        procedureName.Substring(0, procedureName.IndexOf("_")), ModuleIdentifier.RV, ref error);
+                    string moduleIdentifier = procedureName.Substring(0, procedureName.IndexOf("_"));
 
                     Log.LogController.save_error_log(
                         applicationId: applicationId,
                         userId: null,
                         subject: procedureName,
                         exception: ex,
-                        moduleIdentifier: !error ? (ModuleIdentifier?)mi : null);
+                        moduleIdentifier: PublicMethods.parse_enum<ModuleIdentifier>(moduleIdentifier));
                 }
 
                 return new DBResultSet();

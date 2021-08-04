@@ -1043,7 +1043,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             return decode ? Base64.decode(input.ToString()) : input.ToString();
         }
 
-        public static T parse_enum<T>(string input, T defaultValue, ref bool error) where T : struct
+        private static T parse_enum<T>(string input, T defaultValue, ref bool error) where T : struct
         {
             try
             {
@@ -1070,6 +1070,13 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             bool error = false;
             return parse_enum<T>(input, defaultValue, ref error);
+        }
+
+        public static T? parse_enum<T>(string input, T? defaultValue = null) where T : struct
+        {
+            bool error = false;
+            T result = parse_enum<T>(input, new T(), ref error);
+            return error ? defaultValue : (T?)result;
         }
 
         public static string get_dic_value(Dictionary<string, object> dic, string key, string defaultValue = null) {

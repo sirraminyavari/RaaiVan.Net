@@ -256,12 +256,8 @@ namespace RaaiVan.Modules.Knowledge
 
             for (int i = 0; i < table.Rows.Count; i++)
             {
-                bool error = false;
-
-                NecessaryItem itm = PublicMethods.parse_enum<NecessaryItem>(
-                    table.GetString(i, "ItemName"), defaultValue: NecessaryItem.Abstract, error: ref error);
-
-                if(!error) retList.Add(itm);
+                NecessaryItem? itm = table.GetEnum<NecessaryItem>(i, "ItemName");
+                if(itm.HasValue) retList.Add(itm.Value);
             }
 
             return retList;

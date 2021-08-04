@@ -1039,7 +1039,7 @@ namespace RaaiVan.Web.API
             nodeTypeIds.AddRange(connections.Where(u => u.DirectorNodeType.NodeTypeID.HasValue).Select(
                 v => v.DirectorNodeType.NodeTypeID.Value));
 
-            List<State> _sts = WFController.get_states(paramsContainer.Tenant.Id, ref stateIds);
+            List<State> _sts = WFController.get_states(paramsContainer.Tenant.Id, stateIds);
             List<NodeType> _ndtps = CNController.get_node_types(paramsContainer.Tenant.Id, nodeTypeIds);
 
             foreach (State st in _sts) names[st.StateID.Value] = st.Title;
@@ -2733,7 +2733,7 @@ namespace RaaiVan.Web.API
 
             List<DocFileInfo> attachedFiles = DocumentsController.get_owner_files(paramsContainer.Tenant.Id, histIds);
             List<HistoryFormInstance> histFormInstances =
-                WFController.get_history_form_instances(paramsContainer.Tenant.Id, ref histIds, true);
+                WFController.get_history_form_instances(paramsContainer.Tenant.Id, histIds, true);
 
             List<Guid> formsIds = histFormInstances.Where(u => u.FormsID.HasValue).Select(u => u.FormsID.Value).ToList();
 

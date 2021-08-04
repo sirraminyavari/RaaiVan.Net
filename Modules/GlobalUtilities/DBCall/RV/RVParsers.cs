@@ -159,14 +159,10 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             for (int i = 0; i < table.Rows.Count; i++)
             {
+                RVSettingsItem? item = table.GetEnum<RVSettingsItem>(i, "Name");
                 string value = table.GetString(i, "Value");
 
-                bool error = false;
-
-                RVSettingsItem item = PublicMethods.parse_enum<RVSettingsItem>(table.GetString(i, "Name"),
-                    defaultValue: RVSettingsItem.LogoURL, error: ref error);
-
-                if (!error && !string.IsNullOrEmpty(value)) dic[item] = value;
+                if (item.HasValue && !string.IsNullOrEmpty(value)) dic[item.Value] = value;
             }
 
             return dic;
