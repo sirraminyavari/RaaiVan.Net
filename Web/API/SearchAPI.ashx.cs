@@ -92,39 +92,53 @@ namespace RaaiVan.Web.API
             List<SearchDoc> exactItems = new List<SearchDoc>();
             List<SearchDoc> nodeTypes = new List<SearchDoc>();
 
-            int totalCount = 0;
-
             if (!lowerBoundary.HasValue || lowerBoundary == 0)
             {
                 string[] terms = searchText.Split(' ');
-                int? _b = 0;
-
+                
                 if (terms != null && terms.Length == 1 && !string.IsNullOrEmpty(terms[0].Trim()) &&
                     showExactItems.HasValue && showExactItems.Value)
                 {
-                    exactItems = SearchUtilities.search(paramsContainer.Tenant.Id, itemTypes,
-                        paramsContainer.CurrentUserID, new List<Guid>(), new List<string>(),
-                        true, false, false, false, false, false, false, terms[0].Trim(), ref _b, count.Value, false, ref totalCount);
+                    SearchOptions exactOptions = new SearchOptions(
+                        docTypes: itemTypes,
+                        additionalId: true,
+                        phrase: terms[0].Trim(),
+                        count: count.Value);
+
+                    exactItems = SearchUtilities.search(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, exactOptions);
                 }
 
                 if (itemTypes.Exists(u => u == SearchDocType.Node) && suggestNodeTypes.HasValue && suggestNodeTypes.Value)
                 {
-                    List<SearchDocType> sdts = new List<SearchDocType>();
-                    sdts.Add(SearchDocType.NodeType);
-                    nodeTypes = SearchUtilities.search(paramsContainer.Tenant.Id, sdts,
-                        paramsContainer.CurrentUserID, new List<Guid>(), new List<string>(),
-                        true, true, true, false, false, false, false, searchText, ref _b, count.Value, false, ref totalCount);
+                    SearchOptions typeOptions = new SearchOptions(
+                        docTypes: new List<SearchDocType>() { SearchDocType.NodeType },
+                        additionalId: true,
+                        title: true,
+                        description: true,
+                        phrase: searchText,
+                        count: count.Value);
+
+                    nodeTypes = SearchUtilities.search(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, typeOptions);
                 }
             }
 
-            totalCount = 0;
+            SearchOptions options = new SearchOptions(
+                docTypes: itemTypes,
+                typeIds: typeIds,
+                types: types,
+                additionalId: true,
+                title: title.HasValue && title.Value,
+                description: description.HasValue && description.Value,
+                content: content.HasValue && content.Value,
+                tags: tags.HasValue && tags.Value,
+                fileContent: fileContent.HasValue && fileContent.Value,
+                forceHasContent: forceHasContent.HasValue && forceHasContent.Value,
+                highlight: !excel.HasValue || !excel.Value,
+                phrase: searchText,
+                count: count.Value,
+                lowerBoundary: initialLowerBoundary);
 
-            List<SearchDoc> items = SearchUtilities.search(paramsContainer.Tenant.Id,
-                itemTypes, paramsContainer.CurrentUserID, typeIds, types, true,
-                title.HasValue && title.Value, description.HasValue && description.Value,
-                content.HasValue && content.Value, tags.HasValue && tags.Value,
-                fileContent.HasValue && fileContent.Value, forceHasContent.HasValue && forceHasContent.Value,
-                searchText, ref lowerBoundary, count.Value, highlight: !excel.HasValue || !excel.Value, ref totalCount);
+            List<SearchDoc> items = SearchUtilities.search(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, options);
 
             if (excel.HasValue && excel.Value)
             {
@@ -147,8 +161,8 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            responseText = "{\"LastItem\":" + lowerBoundary.ToString() +
-                (totalCount == 0 ? string.Empty : ",\"TotalCount\":" + totalCount.ToString()) +
+            responseText = "{\"LastItem\":" + options.LowerBoundary.ToString() +
+                (options.TotalCount == 0 ? string.Empty : ",\"TotalCount\":" + options.TotalCount.ToString()) +
                 ",\"Items\":[" + string.Join(",", items.Select(u => u.toJson(paramsContainer.Tenant.Id, false))) + "]" +
                 ",\"ExactItems\":[" + string.Join(",", exactItems.Select(u => u.toJson(paramsContainer.Tenant.Id, true))) + "]" +
                 ",\"NodeTypes\":[" + string.Join(",", nodeTypes.Select(u => u.toJson(paramsContainer.Tenant.Id, true))) + "]" +

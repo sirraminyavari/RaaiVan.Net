@@ -117,54 +117,12 @@ namespace RaaiVan.Modules.RSS
 
     public class RSSItem
     {
-        private string _ID;
-        private string _Title;
-        private string _Summary;
-        private string _Description;
-        private string _Link;
-        private string _URL;
-        private DateTime? _PublicationDate;
-
-        public string ID
-        {
-            get { return _ID; }
-            set { _ID = value; }
-        }
-
-        public string Title
-        {
-            get { return _Title; }
-            set { _Title = value; }
-        }
-
-        public string Summary
-        {
-            get { return _Summary; }
-            set { _Summary = value; }
-        }
-
-        public string Description
-        {
-            get { return _Description; }
-            set { _Description = value; }
-        }
-
-        public string Link
-        {
-            get { return _Link; }
-            set { _Link = value; }
-        }
-
-        public string URL
-        {
-            get { return _URL; }
-            set { _URL = value; }
-        }
-
-        public DateTime? PublicationDate
-        {
-            get { return _PublicationDate; }
-            set { _PublicationDate = value; }
-        }
+        public string ID;
+        public string Title;
+        public string Summary;
+        public string Description;
+        public string Link;
+        public string URL;
+        public DateTime? PublicationDate;
     }
 }

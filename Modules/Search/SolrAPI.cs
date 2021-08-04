@@ -57,6 +57,48 @@ namespace RaaiVan.Modules.Search
         {
             return (!string.IsNullOrEmpty(ID) && ID.LastIndexOf("!") > 0) ? ID.Substring(ID.LastIndexOf("!") + 1) : ID;
         }
+
+        public SearchDoc toSearchDoc()
+        {
+            Guid? id = PublicMethods.parse_guid(ID);
+            SearchDocType? tp = PublicMethods.parse_enum<SearchDocType>(SearchDocType);
+
+            if (!id.HasValue || !tp.HasValue) return null;
+
+            return new SearchDoc(
+                id: id.Value,
+                typeId: PublicMethods.parse_guid(TypeID),
+                content: Content,
+                additionalId: AdditionalID,
+                deleted: Deleted,
+                type: Type,
+                docType: tp.Value,
+                title: Title,
+                tags: Tags,
+                description: Description,
+                fileContect: FileContent);
+        }
+
+        public static SolrDoc fromSearchDoc(Guid applicationId, SearchDoc doc)
+        {
+            if (doc == null) doc = new SearchDoc();
+
+            return new SolrDoc()
+            {
+                ID = applicationId.ToString() + "!" + doc.ID.ToString(),
+                TypeID = !doc.TypeID.HasValue ? null : doc.TypeID.ToString(),
+                Type = PublicMethods.verify_string(doc.Type),
+                AdditionalID = PublicMethods.verify_string(doc.AdditionalID),
+                Title = PublicMethods.verify_string(doc.Title),
+                Description = PublicMethods.verify_string(doc.Description),
+                Tags = PublicMethods.verify_string(doc.Tags),
+                Content = PublicMethods.verify_string(doc.Content),
+                FileContent = PublicMethods.verify_string(doc.FileContent),
+                Deleted = doc.Deleted.HasValue && doc.Deleted.Value,
+                NoContent = doc.NoContent,
+                SearchDocType = doc.SearchDocType.ToString()
+            };
+        }
     }
 
     public class QueryTerms
@@ -253,7 +295,7 @@ namespace RaaiVan.Modules.Search
             try
             {
                 ISolrOperations<SolrDoc> solr = get_solr_operator();
-                solr.AddRange(documents.Select(d => d.toSolrDoc(applicationId)));
+                solr.AddRange(documents.Select(d => SolrDoc.fromSearchDoc(applicationId, d)));
                 ResponseHeader response = solr.Commit();
 
                 return response.Status == 0;
@@ -270,7 +312,7 @@ namespace RaaiVan.Modules.Search
             try
             {
                 ISolrOperations<SolrDoc> solr = get_solr_operator();
-                documents.ForEach(d => solr.Delete(d.toSolrDoc(applicationId)));
+                documents.ForEach(d => solr.Delete(SolrDoc.fromSearchDoc(applicationId, d)));
                 ResponseHeader response = solr.Commit();
 
                 return response.Status == 0;
@@ -282,47 +324,48 @@ namespace RaaiVan.Modules.Search
             }
         }
 
-        public static List<SolrDoc> search(Guid applicationId, string phrase, List<SearchDocType> docTypes, List<Guid> typeIds,
-            List<string> types, bool additionalId, bool title, bool description, bool tags, bool content, bool fileContent,
-            bool forceHasContent, int count, int lowerBoundary, bool highlight, ref int totalCount)
+        public static List<SearchDoc> search(Guid applicationId, SearchOptions options)
         {
+            if (options == null) return new List<SearchDoc>();
+
             ISolrOperations<SolrDoc> solr = get_solr_operator();
 
-            QueryTerms searchTerms = new QueryTerms(phrase);
+            QueryTerms searchTerms = new QueryTerms(options.Phrase);
 
             List<KeyValuePair<string, double>> fieldBoosts = new List<KeyValuePair<string, double>>();
 
-            docTypes = (docTypes == null ? new List<SearchDocType>() : docTypes.Where(d => d != SearchDocType.All)).Distinct().ToList();
+            List<SearchDocType> docTypes = (options.DocTypes == null ? new List<SearchDocType>() : 
+                options.DocTypes.Where(d => d != SearchDocType.All)).Distinct().ToList();
 
-            if (title) fieldBoosts.Add(new KeyValuePair<string, double>("title", 5));
-            if (tags) fieldBoosts.Add(new KeyValuePair<string, double>("tags", 4));
-            if (description) fieldBoosts.Add(new KeyValuePair<string, double>("description", 3));
-            if (content) fieldBoosts.Add(new KeyValuePair<string, double>("content", 2));
-            if (fileContent) fieldBoosts.Add(new KeyValuePair<string, double>("file_content", 1));
-            if (additionalId) fieldBoosts.Add(new KeyValuePair<string, double>("additional_id", 0));
+            if (options.Title) fieldBoosts.Add(new KeyValuePair<string, double>("title", 5));
+            if (options.Tags) fieldBoosts.Add(new KeyValuePair<string, double>("tags", 4));
+            if (options.Description) fieldBoosts.Add(new KeyValuePair<string, double>("description", 3));
+            if (options.Content) fieldBoosts.Add(new KeyValuePair<string, double>("content", 2));
+            if (options.FileContent) fieldBoosts.Add(new KeyValuePair<string, double>("file_content", 1));
+            if (options.AdditionalID) fieldBoosts.Add(new KeyValuePair<string, double>("additional_id", 0));
 
-            string query = searchTerms.get_query(fieldBoosts, docTypes, typeIds, types, forceHasContent);
+            string query = searchTerms.get_query(fieldBoosts, docTypes, options.TypeIDs, options.Types, options.ForceHasContent);
 
             QueryOptions queryOptions = new QueryOptions()
             {
-                Rows = count + (count / 2),
-                StartOrCursor = new StartOrCursor.Start(Math.Max(0, lowerBoundary)),
+                Rows = options.Count + (options.Count / 2),
+                StartOrCursor = new StartOrCursor.Start(Math.Max(0, options.LowerBoundary)),
                 ExtraParams = new List<KeyValuePair<string, string>>() {
                     new KeyValuePair<string, string>("_route_", applicationId.ToString() + "!")
                 },
                 Fields = new[] { "id", "search_doc_type", "type_id", "type", "additional_id", "title", "no_content", "deleted" }
             };
 
-            if (highlight) queryOptions.Highlight = new HighlightingParameters()
+            if (options.Highlight) queryOptions.Highlight = new HighlightingParameters()
             {
                 Fields = fieldBoosts.Where(b => b.Key != "additional_id").Select(b => b.Key).ToArray()
             };
 
             SolrQueryResults<SolrDoc> results = solr.Query(query, queryOptions);
 
-            totalCount = results.NumFound;
+            options.TotalCount = results.NumFound;
 
-            if (highlight) {
+            if (options.Highlight) {
                 results.Where(d => results.Highlights.ContainsKey(d.ID)).ToList().ForEach(doc => {
                     HighlightedSnippets snippets = results.Highlights[doc.ID];
                     doc.Description = string.Join(" ", snippets.Values.Select(v => string.Join(" ", v)))
@@ -330,7 +373,7 @@ namespace RaaiVan.Modules.Search
                 });
             }
 
-            return results.ToList();
+            return results.Select(r => r.toSearchDoc()).Where(d => d != null).ToList();
         }
 
         public static string extract_file_content(Guid applicationId, DocFileInfo file)

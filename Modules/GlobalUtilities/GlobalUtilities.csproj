@@ -219,6 +219,7 @@
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Runtime.CompilerServices.Unsafe.4.6.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Text.Encodings.Web, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Text.Encodings.Web.4.6.0\lib\netstandard2.0\System.Text.Encodings.Web.dll</HintPath>
     </Reference>
@@ -278,6 +279,9 @@
     <Compile Include="DBCall\QA\QAObjects.cs" />
     <Compile Include="DBCall\QA\QAParsers.cs" />
     <Compile Include="DBCall\RV\RVParsers.cs" />
+    <Compile Include="DBCall\Search\SearchController.cs" />
+    <Compile Include="DBCall\Search\SearchObjects.cs" />
+    <Compile Include="DBCall\Search\SearchParsers.cs" />
     <Compile Include="DBCall\Sharing\SharingController.cs" />
     <Compile Include="DBCall\Sharing\SharingObjects.cs" />
     <Compile Include="DBCall\Sharing\SHParsers.cs" />
@@ -334,6 +338,7 @@
     <Compile Include="DBCall\Logs\LogController.cs" />
     <Compile Include="DBCall\Logs\LogObjects.cs" />
     <Compile Include="DBCall\Logs\LGParsers.cs" />
+    <Compile Include="RSSObjects.cs" />
     <Compile Include="RVDataTable.cs">
       <SubType>Component</SubType>
     </Compile>
