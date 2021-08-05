@@ -11,6 +11,7 @@ using RaaiVan.Modules.GlobalUtilities;
 using RaaiVan.Modules.Privacy;
 using RaaiVan.Modules.FormGenerator;
 using RaaiVan.Modules.Users;
+using RaaiVan.Modules.CoreNetwork;
 
 namespace RaaiVan.Web.API
 {
@@ -101,17 +102,14 @@ namespace RaaiVan.Web.API
                     AttachFile.OwnerNodeType = ownerNode.OwnerNodeType;
                 }
 
-                bool accessDenied = 
-                    !PrivacyController.check_access(paramsContainer.Tenant.Id,
-                        paramsContainer.CurrentUserID, AttachFile.OwnerID.Value, pot, PermissionType.View) &&
-                    !(
-                        paramsContainer.CurrentUserID.HasValue &&
-                        new CNAPI() { paramsContainer = this.paramsContainer }
-                            ._is_admin(paramsContainer.Tenant.Id, AttachFile.OwnerID.Value,
-                            paramsContainer.CurrentUserID.Value, CNAPI.AdminLevel.Creator, false)
-                     );
+                //check access
+                AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                    nodeIdOrNodeTypeId: AttachFile.OwnerID);
 
-                if (accessDenied)
+                bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Creator, 
+                    privacyObjectType: pot, permission: PermissionType.View);
+
+                if (!hasAccess)
                 {
                     //Save Log
                     try
@@ -134,6 +132,7 @@ namespace RaaiVan.Web.API
 
                     return;
                 }
+                //end of check access
 
                 AttachFile.refresh_folder_name();
 

@@ -10,6 +10,7 @@ using RaaiVan.Modules.Documents;
 using RaaiVan.Modules.GlobalUtilities;
 using RaaiVan.Modules.CoreNetwork;
 using RaaiVan.Modules.Log;
+using RaaiVan.Modules.Privacy;
 
 namespace RaaiVan.Web.API
 {
@@ -345,9 +346,10 @@ namespace RaaiVan.Web.API
                 hasAccess = AuthorizationManager.has_right(AccessRoleName.ContentsManagement, paramsContainer.CurrentUserID);
             else if (CNController.is_node(paramsContainer.Tenant.Id, ownerId.Value))
             {
-                hasAccess = (new CNAPI() { paramsContainer = this.paramsContainer })
-                        ._is_admin(paramsContainer.Tenant.Id,
-                        ownerId.Value, paramsContainer.CurrentUserID.Value, CNAPI.AdminLevel.Node, false);
+                AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, 
+                    paramsContainer.CurrentUserID, nodeIdOrNodeTypeId: ownerId);
+
+                hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Node, permission: PermissionType.None);
             }
             else if (UsersController.get_user(paramsContainer.Tenant.Id, ownerId.Value) != null)
             {
@@ -429,9 +431,10 @@ namespace RaaiVan.Web.API
 
                 if (tr != null && tr.IsPrivate.HasValue && tr.IsPrivate.Value && tr.OwnerID.HasValue)
                 {
-                    hasAccess = (new CNAPI() { paramsContainer = this.paramsContainer })
-                        ._is_admin(paramsContainer.Tenant.Id,
-                        tr.OwnerID.Value, paramsContainer.CurrentUserID.Value, CNAPI.AdminLevel.Node, false);
+                    AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, 
+                        paramsContainer.CurrentUserID, nodeIdOrNodeTypeId: tr.OwnerID);
+
+                    hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Node, permission: PermissionType.None);
                 }
 
                 if (!hasAccess)
@@ -484,9 +487,10 @@ namespace RaaiVan.Web.API
                 hasAccess = AuthorizationManager.has_right(AccessRoleName.ContentsManagement, paramsContainer.CurrentUserID);
             else
             {
-                hasAccess = (new CNAPI() { paramsContainer = this.paramsContainer })
-                        ._is_admin(paramsContainer.Tenant.Id,
-                        ownerId.Value, paramsContainer.CurrentUserID.Value, CNAPI.AdminLevel.Node, false);
+                AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID,
+                        paramsContainer.CurrentUserID, nodeIdOrNodeTypeId: ownerId);
+
+                hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Node, permission: PermissionType.None);
             }
 
             if (!hasAccess)
@@ -785,12 +789,10 @@ namespace RaaiVan.Web.API
                 hasAccess = AuthorizationManager.has_right(AccessRoleName.ContentsManagement, paramsContainer.CurrentUserID);
             else if (CNController.is_node(paramsContainer.Tenant.Id, treeOwnerId.Value))
             {
-                hasAccess = (new CNAPI() { paramsContainer = this.paramsContainer })
-                    ._is_admin(paramsContainer.Tenant.Id, treeOwnerId.Value,
-                    paramsContainer.CurrentUserID.Value, CNAPI.AdminLevel.Node, false);
+                AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID,
+                        paramsContainer.CurrentUserID, nodeIdOrNodeTypeId: treeOwnerId);
 
-                hasAccess = hasAccess || CNController.is_admin_member(paramsContainer.Tenant.Id,
-                    treeOwnerId.Value, paramsContainer.CurrentUserID.Value);
+                hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Node, permission: PermissionType.None);
             }
             else if (UsersController.get_user(paramsContainer.Tenant.Id, treeOwnerId.Value) != null)
             {
@@ -874,7 +876,7 @@ namespace RaaiVan.Web.API
                 ProviderUtil.list_to_string<string>(list.Select(u => u.toJSON()).ToList()) + "]}";
         }
 
-        protected string _get_doc_json(Modules.CoreNetwork.Node _dc, string fileExtension, User creator = null,
+        protected string _get_doc_json(Node _dc, string fileExtension, User creator = null,
             bool? likeStatus = null, bool? editable = null, bool? removable = null)
         {
             string strCreator = creator == null ? "{}" :
@@ -1035,7 +1037,7 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBView) return;
 
-            List<Modules.CoreNetwork.Node> docs = !docId.HasValue ? new List<Modules.CoreNetwork.Node>() :
+            List<Node> docs = !docId.HasValue ? new List<Node>() :
                 CNController.get_previous_versions(paramsContainer.Tenant.Id, docId.Value, paramsContainer.CurrentUserID, true);
             List<User> users = UsersController.get_users(paramsContainer.Tenant.Id,
                 docs.Where(v => v.Creator.UserID.HasValue).Select(u => u.Creator.UserID.Value).ToList());
@@ -1043,7 +1045,7 @@ namespace RaaiVan.Web.API
             responseText = "{\"Docs\":[";
 
             bool isFirst = true;
-            foreach (Modules.CoreNetwork.Node _dc in docs)
+            foreach (Node _dc in docs)
             {
                 responseText += (isFirst ? string.Empty : ",") + _get_doc_json(_dc, string.Empty,
                     (_dc.Creator.UserID.HasValue ? users.Where(u => u.UserID == _dc.Creator.UserID).FirstOrDefault() : null));
@@ -1287,18 +1289,18 @@ namespace RaaiVan.Web.API
 
             if (!treeOwnerId.HasValue)
             {
+                AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID,
+                        paramsContainer.CurrentUserID, nodeIdOrNodeTypeId: nodeIds[0]);
+
                 hasAccess = treeNodeId.HasValue && nodeIds.Count == 1 &&
-                    (new CNAPI() { paramsContainer = this.paramsContainer })
-                    ._is_admin(paramsContainer.Tenant.Id, nodeIds[0],
-                    paramsContainer.CurrentUserID.Value, CNAPI.AdminLevel.Node, false);
+                    accessChecker.checkNodeEditAccess(AdminLevel.Node, permission: PermissionType.None);
             }
             else if (CNController.is_node(paramsContainer.Tenant.Id, treeOwnerId.Value))
             {
-                hasAccess = (new CNAPI() { paramsContainer = this.paramsContainer })
-                    ._is_admin(paramsContainer.Tenant.Id, treeOwnerId.Value,
-                    paramsContainer.CurrentUserID.Value, CNAPI.AdminLevel.Node, false);
-                hasAccess = hasAccess || CNController.is_admin_member(paramsContainer.Tenant.Id,
-                    treeOwnerId.Value, paramsContainer.CurrentUserID.Value);
+                AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID,
+                        paramsContainer.CurrentUserID, nodeIdOrNodeTypeId: treeOwnerId);
+
+                hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Node, permission: PermissionType.None);
             }
             else if (UsersController.get_user(paramsContainer.Tenant.Id, treeOwnerId.Value) != null)
             {

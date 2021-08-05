@@ -1972,6 +1972,7 @@
     <Compile Include="API\API.ashx.cs">
       <DependentUpon>API.ashx</DependentUpon>
     </Compile>
+    <Compile Include="API\Util\AccessChecker.cs" />
     <Compile Include="API\Util\AuthorizationManager.cs" />
     <Compile Include="API\CNAPI.ashx.cs">
       <DependentUpon>CNAPI.ashx</DependentUpon>

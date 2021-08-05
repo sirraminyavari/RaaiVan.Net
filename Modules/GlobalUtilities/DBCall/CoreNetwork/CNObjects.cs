@@ -63,6 +63,14 @@ namespace RaaiVan.Modules.CoreNetwork
         Accepted
     }
 
+    public enum AdminLevel
+    {
+        System,
+        Service,
+        Node,
+        Creator
+    }
+
     public static class CNUtilities
     {
         private static string _DefaultAdditionalIDPattern;
@@ -516,61 +524,21 @@ namespace RaaiVan.Modules.CoreNetwork
 
     public class RelationType
     {
-        private Guid? _RelationTypeID;
-        private int? _AdditionalID;
-        private string _Name;
-        private string _Description;
-        private Guid? _CreatorUserID;
-        private DateTime? _CreationDate;
-        private Guid? _LastModifierUserID;
-        private DateTime? _LastModificationDate;
+        public Guid? RelationTypeID;
+        public int? AdditionalID;
+        public string Name;
+        public string Description;
+        public Guid? CreatorUserID;
+        public DateTime? CreationDate;
+        public Guid? LastModifierUserID;
+        public DateTime? LastModificationDate;
 
-        public Guid? RelationTypeID
+        public string toJson()
         {
-            get { return _RelationTypeID; }
-            set { _RelationTypeID = value; }
-        }
-
-        public int? AdditionalID
-        {
-            get { return _AdditionalID; }
-            set { _AdditionalID = value; }
-        }
-
-        public string Name
-        {
-            get { return _Name; }
-            set { _Name = value; }
-        }
-
-        public string Description
-        {
-            get { return _Description; }
-            set { _Description = value; }
-        }
-
-        public Guid? CreatorUserID
-        {
-            get { return _CreatorUserID; }
-            set { _CreatorUserID = value; }
-        }
-
-        public DateTime? CreationDate
-        {
-            get { return _CreationDate; }
-            set { _CreationDate = value; }
-        }
-
-        public Guid? LastModifierUserID
-        {
-            get { return _LastModifierUserID; }
-            set { _LastModifierUserID = value; }
-        }
-
-        public DateTime? LastModificationDate
-        {
-            get { return _LastModificationDate; }
-            set { _LastModificationDate = value; }
+            return "{\"RelationTypeID\":\"" + (!RelationTypeID.HasValue ? string.Empty : RelationTypeID.ToString()) + "\"" + 
+                ",\"TypeName\":\"" + Base64.encode(Name) + "\"" + 
+                ",\"IsDefault\":" + AdditionalID.HasValue.ToString().ToLower() + 
+                "}";
         }
     }
 

@@ -1465,35 +1465,6 @@ namespace RaaiVan.Web.API
             _save_error_log(action, new List<Guid>() { subjectId.Value }, secondSubjectId, info);
         }
 
-        public enum AdminLevel
-        {
-            System,
-            Service,
-            Node,
-            Creator
-        }
-
-        public bool _is_admin(Guid applicationId, Guid nodeIdOrNodeTypeId, Guid userId, AdminLevel level,
-            bool? checkWorkFlowEditPermission)
-        {
-            bool isAdmin = PublicMethods.is_system_admin(applicationId, userId);
-            if (level == AdminLevel.System) return isAdmin;
-            if (!isAdmin) isAdmin = CNController.is_service_admin(applicationId, nodeIdOrNodeTypeId, userId);
-            if (level == AdminLevel.Service) return isAdmin;
-            if (!isAdmin) isAdmin = CNController.is_node_admin(applicationId, userId, nodeIdOrNodeTypeId, null, null, null);
-            if (level == AdminLevel.Node) return isAdmin;
-            if (!isAdmin) isAdmin = CNController.is_node_creator(applicationId, nodeIdOrNodeTypeId, userId);
-            if (!isAdmin && checkWorkFlowEditPermission.HasValue && checkWorkFlowEditPermission.Value)
-            {
-                bool hasKnowledgePermission = false, hasWorkFlowPermission = false, hideContributors = false;
-
-                check_node_workflow_permissions(new Node() { NodeID = nodeIdOrNodeTypeId },
-                    null, false, false, false, false, ref hasKnowledgePermission, ref hasWorkFlowPermission,
-                    ref isAdmin, ref hideContributors);
-            }
-            return isAdmin;
-        }
-
         public void check_node_workflow_permissions(Node node, bool? isKnowledge,
             bool isSystemAdmin, bool isServiceAdmin, bool isAreaAdmin, bool isCreator,
             ref bool hasKnowledgePermission, ref bool hasWorkFlowPermission,
@@ -2165,18 +2136,6 @@ namespace RaaiVan.Web.API
                 ",\"NodeTypes\":[" + string.Join(",", nodeTypes.Select(u => u.toJson())) + "]}";
         }
 
-        protected string _get_relation_type_json(RelationType relationType)
-        {
-            Guid relationTypeId = relationType.RelationTypeID.Value;
-            string typeName = relationType.Name;
-            bool isDefault = relationType.AdditionalID.HasValue;
-
-            Base64.encode(typeName, ref typeName);
-
-            return "{\"RelationTypeID\":\"" + relationTypeId.ToString() + "\",\"TypeName\":\"" + typeName +
-                "\",\"IsDefault\":" + isDefault.ToString().ToLower() + "}";
-        }
-
         protected void add_relation_type(string typeName, string description, ref string responseText)
         {
             //Privacy Check: OK
@@ -2199,9 +2158,11 @@ namespace RaaiVan.Web.API
             };
 
             bool result = CNController.add_relation_type(paramsContainer.Tenant.Id, relationType);
-            responseText = result ?
-                "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\",\"RelationType\":" + _get_relation_type_json(relationType) + "}" :
-                "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+
+            responseText = !result ? "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}" :
+                "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" + 
+                ",\"RelationType\":" + relationType.toJson() + 
+                "}";
 
             //Save Log
             if (result)
@@ -2243,9 +2204,10 @@ namespace RaaiVan.Web.API
             };
 
             bool result = CNController.modify_relation_type(paramsContainer.Tenant.Id, relationType);
-            responseText = result ?
-                "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\",\"RelationType\":" + _get_relation_type_json(relationType) + "}" :
-                "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+
+            responseText = !result ? "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}" :
+                "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" +
+                ",\"RelationType\":" + relationType.toJson() + "}";
 
             //Save Log
             if (result)
@@ -2312,16 +2274,7 @@ namespace RaaiVan.Web.API
 
             List<RelationType> relationTypes = CNController.get_relation_types(paramsContainer.Tenant.Id);
 
-            responseText = "{\"RelationTypes\":[";
-
-            bool isFirst = true;
-            foreach (RelationType _relationType in relationTypes)
-            {
-                responseText += (isFirst ? string.Empty : ",") + _get_relation_type_json(_relationType);
-                isFirst = false;
-            }
-
-            responseText += "]}";
+            responseText = "{\"RelationTypes\":[" + string.Join(",", relationTypes.Select(t => t.toJson())) + "]}";
         }
 
         protected void add_node(Guid? nodeTypeId, string name, string description,
@@ -2353,17 +2306,21 @@ namespace RaaiVan.Web.API
             NodeType nt = nodeTypeId.HasValue ?
                 CNController.get_node_type(paramsContainer.Tenant.Id, nodeTypeId.Value) : null;
 
-            if (nt == null || !nt.NodeTypeID.HasValue ||
-                (!AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !_is_admin(paramsContainer.Tenant.Id, nt.NodeTypeID.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Service, false) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID,
-                    nt.NodeTypeID.Value, PrivacyObjectType.NodeType, PermissionType.Create)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nt == null ? null : nt.NodeTypeID);
+
+            bool hasAccess= accessChecker.checkNodeEditAccess(AdminLevel.Service, roleName: AccessRoleName.ManageOntology, 
+                privacyObjectType: PrivacyObjectType.NodeType, permission: PermissionType.Create);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nt != null && nt.NodeTypeID.HasValue)
                     _save_error_log(Modules.Log.Action.AddNode_PermissionFailed, nodeTypeId);
                 return;
             }
+            //end of check access
 
             if (nt != null && !string.IsNullOrEmpty(nt.AdditionalIDPattern) &&
                 !Expressions.is_match(nt.AdditionalIDPattern, Expressions.Patterns.AdditionalID))
@@ -2452,18 +2409,20 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            if (!nodeId.HasValue || (
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !_is_admin(paramsContainer.Tenant.Id, nodeId.Value,
-                    paramsContainer.CurrentUserID.Value, AdminLevel.Creator, false) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID,
-                    nodeId.Value, PrivacyObjectType.Node, PermissionType.Modify)
-                ))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Creator, roleName: AccessRoleName.ManageOntology,
+                privacyObjectType: PrivacyObjectType.Node, permission: PermissionType.Modify);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.ModifyNode_PermissionFailed, nodeId);
                 return;
             }
+            //end of check access
 
             Node node = new Node()
             {
@@ -2558,16 +2517,22 @@ namespace RaaiVan.Web.API
             Node nd = !nodeId.HasValue ? null :
                 CNController.get_node(paramsContainer.Tenant.Id, nodeId.Value);
 
+            //check access
             bool creatorLevel = nd != null && nd.Creator.UserID.HasValue && nd.isPersonal(nd.Creator.UserID.Value);
 
-            if (!nodeId.HasValue || (!_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value,
-                creatorLevel ? AdminLevel.Creator : AdminLevel.Node, checkWorkFlowEditPermission) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, nodeId.Value, PrivacyObjectType.Node, PermissionType.Modify)))
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId, node: nd);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(creatorLevel ? AdminLevel.Creator : AdminLevel.Node,
+                privacyObjectType: PrivacyObjectType.Node, permission: PermissionType.Modify);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.SetDocumentTreeNodeID_PermissionFailed, nodeId);
                 return;
             }
+            //end of check access
 
             bool result = CNController.set_document_tree_node_id(paramsContainer.Tenant.Id,
                 nodeId.Value, documentTreeNodeId, paramsContainer.CurrentUserID.Value);
@@ -2599,15 +2564,21 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            if (!nodeId.HasValue || (!_is_admin(paramsContainer.Tenant.Id, nodeId.Value,
-                paramsContainer.CurrentUserID.Value, AdminLevel.Creator, checkWorkFlowEditPermission) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, nodeId.Value, PrivacyObjectType.Node, PermissionType.Modify)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Creator, checkWorkFlowEditPermission: checkWorkFlowEditPermission,
+                roleName: AccessRoleName.ManageOntology, privacyObjectType: PrivacyObjectType.Node, permission: PermissionType.Modify);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue)
                     _save_error_log(Modules.Log.Action.ModifyNodeName_PermissionFailed, nodeId, null, null);
                 return;
             }
+            //end of check access
 
             if (!string.IsNullOrEmpty(name) && name.Length > 250)
             {
@@ -2657,14 +2628,21 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            if (!nodeId.HasValue || (!_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value,
-                AdminLevel.Creator, checkWorkFlowEditPermission) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, nodeId.Value, PrivacyObjectType.Node, PermissionType.Modify)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Creator, 
+                checkWorkFlowEditPermission: checkWorkFlowEditPermission,
+                privacyObjectType: PrivacyObjectType.Node, permission: PermissionType.Modify);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.ModifyNodeDescription_PermissionFailed, nodeId);
                 return;
             }
+            //end of check access
 
             Node node = new Node()
             {
@@ -2726,15 +2704,21 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            if (!nodeId.HasValue || (!_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value,
-                AdminLevel.Creator, checkWorkFlowEditPermission) &&
-                !CNController.is_admin_member(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, nodeId.Value, PrivacyObjectType.Node, PermissionType.Modify)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Creator, 
+                checkWorkFlowEditPermission: checkWorkFlowEditPermission,
+                privacyObjectType: PrivacyObjectType.Node, permission: PermissionType.Modify);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.ModifyNodePublicDescription_PermissionFailed, nodeId);
                 return;
             }
+            //end of check access
 
             bool result = nodeId.HasValue &&
                 CNController.modify_node_public_description(paramsContainer.Tenant.Id, nodeId.Value, description);
@@ -2765,15 +2749,20 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            if (!nodeId.HasValue || !Modules.RaaiVanConfig.Modules.Knowledge(paramsContainer.Tenant.Id) ||
-                !CNController.is_knowledge(paramsContainer.Tenant.Id, nodeId.Value) ||
-                (!_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Node, false) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, nodeId.Value, PrivacyObjectType.Node, PermissionType.Modify)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = accessChecker.isKnowledge() && accessChecker.checkNodeEditAccess(AdminLevel.Node,
+                privacyObjectType: PrivacyObjectType.Node, permission: PermissionType.Modify);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.SetNodeExpirationDate_PermissionFailed, nodeId);
                 return;
             }
+            //end of check access
 
             bool result = nodeId.HasValue &&
                 CNController.set_node_expiration_date(paramsContainer.Tenant.Id, nodeId.Value, expirationDate);
@@ -2811,17 +2800,22 @@ namespace RaaiVan.Web.API
 
             Node nd = !nodeId.HasValue ? null : CNController.get_node(paramsContainer.Tenant.Id, nodeId.Value);
 
+            //check access
             bool creatorLevel = nd != null && nd.Creator.UserID.HasValue && nd.isPersonal(nd.Creator.UserID.Value);
 
-            if (!nodeId.HasValue || (!_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value,
-                creatorLevel ? AdminLevel.Creator : AdminLevel.Node, false) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, 
-                    paramsContainer.CurrentUserID, nodeId.Value, PrivacyObjectType.Node, PermissionType.Modify)))
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId, node: nd);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(creatorLevel ? AdminLevel.Creator : AdminLevel.Node,
+                privacyObjectType: PrivacyObjectType.Node, permission: PermissionType.Modify);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.SetPreviousVersion_PermissionFailed, nodeId);
                 return;
             }
+            //end of check access
 
             if (previousVersionId.HasValue) {
                 Node newVersion = CNController.get_new_versions(paramsContainer.Tenant.Id, previousVersionId.Value)
@@ -2883,14 +2877,21 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            if (!nodeId.HasValue || (!_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value,
-                AdminLevel.Creator, checkWorkFlowEditPermission) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, nodeId.Value, PrivacyObjectType.Node, PermissionType.Modify)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Creator,
+                checkWorkFlowEditPermission: checkWorkFlowEditPermission,
+                privacyObjectType: PrivacyObjectType.Node, permission: PermissionType.Modify);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.ModifyNodeTags_PermissionFailed, nodeId);
                 return;
             }
+            //end of check access
 
             Node node = new Node()
             {
@@ -2948,14 +2949,20 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            if (!nodeId.HasValue || (!_is_admin(paramsContainer.Tenant.Id, nodeId.Value,
-                paramsContainer.CurrentUserID.Value, AdminLevel.Node, false) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, nodeId.Value, PrivacyObjectType.Node, PermissionType.Modify)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Node,
+                privacyObjectType: PrivacyObjectType.Node, permission: PermissionType.Modify);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.SetNodeSearchability_PermissionFailed, nodeId);
                 return;
             }
+            //end of check access
 
             bool result = nodeId.HasValue && CNController.set_node_searchability(paramsContainer.Tenant.Id,
                 nodeId.Value, searchable.HasValue && searchable.Value, paramsContainer.CurrentUserID.Value);
@@ -3099,14 +3106,20 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            if (!AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !(nodeIds.Count == 1 && _is_admin(paramsContainer.Tenant.Id,
-                nodeIds.First(), paramsContainer.CurrentUserID.Value, AdminLevel.Node, false)))
+            //check access. note: only admin can move multiple nodes
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeIds.Count > 0 ? (Guid?)nodeIds.First() : null);
+
+            bool hasAccess = nodeIds.Count > 1 ? accessChecker.checkAccessRole(AccessRoleName.ManageOntology) :
+                accessChecker.checkNodeEditAccess(AdminLevel.Node, roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 _save_error_log(Modules.Log.Action.SetNodeDirectParent, nodeIds);
                 return;
             }
+            //end of check access
 
             string errorMessage = string.Empty;
 
@@ -3176,14 +3189,20 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            if (!sourceNodeId.HasValue || (
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !_is_admin(paramsContainer.Tenant.Id, sourceNodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Creator, false)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: sourceNodeId);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Creator, roleName: AccessRoleName.ManageOntology,
+                permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (sourceNodeId.HasValue) _save_error_log(Modules.Log.Action.AddNodeRelation_PermissionFailed, sourceNodeId);
                 return;
             }
+            //end of check access
 
             List<Relation> relations = new List<Relation>();
 
@@ -3228,13 +3247,19 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            if (!nodeId.HasValue ||
-                !_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Creator, false))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Creator, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.SaveRelations_PermissionFailed, nodeId);
                 return;
             }
+            //end of check access
 
             bool result = nodeId.HasValue && CNController.save_relations(paramsContainer.Tenant.Id,
                 nodeId.Value, relatedNodeIds, paramsContainer.CurrentUserID.Value);
@@ -4012,10 +4037,12 @@ namespace RaaiVan.Web.API
 
             if (!userId.HasValue) userId = paramsContainer.CurrentUserID;
 
-            bool hasAdminAccess = nodeId.HasValue && userId.HasValue && (
-                AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) ||
-                _is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Node, false) ||
-                CNController.is_admin_member(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value));
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAdminAccess = userId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Node, 
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
 
             bool hasUserAccess = nodeId.HasValue && userId.HasValue && !hasAdminAccess &&
                 CNController.has_extension(paramsContainer.Tenant.Id, nodeId.Value, ExtensionType.Group) &&
@@ -4028,14 +4055,17 @@ namespace RaaiVan.Web.API
                     _save_error_log(Modules.Log.Action.AddNodeMember_PermissionFailed, nodeId, userId);
                 return;
             }
+            //end of check access
 
-            NodeMember newMember = new NodeMember();
-            newMember.Node.NodeID = nodeId;
-            newMember.Member.UserID = userId;
-            newMember.MembershipDate = DateTime.Now;
-            newMember.IsAdmin = false;
-            newMember.Status = (hasAdminAccess ? NodeMemberStatuses.Accepted : NodeMemberStatuses.Pending).ToString();
-            if (newMember.Status == NodeMemberStatuses.Accepted.ToString()) newMember.AcceptionDate = DateTime.Now;
+            NodeMember newMember = new NodeMember()
+            {
+                Node = new Node() { NodeID = nodeId },
+                Member = new User() { UserID = userId },
+                MembershipDate = DateTime.Now,
+                IsAdmin = false,
+                Status = (hasAdminAccess ? NodeMemberStatuses.Accepted : NodeMemberStatuses.Pending).ToString(),
+                AcceptionDate = hasAdminAccess ? (DateTime?)DateTime.Now : null
+            };
 
             List<Dashboard> retDashboards = new List<Dashboard>();
 
@@ -4075,18 +4105,22 @@ namespace RaaiVan.Web.API
 
             if (!userId.HasValue) userId = paramsContainer.CurrentUserID;
 
-            bool hasAdminAccess = nodeId.HasValue && userId.HasValue && (
-                AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) ||
-                _is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Node, false) ||
-                CNController.is_admin_member(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value));
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
 
-            if (!hasAdminAccess && userId != paramsContainer.CurrentUserID)
+            bool hasAccess = userId == paramsContainer.CurrentUserID || (
+                userId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Node, 
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None));
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue && userId.HasValue)
                     _save_error_log(Modules.Log.Action.RemoveNodeMember_PermissionFailed, nodeId, userId);
                 return;
             }
+            //check access
 
             bool result = nodeId.HasValue && userId.HasValue &&
                 CNController.remove_member(paramsContainer.Tenant.Id, nodeId.Value, userId.Value);
@@ -4120,18 +4154,21 @@ namespace RaaiVan.Web.API
 
             if (!userId.HasValue) userId = paramsContainer.CurrentUserID;
 
-            bool hasAdminAccess = nodeId.HasValue && userId.HasValue && (
-                AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) ||
-                _is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Node, false) ||
-                CNController.is_admin_member(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value));
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
 
-            if (!hasAdminAccess)
+            bool hasAccess = userId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Node,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue && userId.HasValue)
                     _save_error_log(Modules.Log.Action.AcceptNodeMember_PermissionFailed, nodeId, userId);
                 return;
             }
+            //end of check access
 
             bool result = nodeId.HasValue && userId.HasValue &&
                 CNController.accept_member(paramsContainer.Tenant.Id, nodeId.Value, userId.Value);
@@ -4186,18 +4223,21 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            bool hasAdminAccess = nodeId.HasValue && (
-                AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) ||
-                _is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Node, false) ||
-                CNController.is_admin_member(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value));
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
 
-            if (!hasAdminAccess)
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Node,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.PendingMembers_AccessDenied,
                      nodeId, paramsContainer.CurrentUserID.Value);
                 return;
             }
+            //check access
 
             long totalCount = 0;
 
@@ -4263,15 +4303,21 @@ namespace RaaiVan.Web.API
 
             if (!userId.HasValue) userId = paramsContainer.CurrentUserID;
 
-            if (!nodeId.HasValue || !userId.HasValue || (
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Node, false)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = userId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Node,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue && userId.HasValue)
                     _save_error_log(Modules.Log.Action.SetUserAsNodeAdmin_PermissionFailed, nodeId, userId);
                 return;
             }
+            //end of check access
 
             Node _node = CNController.get_node(paramsContainer.Tenant.Id, nodeId.Value);
 
@@ -4316,15 +4362,21 @@ namespace RaaiVan.Web.API
 
             if (!userId.HasValue) userId = paramsContainer.CurrentUserID;
 
-            if (!nodeId.HasValue || !userId.HasValue || (
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Node, false)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = userId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Node,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue && userId.HasValue)
                     _save_error_log(Modules.Log.Action.RemoveNodeAdmin_PermissionFailed, nodeId, userId);
                 return;
             }
+            //end of check access
 
             bool result = CNController.set_unset_node_admin(paramsContainer.Tenant.Id, nodeId.Value, userId.Value, false);
 
@@ -4356,15 +4408,21 @@ namespace RaaiVan.Web.API
 
             if (!userId.HasValue) userId = paramsContainer.CurrentUserID;
 
-            if (!nodeId.HasValue || !userId.HasValue || (
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Node, false)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = userId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Node,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue && userId.HasValue)
                     _save_error_log(Modules.Log.Action.AddExpert_PermissionFailed, nodeId, userId);
                 return;
             }
+            //end of check access
 
             Expert expert = new Expert();
             expert.Node.NodeID = nodeId;
@@ -4402,15 +4460,21 @@ namespace RaaiVan.Web.API
 
             if (!userId.HasValue) userId = paramsContainer.CurrentUserID;
 
-            if (!nodeId.HasValue || !userId.HasValue || (
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Node, false)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = userId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Node,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue && userId.HasValue)
                     _save_error_log(Modules.Log.Action.RemoveExpert_PermissionFailed, nodeId, userId);
                 return;
             }
+            //end of check access
 
             bool result = CNController.remove_expert(paramsContainer.Tenant.Id, nodeId.Value, userId.Value);
 
@@ -4706,14 +4770,20 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            if (!nodeTypeId.HasValue || (
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !_is_admin(paramsContainer.Tenant.Id, nodeTypeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Service, false)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeTypeId);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Service,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeTypeId.HasValue) _save_error_log(Modules.Log.Action.AddComplex_PermissionFailed, nodeTypeId);
                 return;
             }
+            //check access
 
             NodeList newList = new NodeList()
             {
@@ -4764,22 +4834,22 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            bool accessDenied = !listId.HasValue ||
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID);
+            Guid? listTypeId = !listId.HasValue ? null : CNController.get_complex_type_id(paramsContainer.Tenant.Id, listId.Value);
 
-            if (accessDenied && listId.HasValue)
-            {
-                Guid? listTypeId = CNController.get_complex_type_id(paramsContainer.Tenant.Id, listId.Value);
-                accessDenied = !listId.HasValue || !_is_admin(paramsContainer.Tenant.Id,
-                    listTypeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Service, false);
-            }
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: listTypeId);
 
-            if (accessDenied)
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Service,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 _save_error_log(Modules.Log.Action.ModifyComplex_PermissionFailed, listId);
                 return;
             }
+            //end of check access
 
             NodeList list = new NodeList()
             {
@@ -4817,21 +4887,22 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            bool accessDenied = !listId.HasValue ||
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID);
-            if (accessDenied && listId.HasValue)
-            {
-                Guid? listTypeId = CNController.get_complex_type_id(paramsContainer.Tenant.Id, listId.Value);
-                accessDenied = !listId.HasValue || !_is_admin(paramsContainer.Tenant.Id,
-                    listTypeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Service, false);
-            }
+            Guid? listTypeId = !listId.HasValue ? null : CNController.get_complex_type_id(paramsContainer.Tenant.Id, listId.Value);
 
-            if (accessDenied)
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: listTypeId);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Service,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 _save_error_log(Modules.Log.Action.RemoveComplex_PermissionFailed, listId);
                 return;
             }
+            //end of check access
 
             bool result = listId.HasValue && CNController.remove_complex(paramsContainer.Tenant.Id,
                 listId.Value, paramsContainer.CurrentUserID.Value);
@@ -4861,15 +4932,21 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            if (!listId.HasValue || !nodeId.HasValue || (
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Service, false)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = listId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Service,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (listId.HasValue && nodeId.HasValue)
                     _save_error_log(Modules.Log.Action.AddNodeToComplex_PermissionFailed, listId, nodeId);
                 return;
             }
+            //end of check access
 
             bool result = listId.HasValue && CNController.add_node_to_complex(paramsContainer.Tenant.Id,
                 listId.Value, nodeId.Value, paramsContainer.CurrentUserID.Value);
@@ -4900,15 +4977,21 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            if (!listId.HasValue || !nodeId.HasValue || (
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID) &&
-                !_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Service, false)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId);
+
+            bool hasAccess = listId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Service,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (listId.HasValue && nodeId.HasValue)
                     _save_error_log(Modules.Log.Action.RemoveComplexNode_PermissionFailed, listId, nodeId);
                 return;
             }
+            //end of check access
 
             bool result = listId.HasValue && CNController.remove_complex_node(paramsContainer.Tenant.Id,
                 listId.Value, nodeId.Value, paramsContainer.CurrentUserID.Value);
@@ -4941,23 +5024,23 @@ namespace RaaiVan.Web.API
 
             if (!userId.HasValue) userId = paramsContainer.CurrentUserID;
 
-            bool accessDenied = !listId.HasValue || !userId.HasValue ||
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID);
+            Guid? listTypeId = !listId.HasValue ? null : CNController.get_complex_type_id(paramsContainer.Tenant.Id, listId.Value);
 
-            if (accessDenied && listId.HasValue)
-            {
-                Guid? listTypeId = CNController.get_complex_type_id(paramsContainer.Tenant.Id, listId.Value);
-                accessDenied = !listId.HasValue || !_is_admin(paramsContainer.Tenant.Id,
-                    listTypeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Service, false);
-            }
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: listTypeId);
 
-            if (accessDenied)
+            bool hasAccess = userId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Service,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (listId.HasValue && userId.HasValue)
                     _save_error_log(Modules.Log.Action.AddComplexAdmin_PermissionFailed, listId, userId);
                 return;
             }
+            //end of check access
 
             bool result = listId.HasValue && CNController.add_complex_admin(paramsContainer.Tenant.Id,
                 listId.Value, userId.Value, paramsContainer.CurrentUserID.Value);
@@ -5001,23 +5084,23 @@ namespace RaaiVan.Web.API
 
             if (!userId.HasValue) userId = paramsContainer.CurrentUserID;
 
-            bool accessDenied = !listId.HasValue || !userId.HasValue ||
-                !AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID);
+            Guid? listTypeId = !listId.HasValue ? null : CNController.get_complex_type_id(paramsContainer.Tenant.Id, listId.Value);
 
-            if (accessDenied && listId.HasValue)
-            {
-                Guid? listTypeId = CNController.get_complex_type_id(paramsContainer.Tenant.Id, listId.Value);
-                accessDenied = !listId.HasValue || !_is_admin(paramsContainer.Tenant.Id,
-                    listTypeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Service, false);
-            }
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: listTypeId);
 
-            if (accessDenied)
+            bool hasAccess = userId.HasValue && accessChecker.checkNodeEditAccess(AdminLevel.Service,
+                roleName: AccessRoleName.ManageOntology, permission: PermissionType.None);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (listId.HasValue && userId.HasValue)
                     _save_error_log(Modules.Log.Action.RemoveComplexAdmin_PermissionFailed, listId, userId);
                 return;
             }
+            //end of check access
 
             bool result = listId.HasValue && CNController.remove_complex_admin(paramsContainer.Tenant.Id,
                 listId.Value, userId.Value, paramsContainer.CurrentUserID.Value);
@@ -7844,14 +7927,15 @@ namespace RaaiVan.Web.API
 
             bool granted = service != null && !string.IsNullOrEmpty(service.Title);
 
-            bool isAdminServiceLevel = granted && _is_admin(paramsContainer.Tenant.Id, 
-                nodeTypeId.Value, paramsContainer.CurrentUserID.Value, AdminLevel.Service, false);
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeTypeId);
 
-            granted = granted && (isAdminServiceLevel || 
-                PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID,
-                    nodeTypeId.Value, PrivacyObjectType.NodeType, PermissionType.Create));
+            bool hasAccess = granted && accessChecker.checkNodeEditAccess(AdminLevel.Service,
+                privacyObjectType: PrivacyObjectType.NodeType, permission: PermissionType.Create);
+            //end of check access
 
-            responseText = "{\"Result\":" + granted.ToString().ToLower() + "}";
+            responseText = "{\"Result\":" + hasAccess.ToString().ToLower() + "}";
         }
 
         public bool register_new_node(Guid? nodeId, Guid? nodeTypeId, Guid? parentNodeId, Guid? documentTreeNodeId,
@@ -7884,17 +7968,20 @@ namespace RaaiVan.Web.API
                 return false;
             }
 
-            bool isAdminServiceLevel = nodeTypeId.HasValue && _is_admin(paramsContainer.Tenant.Id, nodeTypeId.Value,
-                paramsContainer.CurrentUserID.Value, AdminLevel.Service, false);
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeTypeId);
 
-            if (!nodeTypeId.HasValue || (!isAdminServiceLevel &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID,
-                    nodeTypeId.Value, PrivacyObjectType.NodeType, PermissionType.Create)))
+            bool hasAccess = accessChecker.checkNodeEditAccess(AdminLevel.Service,
+                privacyObjectType: PrivacyObjectType.NodeType, permission: PermissionType.Create);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeTypeId.HasValue) _save_error_log(Modules.Log.Action.AddNode_PermissionFailed, nodeTypeId);
                 return false;
             }
+            //end of check access
 
             if (ownerId == Guid.Empty) ownerId = null;
             if (!nodeId.HasValue || nodeId == Guid.Empty) nodeId = Guid.NewGuid();
@@ -8176,16 +8263,23 @@ namespace RaaiVan.Web.API
             
             bool creatorLevel = nd != null && nd.Creator.UserID.HasValue && nd.isPersonal(nd.Creator.UserID.Value);
 
-            if (!nodeId.HasValue || (
-                !_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value,
-                    creatorLevel ? AdminLevel.Creator : AdminLevel.Service, false) &&
-                !NotificationController.dashboard_exists(paramsContainer.Tenant.Id, 
-                    paramsContainer.CurrentUserID.Value, nodeId.Value, DashboardType.Knowledge, DashboardSubType.Admin, done: false)))
+            //check access
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId, node: nd);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(
+                creatorLevel ? AdminLevel.Creator : AdminLevel.Service, permission: PermissionType.None);
+
+            hasAccess = hasAccess || (nodeId.HasValue && NotificationController.dashboard_exists(paramsContainer.Tenant.Id,
+                paramsContainer.CurrentUserID.Value, nodeId.Value, DashboardType.Knowledge, DashboardSubType.Admin, done: false));
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.SetAdminArea_PermissionFailed, nodeId);
                 return;
             }
+            //end of check access
 
             bool succeed = CNController.set_admin_area(paramsContainer.Tenant.Id, nodeId.Value, areaId);
 
@@ -8224,9 +8318,13 @@ namespace RaaiVan.Web.API
 
             bool creatorLevel = nd != null && nd.Creator.UserID.HasValue && nd.isPersonal(nd.Creator.UserID.Value);
 
-            if (!nodeId.HasValue || (!_is_admin(paramsContainer.Tenant.Id, nodeId.Value, paramsContainer.CurrentUserID.Value,
-                creatorLevel ? AdminLevel.Creator : AdminLevel.Node, false) &&
-                !PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID, nodeId.Value, PrivacyObjectType.Node, PermissionType.Modify)))
+            AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
+                nodeIdOrNodeTypeId: nodeId, node: nd);
+
+            bool hasAccess = accessChecker.checkNodeEditAccess(creatorLevel ? AdminLevel.Creator : AdminLevel.Node, 
+                privacyObjectType: PrivacyObjectType.Node, permission: PermissionType.Modify);
+
+            if (!hasAccess)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 if (nodeId.HasValue) _save_error_log(Modules.Log.Action.SetDocumentTreeNodeID_PermissionFailed, nodeId);
