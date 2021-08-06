@@ -141,16 +141,17 @@ namespace RaaiVan.Modules.Search
 
             Dictionary<SearchDocType, List<Guid>> existingObjs = get_existing_ids(applicationId, listDocs, ref files);
 
-            listDocs.Where(doc => files.Any(u => u.FileID == doc.ID)).ToList().ForEach(doc =>
-            {
-                doc.FileInfo = files.Where(u => u.FileID == doc.ID).FirstOrDefault();
-            });
+            listDocs.Where(doc => files.Any(u => u.FileID == doc.ID)).ToList()
+                .ForEach(doc => doc.FileInfo = files.Where(u => u.FileID == doc.ID).FirstOrDefault());
 
             List<Guid> existingIds = new List<Guid>();
 
             //Remove not existing docs
             foreach (SearchDoc sd in listDocs)
-                if (!existingObjs.Any(x => x.Value.Any(z => z == sd.ID))) toBeRemoved.Add(sd);
+            {
+                if (!existingObjs.Any(x => x.Value.Any(z => z == sd.ID)) && !toBeRemoved.Any(x => x.ID == sd.ID))
+                    toBeRemoved.Add(sd);
+            }
             //end of Remove not existing docs
 
             List<Guid> granted = new List<Guid>();
@@ -255,9 +256,22 @@ namespace RaaiVan.Modules.Search
             List<SearchDoc> listDocs = RaaiVanSettings.Solr.Enabled ?
                 SolrAPI.search(applicationId, options) : LuceneAPI.search(applicationId, options);
 
-            retDocs.AddRange(process_search_results(applicationId, listDocs, currentUserId, ref toBeRemoved, options.Count));
+            List<SearchDoc> processedResults = 
+                process_search_results(applicationId, listDocs, currentUserId, ref toBeRemoved, options.Count);
 
-            newBoundary += listDocs.Count;
+            retDocs.AddRange(processedResults);
+
+            int processedCount = processedResults.Count == 0 ? listDocs.Count :
+                listDocs.FindIndex(d => d.ID == processedResults.Last().ID) + 1;
+
+            newBoundary += processedCount;
+
+            //for consistency we are not allowed to remove items after the last valid search result
+            List<SearchDoc> invalidRemoveRange = processedCount >= listDocs.Count ? 
+                new List<SearchDoc>() : listDocs.GetRange(processedCount, listDocs.Count - processedCount);
+
+            toBeRemoved = toBeRemoved.Where(r => !invalidRemoveRange.Any(i => i.ID == r.ID)).ToList();
+            //end of for consistency ...
 
             if (options.LowerBoundary != newBoundary)
             {
@@ -292,6 +306,9 @@ namespace RaaiVan.Modules.Search
                 List<SearchDoc> toBeRemoved = new List<SearchDoc>();
 
                 search(applicationId, currentUserId, ref retDocs, ref toBeRemoved, options);
+
+                //in case of fetching more items, removed items do not exists in the index. so, we have to modify the lower boundary
+                options.LowerBoundary -= toBeRemoved.Count;
 
                 if (toBeRemoved.Count > 0) remove_docs(applicationId, toBeRemoved);
 
