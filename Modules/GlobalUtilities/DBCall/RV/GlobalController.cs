@@ -65,7 +65,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             string name, string title, string description, Guid? currentUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddOrModifyApplication"),
-                applicationId, name, title, description, currentUserId);
+                applicationId, name, title, description, currentUserId, DateTime.Now);
         }
 
         public static bool remove_application(Guid applicationId)
@@ -80,7 +80,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static bool add_user_to_application(Guid applicationId, Guid userId)
         {
-            return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddUserToApplication"), applicationId, userId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddUserToApplication"), applicationId, userId, DateTime.Now);
         }
 
         public static bool remove_user_from_application(Guid applicationId, Guid userId)
