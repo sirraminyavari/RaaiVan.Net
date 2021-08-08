@@ -281,24 +281,11 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             if (table.Columns.Count <= 2)
             {
-                try
-                {
-                    string value = table.GetString(row: 1, column: 0);
+                string value = table.GetString(row: 1, column: 0);
 
-                    try
-                    {
-                        if (table.Columns.Count > 1) errorMessage += value;
-                    }
-                    catch (Exception ex)
-                    {
-                    }
+                if (table.Columns.Count > 1 && !string.IsNullOrEmpty(value)) errorMessage += value;
 
-                    return int.Parse(value);
-                }
-                catch (Exception ex2)
-                {
-                    return 0;
-                }
+                return table.GetInt(row: 0, column: 0, defaultValue: 0).Value;
             }
 
             retDashboards = parse_dashboards(table);

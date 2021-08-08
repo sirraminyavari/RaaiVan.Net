@@ -57,7 +57,7 @@ namespace RaaiVan.Modules.CoreNetwork
         
         public static List<NodeType> get_node_types(Guid applicationId, List<Guid> nodeTypeIds, bool grabSubNodeTypes = false)
         {
-            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodeType"),
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodeTypesByIDs"),
                 applicationId, ProviderUtil.list_to_string<Guid>(ref nodeTypeIds), ',', grabSubNodeTypes);
 
             long totalCount = 0;

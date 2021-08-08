@@ -208,14 +208,22 @@ namespace RaaiVan.Web.API
                     get_remote_servers(ref responseText);
                     paramsContainer.return_response(ref responseText);
                     return;
+                case "SetUserName":
+                    set_user_name(PublicMethods.parse_guid(context.Request.Params["UserID"]),
+                        PublicMethods.parse_string(context.Request.Params["UserName"]), ref responseText);
+                    _return_response(ref context, ref responseText);
+                    return;
                 case "SetFirstAndLastName":
                     set_first_and_last_name(mixedUserId, PublicMethods.parse_string(context.Request.Params["FirstName"]),
                         PublicMethods.parse_string(context.Request.Params["LastName"]), ref responseText);
                     _return_response(ref context, ref responseText);
                     return;
-                case "SetUserName":
-                    set_user_name(PublicMethods.parse_guid(context.Request.Params["UserID"]),
-                        PublicMethods.parse_string(context.Request.Params["UserName"]), ref responseText);
+                case "SetFirstName":
+                    set_first_name(mixedUserId, PublicMethods.parse_string(context.Request.Params["FirstName"]), ref responseText);
+                    _return_response(ref context, ref responseText);
+                    return;
+                case "SetLastName":
+                    set_last_name(mixedUserId, PublicMethods.parse_string(context.Request.Params["LastName"]), ref responseText);
                     _return_response(ref context, ref responseText);
                     return;
                 case "SetJobTitle":
@@ -495,7 +503,10 @@ namespace RaaiVan.Web.API
                             PublicMethods.parse_string(context.Request.Params["ImageURL"], decode: false),
                             PublicMethods.parse_guid(context.Request.Params["InvitationID"]),
                             HttpContext.Current,
-                            callback: res => paramsContainer.return_response(res));
+                            callback: res =>
+                            {
+                                paramsContainer.return_response(res);
+                            });
                         isAsync = true;
                     }
                     break;
@@ -2236,53 +2247,6 @@ namespace RaaiVan.Web.API
 
         /* Profile */
 
-        protected void set_first_and_last_name(Guid userId, string firstName, string lastName, ref string responseText)
-        {
-            //Privacy Check: OK
-            if (!paramsContainer.GBEdit) return;
-
-            if ((!string.IsNullOrEmpty(firstName) && firstName.Length > 250) ||
-                (!string.IsNullOrEmpty(lastName) && lastName.Length > 250))
-            {
-                responseText = "{\"ErrorText\":\"" + Messages.MaxAllowedInputLengthExceeded + "\"}";
-                return;
-            }
-            else if (!PublicMethods.is_secure_title(firstName) || !PublicMethods.is_secure_title(lastName))
-            {
-                responseText = "{\"ErrorText\":\"" + Messages.TheTextIsFormattedBadly + "\"}";
-                return;
-            }
-
-            if (userId != paramsContainer.CurrentUserID &&
-                !AuthorizationManager.has_right(AccessRoleName.UsersManagement, paramsContainer.CurrentUserID.Value))
-            {
-                responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
-                return;
-            }
-
-            bool result = UsersController.set_first_and_last_name(paramsContainer.Tenant.Id, userId, firstName, lastName);
-
-            responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
-                "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
-
-            //Save Log
-            if (result)
-            {
-                LogController.save_log(paramsContainer.Tenant.Id, new Log()
-                {
-                    UserID = paramsContainer.CurrentUserID,
-                    Date = DateTime.Now,
-                    HostAddress = PublicMethods.get_client_ip(HttpContext.Current),
-                    HostName = PublicMethods.get_client_host_name(HttpContext.Current),
-                    Action = Modules.Log.Action.SetFirstAndLastName,
-                    SubjectID = userId,
-                    Info = "{\"FirstName\":\"" + Base64.encode(firstName) + "\",\"LastName\":\"" + Base64.encode(lastName) + "\"}",
-                    ModuleIdentifier = ModuleIdentifier.USR
-                });
-            }
-            //end of Save Log
-        }
-
         protected void set_user_name(Guid? userId, string userName, ref string responseText)
         {
             //Privacy Check: OK
@@ -2342,6 +2306,75 @@ namespace RaaiVan.Web.API
                 });
             }
             //end of Save Log
+        }
+
+        protected void set_first_and_last_name(Guid userId, string firstName, string lastName, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            if ((!string.IsNullOrEmpty(firstName) && firstName.Length > 250) ||
+                (!string.IsNullOrEmpty(lastName) && lastName.Length > 250))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.MaxAllowedInputLengthExceeded + "\"}";
+                return;
+            }
+            else if (!PublicMethods.is_secure_title(firstName) || !PublicMethods.is_secure_title(lastName))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.TheTextIsFormattedBadly + "\"}";
+                return;
+            }
+
+            if (userId != paramsContainer.CurrentUserID &&
+                !AuthorizationManager.has_right(AccessRoleName.UsersManagement, paramsContainer.CurrentUserID.Value))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+                return;
+            }
+
+            bool result = UsersController.set_first_and_last_name(paramsContainer.Tenant.Id, userId, firstName, lastName);
+
+            responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
+                "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+
+            //Save Log
+            if (result)
+            {
+                LogController.save_log(paramsContainer.Tenant.Id, new Log()
+                {
+                    UserID = paramsContainer.CurrentUserID,
+                    Date = DateTime.Now,
+                    HostAddress = PublicMethods.get_client_ip(HttpContext.Current),
+                    HostName = PublicMethods.get_client_host_name(HttpContext.Current),
+                    Action = Modules.Log.Action.SetFirstAndLastName,
+                    SubjectID = userId,
+                    Info = "{\"FirstName\":\"" + Base64.encode(firstName) + "\",\"LastName\":\"" + Base64.encode(lastName) + "\"}",
+                    ModuleIdentifier = ModuleIdentifier.USR
+                });
+            }
+            //end of Save Log
+        }
+
+        protected void set_first_name(Guid userId, string firstName, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            User user = UsersController.get_user(paramsContainer.ApplicationID, userId);
+
+            if (user == null) responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+            else set_first_and_last_name(userId, firstName, user.LastName, ref responseText);
+        }
+
+        protected void set_last_name(Guid userId, string lastName, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            User user = UsersController.get_user(paramsContainer.ApplicationID, userId);
+
+            if (user == null) responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+            else set_first_and_last_name(userId, user.FirstName, lastName, ref responseText);
         }
 
         protected void set_job_title(Guid userId, string jobTitle, ref string responseText)
