@@ -481,6 +481,24 @@
         return UsersAPI._send(url, params, queryString);
     },
 
+    SetAboutMe: function (params) {
+        params = params || {};
+
+        var url = UsersAPI.ResponseURL + "/SetAboutMe?timeStamp=" + new Date().getTime();
+        var queryString = (params.UserID ? "&UserID=" + params.UserID : "") +
+            (params.Text ? "&Text=" + params.Text : "");
+        return UsersAPI._send(url, params, queryString);
+    },
+
+    SetCity: function (params) {
+        params = params || {};
+
+        var url = UsersAPI.ResponseURL + "/SetCity?timeStamp=" + new Date().getTime();
+        var queryString = (params.UserID ? "&UserID=" + params.UserID : "") +
+            (params.City ? "&City=" + params.City : "");
+        return UsersAPI._send(url, params, queryString);
+    },
+
     IsApproved: function (params) {
         params = params || {};
 
@@ -495,6 +513,24 @@
 
         var url = UsersAPI.ResponseURL + "/UnlockUser?timeStamp=" + new Date().getTime();
         var queryString = (params.UserID ? "&UserID=" + params.UserID : "");
+        return UsersAPI._send(url, params, queryString);
+    },
+
+    SetOrganization: function (params) {
+        params = params || {};
+
+        var url = UsersAPI.ResponseURL + "/SetOrganization?timeStamp=" + new Date().getTime();
+        var queryString = (params.UserID ? "&UserID=" + params.UserID : "") +
+            (params.Organization ? "&Organization=" + params.Organization : "");
+        return UsersAPI._send(url, params, queryString);
+    },
+
+    SetDepartment: function (params) {
+        params = params || {};
+
+        var url = UsersAPI.ResponseURL + "/SetDepartment?timeStamp=" + new Date().getTime();
+        var queryString = (params.UserID ? "&UserID=" + params.UserID : "") +
+            (params.Department ? "&Department=" + params.Department : "");
         return UsersAPI._send(url, params, queryString);
     },
 

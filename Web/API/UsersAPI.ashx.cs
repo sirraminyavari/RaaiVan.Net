@@ -226,6 +226,24 @@ namespace RaaiVan.Web.API
                     set_last_name(mixedUserId, PublicMethods.parse_string(context.Request.Params["LastName"]), ref responseText);
                     _return_response(ref context, ref responseText);
                     return;
+                case "SetAboutMe":
+                    set_about_me(mixedUserId, PublicMethods.parse_string(context.Request.Params["Text"]), ref responseText);
+                    _return_response(ref context, ref responseText);
+                    return;
+                case "SetCity":
+                    set_city(mixedUserId, PublicMethods.parse_string(context.Request.Params["City"]), ref responseText);
+                    _return_response(ref context, ref responseText);
+                    return;
+                case "SetOrganization":
+                    set_organization(mixedUserId,
+                        PublicMethods.parse_string(context.Request.Params["Organization"]), ref responseText);
+                    _return_response(ref context, ref responseText);
+                    return;
+                case "SetDepartment":
+                    set_department(mixedUserId,
+                        PublicMethods.parse_string(context.Request.Params["Department"]), ref responseText);
+                    _return_response(ref context, ref responseText);
+                    return;
                 case "SetJobTitle":
                     set_job_title(mixedUserId,
                         PublicMethods.parse_string(context.Request.Params["JobTitle"]), ref responseText);
@@ -2375,6 +2393,102 @@ namespace RaaiVan.Web.API
 
             if (user == null) responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
             else set_first_and_last_name(userId, user.FirstName, lastName, ref responseText);
+        }
+
+        protected void set_about_me(Guid userId, string text, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            if (!string.IsNullOrEmpty(text) && text.Length > 1900)
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.MaxAllowedInputLengthExceeded + "\"}";
+                return;
+            }
+
+            if (userId != paramsContainer.CurrentUserID &&
+                !AuthorizationManager.has_right(AccessRoleName.UsersManagement, paramsContainer.CurrentUserID.Value))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+                return;
+            }
+
+            bool result = true;
+
+            responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
+                "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+        }
+
+        protected void set_city(Guid userId, string city, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            if (!string.IsNullOrEmpty(city) && city.Length > 250)
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.MaxAllowedInputLengthExceeded + "\"}";
+                return;
+            }
+
+            if (userId != paramsContainer.CurrentUserID &&
+                !AuthorizationManager.has_right(AccessRoleName.UsersManagement, paramsContainer.CurrentUserID.Value))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+                return;
+            }
+
+            bool result = true;
+
+            responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
+                "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+        }
+
+        protected void set_organization(Guid userId, string organization, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            if (!string.IsNullOrEmpty(organization) && organization.Length > 250)
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.MaxAllowedInputLengthExceeded + "\"}";
+                return;
+            }
+
+            if (userId != paramsContainer.CurrentUserID &&
+                !AuthorizationManager.has_right(AccessRoleName.UsersManagement, paramsContainer.CurrentUserID.Value))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+                return;
+            }
+
+            bool result = true;
+
+            responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
+                "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+        }
+
+        protected void set_department(Guid userId, string department, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            if (!string.IsNullOrEmpty(department) && department.Length > 250)
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.MaxAllowedInputLengthExceeded + "\"}";
+                return;
+            }
+
+            if (userId != paramsContainer.CurrentUserID &&
+                !AuthorizationManager.has_right(AccessRoleName.UsersManagement, paramsContainer.CurrentUserID.Value))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+                return;
+            }
+
+            bool result = true;
+
+            responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
+                "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
         }
 
         protected void set_job_title(Guid userId, string jobTitle, ref string responseText)
