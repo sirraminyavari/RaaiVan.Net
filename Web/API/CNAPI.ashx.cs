@@ -7931,8 +7931,12 @@ namespace RaaiVan.Web.API
             AccessChecker accessChecker = new AccessChecker(paramsContainer.ApplicationID, paramsContainer.CurrentUserID,
                 nodeIdOrNodeTypeId: nodeTypeId);
 
-            bool hasAccess = granted && accessChecker.checkNodeEditAccess(AdminLevel.Service,
+            bool serviceLevelAccess = granted && accessChecker.checkNodeEditAccess(AdminLevel.Service,
                 privacyObjectType: PrivacyObjectType.NodeType, permission: PermissionType.Create);
+
+            bool hasAccess = granted && (serviceLevelAccess ||
+                PrivacyController.check_access(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID,
+                    nodeTypeId.Value, PrivacyObjectType.NodeType, PermissionType.Create));
             //end of check access
 
             responseText = "{\"Result\":" + hasAccess.ToString().ToLower() + "}";

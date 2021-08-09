@@ -663,8 +663,10 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                     for (int i = 0; i < fieldCount; ++i)
                     {
-                        values[i] = reader[i].GetType() == typeof(string) && !string.IsNullOrEmpty((string)reader[i]) ?
-                            ((string)reader[i]).Substring(0, Math.Min(1000, ((string)reader[i]).Length)) : reader[i];
+                        values[i] = reader[i];
+
+                        //values[i] = reader[i].GetType() == typeof(string) && !string.IsNullOrEmpty((string)reader[i]) ?
+                        //    ((string)reader[i]).Substring(0, Math.Min(1000, ((string)reader[i]).Length)) : reader[i];
                     }
 
                     retTable.Rows.Add(values);
