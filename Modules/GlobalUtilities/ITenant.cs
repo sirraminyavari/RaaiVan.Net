@@ -30,7 +30,6 @@ namespace RaaiVan.Modules.GlobalUtilities
     {
         /// <summary>
         /// Tenant's Id
-        /// </summary>
         Guid Id { get; }
 
         /// <summary>

@@ -8,7 +8,6 @@ using System.Management;
 using System.Security.Cryptography;
 using System.IO;
 using System.Web;
-using System.Web.Security;
 using System.Web.UI;
 using System.Web.Script.Serialization;
 using System.Net;
@@ -875,44 +874,6 @@ namespace RaaiVan.Modules.GlobalUtilities
             { return Guid.Empty; }
         }
         
-        public static MembershipUser get_user(Guid userId, int reverseCounter = 12)
-        {
-            if (userId == Guid.Empty) return null;
-
-            try { return Membership.GetUser(userId); }
-            catch
-            {
-                if (reverseCounter > 0)
-                {
-                    if (reverseCounter > 12) reverseCounter = 12;
-                    Thread.Sleep((12 - reverseCounter) * 100 + 200);
-                    return get_user(userId, reverseCounter - 1);
-                }
-                else throw;
-            }
-        }
-
-        public static void active_user(Guid userId, bool active)
-        {
-            MembershipUser user = null;
-            if (userId != Guid.Empty) user = Membership.GetUser(userId);
-
-            if (user != null)
-            {
-                if (active /*&& (user.IsLockedOut || !user.IsApproved)*/)
-                {
-                    user.UnlockUser();
-                    user.IsApproved = true;
-                }
-                else
-                {
-                    user.IsApproved = false;
-                }
-
-                Membership.UpdateUser(user);
-            }
-        }
-
         public static long miliseconds()
         {
             return (long)((DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalMilliseconds + 0.5);

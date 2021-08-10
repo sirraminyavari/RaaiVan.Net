@@ -9,6 +9,7 @@ using RaaiVan.Modules.GlobalUtilities;
 
 namespace RaaiVan.Web
 {
+    /*
     public class RVMembershipProvider : SqlMembershipProvider
     {
         public override void Initialize(string name, NameValueCollection config)
@@ -44,4 +45,5 @@ namespace RaaiVan.Web
             connectionStringField.SetValue(this, ProviderUtil.ConnectionString);
         }
     }
+    */
 }

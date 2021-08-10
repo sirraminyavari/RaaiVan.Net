@@ -1736,7 +1736,7 @@ namespace RaaiVan.Web.API
         {
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
-
+            
             if (!userId.HasValue ||
                 !AuthorizationManager.has_right(AccessRoleName.UsersManagement, paramsContainer.CurrentUserID))
             {

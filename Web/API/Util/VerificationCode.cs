@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
 using RaaiVan.Modules.GlobalUtilities;
-using RaaiVan.Modules.Users;
 
 namespace RaaiVan.Web.API
 {

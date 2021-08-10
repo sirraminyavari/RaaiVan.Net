@@ -395,10 +395,8 @@ namespace RaaiVan.Web.API
                     //Save Log
                     try
                     {
-                        Guid? uId = UsersController.get_user_id(applicationId, username);
-
-                        MembershipUser usr = !uId.HasValue ? null : PublicMethods.get_user(uId.Value);
-                        bool locked = usr != null && usr.IsLockedOut;
+                        User usr = UsersController.locked(applicationId, username);
+                        bool locked = usr != null && usr.IsLockedOut.HasValue && usr.IsLockedOut.Value;
 
                         if (locked)
                         {
@@ -877,7 +875,7 @@ namespace RaaiVan.Web.API
 
                 if (lastMonth.ContainsKey("ActiveUsersCount")) statistics["ActiveUsersCount"] = lastMonth["ActiveUsersCount"];
 
-                statistics["OnlineUsersCount"] = Membership.GetNumberOfUsersOnline();
+                //statistics["OnlineUsersCount"] = Membership.GetNumberOfUsersOnline();
 
                 ArrayList lst = GlobalController.get_last_content_creators(paramsContainer.Tenant.Id, 10);
 
