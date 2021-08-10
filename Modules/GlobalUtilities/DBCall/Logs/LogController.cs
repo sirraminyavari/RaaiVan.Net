@@ -47,7 +47,7 @@ namespace RaaiVan.Modules.Log
             DateTime? beginDate = null, DateTime? finishDate = null, long? lastId = null, int? count = null)
         {
             return LGParsers.logs(DBConnector.read(applicationId, GetFullyQualifiedName("GetLogs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref userIds), 
+                applicationId, ProviderUtil.list_to_string<Guid>(userIds), 
                 ProviderUtil.list_to_string<Action>(actions), ',', beginDate, finishDate, lastId, count));
         }
 

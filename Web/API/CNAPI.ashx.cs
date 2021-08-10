@@ -2127,8 +2127,8 @@ namespace RaaiVan.Web.API
                 CNController.get_node_types(paramsContainer.Tenant.Id, null, new List<ExtensionType>(), archive) :
                 CNController.get_child_node_types(paramsContainer.Tenant.Id, parentId, archive);
 
-            List<Guid> nodeTypeIds = nodeTypes.Select(u => u.NodeTypeID.Value).ToList();
-            nodeTypeIds = CNController.have_child_node_types(paramsContainer.Tenant.Id, ref nodeTypeIds);
+            List<Guid> nodeTypeIds = CNController.have_child_node_types(paramsContainer.Tenant.Id, 
+                nodeTypeIds: nodeTypes.Select(u => u.NodeTypeID.Value).ToList());
 
             nodeTypes.ForEach(u => { u.HasChild = nodeTypeIds.Exists(x => x == u.NodeTypeID.Value); });
 
@@ -3932,8 +3932,8 @@ namespace RaaiVan.Web.API
             //nodes = nodes.OrderBy(u => u.CreationDate).ToList();
             //nodes = nodes.OrderBy(u => u.Name).ToList();
 
-            List<Guid> nodeIds = nodes.Select(u => u.NodeID.Value).ToList();
-            nodeIds = CNController.have_childs(paramsContainer.Tenant.Id, ref nodeIds);
+            List<Guid> nodeIds = CNController.have_childs(paramsContainer.Tenant.Id, 
+                nodeIds: nodes.Select(u => u.NodeID.Value).ToList());
 
             responseText = "{\"TotalCount\":" + totalCount.ToString() + ",\"Nodes\":[" + string.Join(",", nodes.Select(
                 u => "{\"NodeID\":\"" + u.NodeID.ToString() + "\"" +
@@ -6819,7 +6819,7 @@ namespace RaaiVan.Web.API
             if (adminNodeId == Guid.Empty) adminNodeId = null;
 
             bool result = CNController.set_service_admin_type(paramsContainer.Tenant.Id,
-                nodeTypeId.Value, adminType, adminNodeId, ref limitNodeTypeIds, paramsContainer.CurrentUserID.Value);
+                nodeTypeId.Value, adminType, adminNodeId, limitNodeTypeIds, paramsContainer.CurrentUserID.Value);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";

@@ -25,22 +25,10 @@ namespace RaaiVan.Modules.GlobalUtilities
         }
 
 
-        public static string list_to_string<T>(ref List<T> lst, char? delimiter = ',')
-        {
-            string strGuids = string.Empty;
-            bool isFirst = true;
-            foreach (T _item in lst)
-            {
-                strGuids += (isFirst || !delimiter.HasValue ? string.Empty : delimiter.ToString()) + _item.ToString();
-                isFirst = false;
-            }
-
-            return strGuids;
-        }
-
         public static string list_to_string<T>(List<T> lst, char? delimiter = ',')
         {
-            return list_to_string<T>(ref lst, delimiter);
+            string del = !delimiter.HasValue ? string.Empty : delimiter.Value.ToString();
+            return lst == null ? string.Empty : string.Join(del, lst.Select(t => t.ToString()));
         }
 
         public static string pair_list_to_string<F, S>(ref List<KeyValuePair<F, S>> lst, char innerDelimiter, char outerDelimiter)

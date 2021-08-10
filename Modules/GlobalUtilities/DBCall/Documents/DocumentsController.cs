@@ -47,7 +47,7 @@ namespace RaaiVan.Modules.Documents
         public static List<Tree> get_trees(Guid applicationId, List<Guid> treeIds)
         {
             return DCTParsers.trees(DBConnector.read(applicationId, GetFullyQualifiedName("GetTreesByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref treeIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(treeIds), ','));
         }
 
         public static Tree get_tree(Guid applicationId, Guid treeIdOrTreeNodeId)
@@ -110,7 +110,7 @@ namespace RaaiVan.Modules.Documents
         public static List<TreeNode> get_tree_nodes(Guid applicationId, List<Guid> treeNodeIds)
         {
             return DCTParsers.tree_nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetTreeNodesByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref treeNodeIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(treeNodeIds), ','));
         }
 
         public static TreeNode get_tree_node(Guid applicationId, Guid treeNodeId)
@@ -174,7 +174,7 @@ namespace RaaiVan.Modules.Documents
             if (ownerType != FileOwnerTypes.None) strOwnerType = ownerType.ToString();
 
             return DCTParsers.files(DBConnector.read(applicationId, GetFullyQualifiedName("GetOwnerFiles"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref ownerIds), ',', strOwnerType));
+                applicationId, ProviderUtil.list_to_string<Guid>(ownerIds), ',', strOwnerType));
         }
 
         public static List<DocFileInfo> get_owner_files(Guid applicationId, 
@@ -186,7 +186,7 @@ namespace RaaiVan.Modules.Documents
         public static List<DocFileInfo> get_files(Guid applicationId, List<Guid> fileIds)
         {
             return DCTParsers.files(DBConnector.read(applicationId, GetFullyQualifiedName("GetFilesByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref fileIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(fileIds), ','));
         }
 
         public static DocFileInfo get_file(Guid applicationId, Guid fileId)
@@ -197,7 +197,7 @@ namespace RaaiVan.Modules.Documents
         public static List<DocFileInfo> get_file_owner_nodes(Guid applicationId, List<Guid> fileIds)
         {
             return DCTParsers.file_owner_nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetFileOwnerNodes"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref fileIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(fileIds), ','));
         }
 
         public static DocFileInfo get_file_owner_node(Guid applicationId, Guid fileId)
@@ -213,7 +213,7 @@ namespace RaaiVan.Modules.Documents
         private static bool _remove_files(Guid applicationId, Guid? ownerId, List<Guid> fileIds)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteFiles"),
-                applicationId, ownerId, ProviderUtil.list_to_string<Guid>(ref fileIds), ',');
+                applicationId, ownerId, ProviderUtil.list_to_string<Guid>(fileIds), ',');
         }
 
         public static bool remove_files(Guid applicationId, Guid ownerId, ref List<Guid> fileIds)

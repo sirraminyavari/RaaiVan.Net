@@ -521,9 +521,17 @@ namespace RaaiVan.Web.API
                             PublicMethods.parse_string(context.Request.Params["ImageURL"], decode: false),
                             PublicMethods.parse_guid(context.Request.Params["InvitationID"]),
                             HttpContext.Current,
-                            callback: res =>
+                            callback: (userId, res) =>
                             {
-                                paramsContainer.return_response(res);
+                                Dictionary<string, object> resDic = PublicMethods.fromJSON(res);
+
+                                User user = !userId.HasValue ? null :
+                                    UsersController.get_user(paramsContainer.ApplicationID, userId.Value);
+
+                                if (user != null) resDic["User"] = 
+                                    user.toJson(applicationId: paramsContainer.ApplicationID, profileImageUrl: true);
+
+                                paramsContainer.return_response(PublicMethods.toJSON(resDic));
                             });
                         isAsync = true;
                     }
@@ -944,7 +952,7 @@ namespace RaaiVan.Web.API
             string phone = PublicMethods.get_dic_value(dic, "Phone");
             Guid? invitationId = PublicMethods.parse_guid(PublicMethods.get_dic_value(dic, "InvitationID"));
 
-            finalize_user_sign_up(username: PublicMethods.get_dic_value(dic, "UserName"),
+            Guid? userId = finalize_user_sign_up(username: PublicMethods.get_dic_value(dic, "UserName"),
                 email: email,
                 phone: phone,
                 firstName: PublicMethods.get_dic_value(dic, "FirstName"),
@@ -954,10 +962,17 @@ namespace RaaiVan.Web.API
                 login: login,
                 context: HttpContext.Current,
                 responseText: ref responseText);
+
+            Dictionary<string, object> resDic = PublicMethods.fromJSON(responseText);
+            User user = !userId.HasValue ? null : UsersController.get_user(paramsContainer.ApplicationID, userId.Value);
+
+            if (user != null) resDic["User"] = user.toJson(paramsContainer.ApplicationID, profileImageUrl: true);
+
+            responseText = PublicMethods.toJSON(resDic);
         }
 
         public async void sign_in_with_google(string token, string email, string firstName, string lastName, 
-            string googleId, string imageUrl, Guid? invitationId, HttpContext context, Action<string> callback)
+            string googleId, string imageUrl, Guid? invitationId, HttpContext context, Action<Guid?, string> callback)
         {
             //Privacy Check: OK
             if (!RaaiVanSettings.UserSignUp(paramsContainer.ApplicationID) &&
@@ -982,7 +997,7 @@ namespace RaaiVan.Web.API
 
                 if (payload == null)
                 {
-                    callback("{\"ErrorText\":\"" + Messages.TokenValidationFailed.ToString() + "\"}");
+                    callback(null, "{\"ErrorText\":\"" + Messages.TokenValidationFailed.ToString() + "\"}");
                     return;
                 }
 
@@ -990,15 +1005,14 @@ namespace RaaiVan.Web.API
                 firstName = string.IsNullOrEmpty(payload.Name) ? payload.GivenName : payload.Name;
                 lastName = string.IsNullOrEmpty(payload.FamilyName) ? payload.GivenName : payload.FamilyName;
 
-
                 if (string.IsNullOrEmpty(email))
                 {
-                    callback("{\"ErrorText\":\"" + Messages.EmailIsNotValid.ToString() + "\"}");
+                    callback(null, "{\"ErrorText\":\"" + Messages.EmailIsNotValid.ToString() + "\"}");
                     return;
                 }
                 else if (!payload.EmailVerified)
                 {
-                    callback("{\"ErrorText\":\"" + Messages.EmailIsNotVerified.ToString() + "\"}");
+                    callback(null, "{\"ErrorText\":\"" + Messages.EmailIsNotVerified.ToString() + "\"}");
                     return;
                 }
             }
@@ -1007,6 +1021,7 @@ namespace RaaiVan.Web.API
                .Where(e => e.IsMain.HasValue && e.IsMain.Value).FirstOrDefault();
 
             string responseText = string.Empty;
+            Guid? userId = null;
 
             //if address is null, then this is a sign up
             if (address == null)
@@ -1014,7 +1029,7 @@ namespace RaaiVan.Web.API
                 if (string.IsNullOrEmpty(firstName)) firstName = email.Substring(0, email.IndexOf('@'));
                 if (string.IsNullOrEmpty(lastName)) lastName = email.Substring(0, email.IndexOf('@'));
 
-                finalize_user_sign_up(username: PublicMethods.random_string(8).ToLower(),
+                userId = finalize_user_sign_up(username: PublicMethods.random_string(8).ToLower(),
                     email: email,
                     phone: null,
                     firstName: firstName,
@@ -1026,6 +1041,8 @@ namespace RaaiVan.Web.API
                     responseText: ref responseText);
             }
             else {
+                userId = address.UserID;
+
                 Guid? appId = paramsContainer.ApplicationID.HasValue ? paramsContainer.ApplicationID :
                     (!invitationId.HasValue ? null : UsersController.get_invitation_application_id(invitationId.Value, checkIfNotUsed: true));
 
@@ -1036,10 +1053,11 @@ namespace RaaiVan.Web.API
                     succeed: true, login: true, context: context, responseText: ref responseText);
             }
 
-            callback(responseText);
+            callback(userId, responseText);
         }
 
-        private void finalize_user_sign_up(string username, string email, string phone, string firstName, 
+        //returns UserID
+        private Guid? finalize_user_sign_up(string username, string email, string phone, string firstName, 
             string lastName, string password, Guid? invitationId, bool? login, HttpContext context, ref string responseText)
         {
             if (!string.IsNullOrEmpty(email) &&
@@ -1047,14 +1065,14 @@ namespace RaaiVan.Web.API
                     .Any(e => e.IsMain.HasValue && e.IsMain.Value))
             {
                 responseText = "{\"ErrorText\":\"" + Messages.EmailAlreadyExists + "\"}";
-                return;
+                return null;
             }
             else if (!string.IsNullOrEmpty(phone) &&
                 UsersController.get_phone_owners(paramsContainer.ApplicationID, new List<string>() { phone })
                     .Any(e => e.IsMain.HasValue && e.IsMain.Value))
             {
                 responseText = "{\"ErrorText\":\"" + Messages.PhoneNumberAlreadyExists + "\"}";
-                return;
+                return null;
             }
 
             User newUser = new User()
@@ -1074,12 +1092,12 @@ namespace RaaiVan.Web.API
                 string.IsNullOrEmpty(newUser.LastName) || string.IsNullOrEmpty(newUser.Password))
             {
                 responseText = "{\"ErrorText\":\"" + Messages.InvalidInput + "\"}";
-                return;
+                return null;
             }
             else if (UsersController.get_user(paramsContainer.ApplicationID, newUser.UserName) != null)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.UserNameAlreadyExists + "\"}";
-                return;
+                return null;
             }
 
             Guid? appId = paramsContainer.ApplicationID.HasValue ? paramsContainer.ApplicationID :
@@ -1089,6 +1107,8 @@ namespace RaaiVan.Web.API
 
             user_sign_up_is_complete(applicationId: appId, userId: newUser.UserID, 
                 succeed: succeed, login: login.HasValue && login.Value, context: context, responseText: ref responseText);
+
+            return succeed ? newUser.UserID : null;
         }
 
         private void user_sign_up_is_complete(Guid? applicationId, Guid? userId, bool succeed, bool login, 

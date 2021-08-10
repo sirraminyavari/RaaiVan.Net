@@ -61,7 +61,7 @@ namespace RaaiVan.Modules.FormGenerator
         public static List<FormType> get_forms(Guid applicationId, List<Guid> formIds)
         {
             return FGParsers.form_types(DBConnector.read(applicationId, GetFullyQualifiedName("GetFormsByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref formIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(formIds), ','));
         }
 
         public static FormType get_form(Guid applicationId, Guid formId)
@@ -214,7 +214,7 @@ namespace RaaiVan.Modules.FormGenerator
         public static bool remove_form_instances(Guid applicationId, List<Guid> instanceIds, Guid currentUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("RemoveFormInstances"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref instanceIds), ',', currentUserId, DateTime.Now);
+                applicationId, ProviderUtil.list_to_string<Guid>(instanceIds), ',', currentUserId, DateTime.Now);
         }
 
         public static bool remove_form_instance(Guid applicationId, Guid instanceId, Guid currentUserId)
@@ -254,7 +254,7 @@ namespace RaaiVan.Modules.FormGenerator
         public static List<FormType> get_form_instances(Guid applicationId, List<Guid> instanceIds)
         {
             return FGParsers.form_instances(DBConnector.read(applicationId, GetFullyQualifiedName("GetFormInstances"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref instanceIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>( instanceIds), ','));
         }
 
         public static FormType get_form_instance(Guid applicationId, Guid instanceId)
@@ -412,7 +412,7 @@ namespace RaaiVan.Modules.FormGenerator
             if (elementIds == null || elementIds.Count == 0) return new Dictionary<Guid, List<SelectedGuidItem>>();
 
             return FGParsers.selected_guids(DBConnector.read(applicationId, GetFullyQualifiedName("GetSelectedGuids"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref elementIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(elementIds), ','));
         }
 
         public static List<FormElement> get_element_changes(Guid applicationId, Guid elementId, int? count, int? lowerBoundary)
@@ -465,7 +465,7 @@ namespace RaaiVan.Modules.FormGenerator
         public static bool set_element_limits(Guid applicationId, Guid ownerId, List<Guid> elementIds, Guid currentUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetElementLimits"),
-                applicationId, ownerId, ProviderUtil.list_to_string<Guid>(ref elementIds), ',', currentUserId, DateTime.Now);
+                applicationId, ownerId, ProviderUtil.list_to_string<Guid>(elementIds), ',', currentUserId, DateTime.Now);
         }
 
         public static List<FormElement> get_element_limits(Guid applicationId, Guid ownerId)

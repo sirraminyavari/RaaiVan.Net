@@ -58,7 +58,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<NodeType> get_node_types(Guid applicationId, List<Guid> nodeTypeIds, bool grabSubNodeTypes = false)
         {
             DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodeTypesByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeTypeIds), ',', grabSubNodeTypes);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',', grabSubNodeTypes);
 
             long totalCount = 0;
 
@@ -112,15 +112,10 @@ namespace RaaiVan.Modules.CoreNetwork
             return _get_node_type(applicationId: applicationId, nodeTypeId: null, nodeType: nodeType, nodeId: null);
         }
 
-        public static List<Guid> have_child_node_types(Guid applicationId, ref List<Guid> nodeTypeIds)
-        {
-            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("HaveChildNodeTypes"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeTypeIds), ',');
-        }
-
         public static List<Guid> have_child_node_types(Guid applicationId, List<Guid> nodeTypeIds)
         {
-            return have_child_node_types(applicationId, ref nodeTypeIds);
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("HaveChildNodeTypes"),
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',');
         }
 
         public static List<NodeType> get_child_node_types(Guid applicationId, Guid? parentId, bool? archive = false)
@@ -136,7 +131,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool remove_node_types(Guid applicationId, List<Guid> nodeTypeIds, bool? removeHierarchy, Guid currentUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteNodeTypes"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeTypeIds), ',', removeHierarchy, currentUserId, DateTime.Now);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',', removeHierarchy, currentUserId, DateTime.Now);
         }
 
         public static bool remove_node_type(Guid applicationId, Guid nodeTypeId, bool? removeHierarchy, Guid currentUserId)
@@ -281,7 +276,7 @@ namespace RaaiVan.Modules.CoreNetwork
             List<Guid> nodeIds, Guid? documentTreeNodeId, Guid currentUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetDocumentTreeNodeID"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', documentTreeNodeId, currentUserId, DateTime.Now);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', documentTreeNodeId, currentUserId, DateTime.Now);
         }
 
         public static bool set_document_tree_node_id(Guid applicationId, 
@@ -364,7 +359,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool set_nodes_searchability(Guid applicationId, List<Guid> nodeIds, bool searchable, Guid currentUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetNodesSearchability"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', searchable, currentUserId, DateTime.Now);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', searchable, currentUserId, DateTime.Now);
         }
 
         public static bool set_node_searchability(Guid applicationId, Guid nodeId, bool searchable, Guid currentUserId)
@@ -375,7 +370,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool remove_nodes(Guid applicationId, List<Guid> nodeIds, bool? removeHierarchy, Guid lastModifierUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteNodes"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', removeHierarchy, lastModifierUserId, DateTime.Now);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', removeHierarchy, lastModifierUserId, DateTime.Now);
         }
 
         public static bool remove_node(Guid applicationId, Guid nodeId, bool? removeHierarchy, Guid lastModifierUserId)
@@ -386,19 +381,19 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool recycle_nodes(Guid applicationId, List<Guid> nodeIds, Guid currentUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("RecycleNodes"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', currentUserId, DateTime.Now);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', currentUserId, DateTime.Now);
         }
 
         public static bool set_node_types_order(Guid applicationId, List<Guid> nodeTypeIds)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetNodeTypesOrder"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeTypeIds), ',');
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',');
         }
 
         public static bool set_nodes_order(Guid applicationId, List<Guid> nodeIds)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetNodesOrder"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',');
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',');
         }
 
         private static List<NodesCount> _get_nodes_count(Guid applicationId, 
@@ -409,7 +404,7 @@ namespace RaaiVan.Modules.CoreNetwork
             if (nodeType.HasValue) strAdditionalId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
 
             return CNParsers.nodes_count(DBConnector.read(applicationId, GetFullyQualifiedName("GetNodesCount"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeTypeIds), ',',
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',',
                 strAdditionalId, lowerCreationDateLimit, upperCreationDateLimit, root, archive));
         }
 
@@ -548,7 +543,7 @@ namespace RaaiVan.Modules.CoreNetwork
             if (nodeIds.Count == 0) return new List<Node>();
 
             DBResultSet resutls = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodesByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', full, currentUserId);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', full, currentUserId);
 
             return CNParsers.nodes(resutls, full: full);
         }
@@ -767,7 +762,7 @@ namespace RaaiVan.Modules.CoreNetwork
             List<Guid> nodeIds, Guid? parentNodeId, Guid currentUserId, ref string errorMessage)
         {
             return DBConnector.succeed(applicationId, ref errorMessage, GetFullyQualifiedName("SetDirectParent"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', parentNodeId, currentUserId, DateTime.Now);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', parentNodeId, currentUserId, DateTime.Now);
         }
 
         public static bool set_direct_parent(Guid applicationId, Guid nodeId, Guid? parentNodeId, 
@@ -776,23 +771,15 @@ namespace RaaiVan.Modules.CoreNetwork
             return set_direct_parent(applicationId, new List<Guid>() { nodeId }, parentNodeId, currentUserId, ref errorMessage);
         }
 
-        public static List<Guid> have_childs(Guid applicationId, ref List<Guid> nodeIds)
-        {
-            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("HaveChilds"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',');
-        }
-
         public static List<Guid> have_childs(Guid applicationId, List<Guid> nodeIds)
         {
-            return have_childs(applicationId, ref nodeIds);
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("HaveChilds"),
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',');
         }
 
         public static bool has_childs(Guid applicationId, Guid nodeId)
         {
-            List<Guid> _nIds = new List<Guid>();
-            _nIds.Add(nodeId);
-            _nIds = have_childs(applicationId, ref _nIds);
-            return _nIds != null && _nIds.Count > 0;
+            return have_childs(applicationId, new List<Guid>() { nodeId }).Count > 0;
         }
 
         public static List<Guid> get_related_node_ids(Guid applicationId, Guid nodeId, Guid? nodeTypeId, 
@@ -1294,21 +1281,19 @@ namespace RaaiVan.Modules.CoreNetwork
         }
 
         public static List<Guid> get_member_user_ids(Guid applicationId, 
-            ref List<Guid> nodeIds, NodeMemberStatuses? status = null, bool? admin = null)
+            List<Guid> nodeIds, NodeMemberStatuses? status = null, bool? admin = null)
         {
             string strStatus = status.ToString();
             if (string.IsNullOrEmpty(strStatus)) strStatus = null;
 
             return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetMemberUserIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', strStatus, admin);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', strStatus, admin);
         }
 
         public static List<Guid> get_member_user_ids(Guid applicationId, 
             Guid nodeId, NodeMemberStatuses? status = null, bool? admin = null)
         {
-            List<Guid> _uIds = new List<Guid>();
-            _uIds.Add(nodeId);
-            return get_member_user_ids(applicationId, ref _uIds, status, admin);
+            return get_member_user_ids(applicationId, new List<Guid>() { nodeId }, status, admin);
         }
 
         public static int get_members_count(Guid applicationId, Guid nodeId, NodeMemberStatuses? status = null, bool? admin = null)
@@ -1409,7 +1394,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<NodeMember> get_users_departments(Guid applicationId, List<Guid> userIds)
         {
             DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetUsersDepartments"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref userIds), ',');
+                applicationId, ProviderUtil.list_to_string<Guid>(userIds), ',');
 
             return CNParsers.node_members(results, parseNode: true, parseUser: false);
         }
@@ -1424,7 +1409,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool like_nodes(Guid applicationId, List<Guid> nodeIds, Guid userId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("LikeNodes"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', userId, DateTime.Now);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', userId, DateTime.Now);
         }
 
         public static bool like_node(Guid applicationId, Guid nodeId, Guid userId)
@@ -1435,7 +1420,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool unlike_nodes(Guid applicationId, List<Guid> nodeIds, Guid userId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("UnlikeNodes"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', userId);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', userId);
         }
 
         public static bool unlike_node(Guid applicationId, Guid nodeId, Guid userId)
@@ -1446,7 +1431,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<Guid> is_fan(Guid applicationId, List<Guid> nodeIds, Guid userId)
         {
             return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("IsFan"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', userId);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', userId);
         }
 
         public static bool is_fan(Guid applicationId, Guid nodeId, Guid userId)
@@ -1545,7 +1530,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool remove_complexes(Guid applicationId, List<Guid> listIds, Guid lastModifierUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteComplexes"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref listIds), ',', lastModifierUserId, DateTime.Now);
+                applicationId, ProviderUtil.list_to_string<Guid>(listIds), ',', lastModifierUserId, DateTime.Now);
         }
 
         public static bool remove_complex(Guid applicationId, Guid listId, Guid lastModifierUserId)
@@ -1568,7 +1553,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<NodeList> get_lists(Guid applicationId, List<Guid> listIds)
         {
             return CNParsers.lists(DBConnector.read(applicationId, GetFullyQualifiedName("GetListsByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref listIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(listIds), ','));
         }
 
         public static NodeList get_list(Guid applicationId, Guid listId)
@@ -1601,7 +1586,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool add_nodes_to_complex(Guid applicationId, Guid listId, List<Guid> nodeIds, Guid creatorUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddNodesToComplex"),
-                applicationId, listId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', creatorUserId, DateTime.Now);
+                applicationId, listId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', creatorUserId, DateTime.Now);
         }
 
         public static bool add_node_to_complex(Guid applicationId, Guid listId, Guid nodeId, Guid creatorUserId)
@@ -1612,7 +1597,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool remove_complex_nodes(Guid applicationId, Guid listId, List<Guid> nodeIds, Guid lastModifierUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteComplexNodes"),
-                applicationId, listId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', lastModifierUserId, DateTime.Now);
+                applicationId, listId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', lastModifierUserId, DateTime.Now);
         }
 
         public static bool remove_complex_node(Guid applicationId, Guid listId, Guid nodeId, Guid lastModifierUserId)
@@ -1695,7 +1680,7 @@ namespace RaaiVan.Modules.CoreNetwork
             if (userIds == null || userIds.Count == 0) return false;
 
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddExperts"),
-                applicationId, nodeId, ProviderUtil.list_to_string<Guid>(ref userIds), ',');
+                applicationId, nodeId, ProviderUtil.list_to_string<Guid>(userIds), ',');
         }
 
         public static bool add_expert(Guid applicationId, Guid nodeId, Guid userId)
@@ -1706,7 +1691,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static bool remove_experts(Guid applicationId, Guid nodeId, List<Guid> userIds)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArithmeticDeleteExperts"),
-                applicationId, nodeId, ProviderUtil.list_to_string<Guid>(ref userIds), ',');
+                applicationId, nodeId, ProviderUtil.list_to_string<Guid>(userIds), ',');
         }
 
         public static bool remove_expert(Guid applicationId, Guid nodeId, Guid userId)
@@ -1768,34 +1753,30 @@ namespace RaaiVan.Modules.CoreNetwork
             return CNParsers.nodes(results, full: null, totalCount: ref totalCount);
         }
 
-        public static List<Expert> get_expertise_domains(Guid applicationId, ref List<Guid> userIds, bool? approved, 
+        public static List<Expert> get_expertise_domains(Guid applicationId, List<Guid> userIds, bool? approved, 
             bool? socialApproved, bool? all = null, Guid? nodeTypeId = null)
         {
             return CNParsers.experts(DBConnector.read(applicationId, GetFullyQualifiedName("GetUsersExpertiseDomains"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref userIds), ',', nodeTypeId, approved, socialApproved, all));
+                applicationId, ProviderUtil.list_to_string<Guid>(userIds), ',', nodeTypeId, approved, socialApproved, all));
         }
 
         public static List<Expert> get_expertise_domains(Guid applicationId, Guid userId, bool? approved, 
             bool? socialApproved, bool? all = null, Guid? nodeTypeId = null)
         {
-            List<Guid> _uIds = new List<Guid>();
-            _uIds.Add(userId);
-            return get_expertise_domains(applicationId, ref _uIds, approved, socialApproved, all, nodeTypeId);
+            return get_expertise_domains(applicationId, new List<Guid>() { userId }, approved, socialApproved, all, nodeTypeId);
         }
 
         public static List<Guid> get_expertise_domain_ids(Guid applicationId, 
-            ref List<Guid> userIds, bool? approved, bool? socialApproved)
+            List<Guid> userIds, bool? approved, bool? socialApproved)
         {
             return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetUsersExpertiseDomainIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref userIds), ',', approved, socialApproved);
+                applicationId, ProviderUtil.list_to_string<Guid>(userIds), ',', approved, socialApproved);
         }
 
         public static List<Guid> get_expertise_domain_ids(Guid applicationId, 
             Guid userId, bool? approved, bool? socialApproved)
         {
-            List<Guid> _uIds = new List<Guid>();
-            _uIds.Add(userId);
-            return get_expertise_domain_ids(applicationId, ref _uIds, approved, socialApproved);
+            return get_expertise_domain_ids(applicationId, new List<Guid>() { userId }, approved, socialApproved);
         }
 
         public static bool is_expert(Guid applicationId, Guid userId, Guid nodeId, bool? approved, bool? socialApproved)
@@ -1893,7 +1874,7 @@ namespace RaaiVan.Modules.CoreNetwork
             PublicMethods.split_list<Guid>(nodeIds, 200, ids =>
             {
                 List<Guid> newNodeIds = DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetExistingNodeIDs"),
-                    applicationId, ProviderUtil.list_to_string(ref nodeIds), ',', searchable, noContent);
+                    applicationId, ProviderUtil.list_to_string(nodeIds), ',', searchable, noContent);
 
                 if (newNodeIds.Count > 0) retIds.AddRange(newNodeIds);
             });
@@ -1904,7 +1885,7 @@ namespace RaaiVan.Modules.CoreNetwork
         public static List<Guid> get_existing_node_type_ids(Guid applicationId, List<Guid> nodeTypeIds, bool? noContent)
         {
             return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetExistingNodeTypeIDs"),
-                applicationId, ProviderUtil.list_to_string(ref nodeTypeIds), ',', noContent);
+                applicationId, ProviderUtil.list_to_string(nodeTypeIds), ',', noContent);
         }
 
         public static List<NodeInfo> get_node_info(Guid applicationId, List<Guid> nodeIds, Guid? currentUserId, 
@@ -1922,9 +1903,7 @@ namespace RaaiVan.Modules.CoreNetwork
             bool? tags, bool? description, bool? creator, bool? contributorsCount, bool? likesCount, bool? visitsCount, 
             bool? expertsCount, bool? membersCount, bool? childsCount, bool? relatedNodesCount, bool? likeStatus)
         {
-            List<Guid> nIds = new List<Guid>();
-            nIds.Add(nodeId);
-            return get_node_info(applicationId, nIds, currentUserId, tags, description, creator, 
+            return get_node_info(applicationId, new List<Guid>() { nodeId }, currentUserId, tags, description, creator, 
                 contributorsCount, likesCount, visitsCount, expertsCount, membersCount, childsCount, 
                 relatedNodesCount, likeStatus).FirstOrDefault();
         }
@@ -1940,8 +1919,8 @@ namespace RaaiVan.Modules.CoreNetwork
                 u => u.ExtensionType).ToList();
 
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("InitializeExtensions"),
-                applicationId, ownerId, ProviderUtil.list_to_string<ExtensionType>(ref enabledExtensions),
-                ProviderUtil.list_to_string<ExtensionType>(ref disabledExtensions), ',', currentUserId, DateTime.Now);
+                applicationId, ownerId, ProviderUtil.list_to_string<ExtensionType>(enabledExtensions),
+                ProviderUtil.list_to_string<ExtensionType>(disabledExtensions), ',', currentUserId, DateTime.Now);
         }
 
         private static bool _enable_disable_extension(Guid applicationId,
@@ -2117,7 +2096,7 @@ namespace RaaiVan.Modules.CoreNetwork
             bool wiki = true;
 
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("UpdateFormAndWikiTags"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref nodeIds), ',', creatorUserId, count, form, wiki);
+                applicationId, ProviderUtil.list_to_string<Guid>(nodeIds), ',', creatorUserId, count, form, wiki);
         }
 
         public static bool update_form_and_wiki_tags(Guid applicationId, int? count)
@@ -2193,11 +2172,11 @@ namespace RaaiVan.Modules.CoreNetwork
         }
 
         public static bool set_service_admin_type(Guid applicationId, Guid serviceTypeId, ServiceAdminType adminType,
-            Guid? adminNodeId, ref List<Guid> limitNodeTypeIds, Guid currentUserId)
+            Guid? adminNodeId, List<Guid> limitNodeTypeIds, Guid currentUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetServiceAdminType"),
                 applicationId, serviceTypeId, adminType.ToString(), adminNodeId,
-                ProviderUtil.list_to_string<Guid>(ref limitNodeTypeIds), ',', currentUserId, DateTime.Now);
+                ProviderUtil.list_to_string<Guid>(limitNodeTypeIds), ',', currentUserId, DateTime.Now);
         }
 
         public static List<NodeType> get_admin_area_limits(Guid applicationId, Guid nodeTypeIdOrNodeId)
@@ -2217,7 +2196,7 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid serviceTypeId, List<Guid> limitNodeTypeIds, Guid currentUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetContributionLimits"),
-                applicationId, serviceTypeId, ProviderUtil.list_to_string<Guid>(ref limitNodeTypeIds), ',', currentUserId, DateTime.Now);
+                applicationId, serviceTypeId, ProviderUtil.list_to_string<Guid>(limitNodeTypeIds), ',', currentUserId, DateTime.Now);
         }
 
         public static List<NodeType> get_contribution_limits(Guid applicationId, Guid nodeTypeIdOrNodeId)

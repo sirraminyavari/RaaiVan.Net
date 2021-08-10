@@ -56,7 +56,7 @@ namespace RaaiVan.Modules.Wiki
         public static List<WikiTitle> get_titles(Guid applicationId, List<Guid> titleIds, Guid currentUserId)
         {
             return WikiParsers.titles(DBConnector.read(applicationId, GetFullyQualifiedName("GetTitlesByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref titleIds), ',', currentUserId));
+                applicationId, ProviderUtil.list_to_string<Guid>(titleIds), ',', currentUserId));
         }
 
         public static WikiTitle get_title(Guid applicationId, Guid titleId, Guid currentUserId)
@@ -123,7 +123,7 @@ namespace RaaiVan.Modules.Wiki
         public static List<Paragraph> get_paragraphs(Guid applicationId, List<Guid> paragraphIds, Guid currentUserId)
         {
             return WikiParsers.paragraphs(DBConnector.read(applicationId, GetFullyQualifiedName("GetParagraphsByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref paragraphIds), ',', currentUserId));
+                applicationId, ProviderUtil.list_to_string<Guid>(paragraphIds), ',', currentUserId));
         }
 
         public static Paragraph get_paragraph(Guid applicationId, Guid paragraphId, Guid currentUserId)
@@ -198,7 +198,7 @@ namespace RaaiVan.Modules.Wiki
             if (status.HasValue) strStatus = status.ToString();
 
             return WikiParsers.changes(DBConnector.read(applicationId, GetFullyQualifiedName("GetParagraphChanges"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ref paragraphIds), ',', creatorUserId, strStatus, applied));
+                applicationId, ProviderUtil.list_to_string<Guid>(paragraphIds), ',', creatorUserId, strStatus, applied));
         }
 
         public static List<Change> get_changes(Guid applicationId, Guid paragraphId, Guid? creatorUserId,

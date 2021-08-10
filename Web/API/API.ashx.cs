@@ -1025,12 +1025,11 @@ namespace RaaiVan.Web.API
                     break;
                 case "index_update":
                     {
-                        SearchDocType type = SearchDocType.All;
-                        if (!Enum.TryParse<SearchDocType>(PublicMethods.get_dic_value(options, "type"), out type))
-                            type = SearchDocType.All;
+                        SearchDocType type = PublicMethods.parse_enum<SearchDocType>(
+                            PublicMethods.get_dic_value(options, "type"), defaultValue: SearchDocType.All);
 
-                        int batchSize = 0;
-                        int.TryParse(PublicMethods.get_dic_value(options, "batch_size"), out batchSize);
+                        int batchSize = 
+                            PublicMethods.parse_int(PublicMethods.get_dic_value(options, "batch_size"), defaultValue: 0).Value;
 
                         SearchUtilities.update_index(appId.Value, type, batchSize);
                     }

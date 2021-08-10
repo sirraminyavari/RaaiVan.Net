@@ -268,7 +268,7 @@ namespace RaaiVan.Modules.Users
         {
             return userIds == null || userIds.Count == 0 ? new List<User>() :
                 USRParsers.users(DBConnector.read(applicationId, GetFullyQualifiedName("GetUsersByIDs"),
-                ProviderUtil.list_to_string<Guid>(ref userIds), ','));
+                ProviderUtil.list_to_string<Guid>(userIds), ','));
         }
 
         public static User get_user(Guid? applicationId, Guid userId)
@@ -448,7 +448,7 @@ namespace RaaiVan.Modules.Users
         public static List<Guid> get_approved_user_ids(Guid applicationId, List<Guid> userIds)
         {
             return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetApprovedUserIDs"),
-                applicationId, ProviderUtil.list_to_string(ref userIds), ',');
+                applicationId, ProviderUtil.list_to_string(userIds), ',');
         }
 
         public static bool set_last_activity_date(Guid? applicationId, Guid userId)

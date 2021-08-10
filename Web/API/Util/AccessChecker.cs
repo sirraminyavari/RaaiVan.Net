@@ -304,7 +304,7 @@ namespace RaaiVan.Web.API
             }
 
             if (!isAdmin && ApplicationID.HasValue && NodeIDOrNodeTypeID.HasValue && permissions != null &&
-                permissions.Count > 0 && privacyObjectType != PrivacyObjectType.None)
+                permissions.Count > 0 /* && privacyObjectType != PrivacyObjectType.None */) //even none permission matters!
                 isAdmin = PrivacyController.check_access(applicationId: ApplicationID.Value, userId: CurrentUserID,
                     objectId: NodeIDOrNodeTypeID.Value, objectType: privacyObjectType, permissions: permissions).Count > 0;
 
