@@ -131,7 +131,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                 object[] row = new object[tbl.Columns.Count];
                 int cnt = reader.GetValues(row);
 
-                if (options.IsReport) {
+                if (options != null && options.IsReport) {
                     for (int i = 0; i < row.Length; i++)
                     {
                         if (row[i] != null && row[i].GetType() == typeof(string) && !string.IsNullOrEmpty((string)row[i]))

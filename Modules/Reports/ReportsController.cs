@@ -28,8 +28,13 @@ namespace RaaiVan.Modules.Reports
         {
             if (parameters == null) parameters = new List<object>();
 
-            DBResultSet results = 
-                DBConnector.read(applicationId, GetFullyQualifiedName(reportName, moduleIdentifier), parameters.ToArray());
+            DBReadOptions options = new DBReadOptions()
+            {
+                IsReport = true
+            };
+
+            DBResultSet results = DBConnector.read(options, applicationId, 
+                GetFullyQualifiedName(reportName, moduleIdentifier), parameters.ToArray());
 
             RVDataTable retTable = results.get_table();
             retActions = results.get_table(1).GetString(row: 0, column: 0);
