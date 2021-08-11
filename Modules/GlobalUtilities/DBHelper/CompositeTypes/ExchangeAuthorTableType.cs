@@ -4,13 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NpgsqlTypes;
+using Newtonsoft.Json;
 
 namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
 {
+    [Serializable]
     public class ExchangeAuthorTableType : ITableType
     {
         public ExchangeAuthorTableType() : base() { } //empty constructor is a must
 
+        [JsonIgnore]
         public string MSSQLName { get { return "ExchangeAuthorTableType"; } }
 
         [PgName("node_type_additional_id")]

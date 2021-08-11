@@ -1,16 +1,19 @@
-﻿using NpgsqlTypes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NpgsqlTypes;
+using Newtonsoft.Json;
 
 namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
 {
+    [Serializable]
     public class StringTableType : ITableType
     {
         public StringTableType() : base() { } //empty constructor is a must
 
+        [JsonIgnore]
         public string MSSQLName { get { return "StringTableType"; } }
 
         [PgName("value")]

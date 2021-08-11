@@ -22,7 +22,7 @@ namespace RaaiVan.Web.API
         Service Service = null;
         List<NodeCreator> Contributors = null;
 
-        bool? _IsSystemAdmin = false;
+        bool? _IsSystemAdmin = null;
         Dictionary<Guid, bool> _IsServiceAdmin = new Dictionary<Guid, bool>();
         Dictionary<Guid, bool> _IsAreaAdmin = new Dictionary<Guid, bool>();
         Dictionary<Guid, bool> _IsCreator = new Dictionary<Guid, bool>();
@@ -282,6 +282,19 @@ namespace RaaiVan.Web.API
             return checkAccessRole(new List<AccessRoleName>() { roleName }).Count > 0;
         }
 
+        private bool checkAdminLevel(AdminLevel level)
+        {
+            bool isAdmin = isSystemAdmin();
+            if (level == AdminLevel.System) return isAdmin;
+            if (!isAdmin) isAdmin = isServiceAdmin(NodeIDOrNodeTypeID);
+            if (level == AdminLevel.Service) return isAdmin;
+            if (!isAdmin) isAdmin = isAreaAdmin() || isAdminMember();
+            if (level == AdminLevel.Node) return isAdmin;
+            if (!isAdmin) isAdmin = isCreator() || isContributor();
+
+            return isAdmin;
+        }
+
         public bool checkNodeEditAccess(AdminLevel level, bool? checkWorkFlowEditPermission = false,
             AccessRoleName roleName = AccessRoleName.None, PrivacyObjectType privacyObjectType = PrivacyObjectType.None, 
             List<PermissionType> permissions = null)
@@ -290,13 +303,8 @@ namespace RaaiVan.Web.API
 
             if (checkAccessRole(roleName)) return true;
 
-            bool isAdmin =  isSystemAdmin();
-            if (level == AdminLevel.System) return isAdmin;
-            if (!isAdmin) isAdmin = isServiceAdmin(NodeIDOrNodeTypeID);
-            if (level == AdminLevel.Service) return isAdmin;
-            if (!isAdmin) isAdmin = isAreaAdmin() || isAdminMember();
-            if (level == AdminLevel.Node) return isAdmin;
-            if (!isAdmin) isAdmin = isCreator() || isContributor();
+            bool isAdmin =  checkAdminLevel(level);
+
             if (!isAdmin && checkWorkFlowEditPermission.HasValue && checkWorkFlowEditPermission.Value)
             {
                 bool hideContributors = false;

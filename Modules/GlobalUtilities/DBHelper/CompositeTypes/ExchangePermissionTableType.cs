@@ -4,13 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NpgsqlTypes;
+using Newtonsoft.Json;
 
 namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
 {
+    [Serializable]
     public class ExchangePermissionTableType : ITableType
     {
         public ExchangePermissionTableType() : base() { } //empty constructor is a must
 
+        [JsonIgnore]
         public string MSSQLName { get { return "ExchangePermissionTableType"; } }
 
         [PgName("node_type_additional_id")]

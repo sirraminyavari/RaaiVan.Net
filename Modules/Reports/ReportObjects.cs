@@ -5,6 +5,7 @@ using System.Text;
 using System.Web;
 using System.Data;
 using RaaiVan.Modules.GlobalUtilities;
+using System.Collections;
 
 namespace RaaiVan.Modules.Reports
 {
@@ -73,6 +74,83 @@ namespace RaaiVan.Modules.Reports
             return id;
         }
 
+        private static object get_generic_parameter(string name, string type, string value)
+        {
+            if (string.IsNullOrEmpty(name) || value == null) return null;
+
+            switch (type.ToLower())
+            {
+                case "bool":
+                    return PublicMethods.parse_bool(value);
+                case "string":
+                    return string.IsNullOrEmpty(value) ? null : value;
+                case "base64":
+                    return string.IsNullOrEmpty(value) ? null : Base64.decode(value);
+                case "char":
+                    return string.IsNullOrEmpty(value) ? null : (char?)value[0];
+                case "guid":
+                    return PublicMethods.parse_guid(value);
+                case "long":
+                    return PublicMethods.parse_long(value);
+                case "int":
+                    return PublicMethods.parse_int(value);
+                case "float":
+                case "double":
+                    return PublicMethods.parse_double(value);
+                case "datetime":
+                    List<string> lst = new List<string>() {
+                        "dateto", "todate", "enddate", "finishdate", "uppercreationdatelimit"
+                    };
+
+                    int days2Add = lst.Any(u => name.ToLower().IndexOf(u) >= 0) ? 1 : 0;
+
+                    return PublicMethods.parse_date(value, days2Add);
+                case "now":
+                    return DateTime.Now;
+                default:
+                    return value;
+            }
+        }
+
+        public static object get_parameter_new(string name, string type, string value)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+
+            switch (name.ToLower())
+            {
+                case "structure":
+                    Dictionary<string, object> composite = PublicMethods.fromJSON(value);
+
+                    string compositeName = PublicMethods.get_dic_value(composite, "Name");
+
+                    Dictionary<string, object> types = PublicMethods.get_dic_value<Dictionary<string, object>>(
+                        composite, "Types", defaultValue: new Dictionary<string, object>());
+
+                    ArrayList items = PublicMethods.get_dic_value<ArrayList>(composite, "Items", defaultValue: new ArrayList());
+
+                    List<string> parameters = items.ToArray()
+                        .Where(i => i != null && i.GetType() == typeof(Dictionary<string, object>))
+                        .Select(i => (Dictionary<string, object>)i)
+                        .Select(itm =>
+                        {
+                            Dictionary<string, object> itemDic = new Dictionary<string, object>();
+
+                            itm.Keys.ToList().ForEach(key => {
+                                string tp = PublicMethods.get_dic_value(types, key);
+
+                                itemDic[key] = itm[key] == null ? null :
+                                    get_generic_parameter(key, tp, itm[key].ToString());
+                            });
+
+                            return PublicMethods.toJSON(itemDic);
+                        }).ToList();
+
+                    return DBCompositeType<object>.fromJson(compositeName, parameters);
+                default:
+                    return get_generic_parameter(name, type, value);
+            }
+        }
+
         public static ReportParameter get_parameter(string name, string type, string value)
         {
             ReportParameter newParam = new ReportParameter();
@@ -84,7 +162,7 @@ namespace RaaiVan.Modules.Reports
             {
                 case "bool":
                     newParam.Type = typeof(bool);
-                    if (!string.IsNullOrEmpty(value)) newParam.Value = value.ToLower() == "true";
+                    newParam.Value = PublicMethods.parse_bool(value);
                     break;
                 case "string":
                     newParam.Type = typeof(string);
@@ -100,33 +178,32 @@ namespace RaaiVan.Modules.Reports
                     break;
                 case "guid":
                     newParam.Type = typeof(Guid);
-                    if (!string.IsNullOrEmpty(value)) newParam.Value = Guid.Parse(value);
+                    newParam.Value = PublicMethods.parse_guid(value);
+                    break;
+                case "long":
+                    newParam.Type = typeof(long);
+                    newParam.Value = PublicMethods.parse_long(value);
                     break;
                 case "int":
                     newParam.Type = typeof(int);
-                    if (!string.IsNullOrEmpty(value)) newParam.Value = int.Parse(value);
+                    newParam.Value = PublicMethods.parse_int(value);
                     break;
                 case "float":
-                    newParam.Type = typeof(float);
-                    if (!string.IsNullOrEmpty(value)) newParam.Value = float.Parse(value);
-                    break;
                 case "double":
                     newParam.Type = typeof(double);
-                    if (!string.IsNullOrEmpty(value)) newParam.Value = double.Parse(value);
+                    newParam.Value = PublicMethods.parse_double(value);
                     break;
                 case "datetime":
                     newParam.Type = typeof(DateTime);
                     if (!string.IsNullOrEmpty(value))
                     {
-                        newParam.Value = DateTime.Parse(value);
-
                         List<string> lst = new List<string>() {
                             "dateto", "todate", "enddate", "finishdate", "uppercreationdatelimit"
                         };
 
-                        string nm = name.ToLower();
+                        int days2Add = lst.Any(u => name.ToLower().IndexOf(u) >= 0) ? 1 : 0;
 
-                        if(lst.Any(u => nm.IndexOf(u) >= 0)) newParam.Value = ((DateTime)newParam.Value).AddDays(1);
+                        newParam.Value = PublicMethods.parse_date(value, days2Add);
                     }
                     break;
                 case "now":

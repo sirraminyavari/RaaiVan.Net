@@ -255,6 +255,18 @@ namespace RaaiVan.Web.API
             if (!string.IsNullOrEmpty(command)) command = command.ToLower();
 
             switch (command) {
+                case "abc222":
+                    {
+                        object results = DBCompositeType<object>.fromJson("BigIntTableType", new List<string>()
+                        {
+                            "{\"Value\":2}",
+                            "{\"Value\":\"3434sdsdfsfd343\"}",
+                            "{\"Value\":8}"
+                        });
+
+                        paramsContainer.return_response("result: ok " + results.ToString());
+                        return true;
+                    }
                 case "abc123":
                     {
                         DBCompositeType<DocFileInfoTableType> nodeIds = new DBCompositeType<DocFileInfoTableType>()

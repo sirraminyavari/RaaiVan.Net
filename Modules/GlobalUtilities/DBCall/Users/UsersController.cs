@@ -268,7 +268,7 @@ namespace RaaiVan.Modules.Users
         {
             return userIds == null || userIds.Count == 0 ? new List<User>() :
                 USRParsers.users(DBConnector.read(applicationId, GetFullyQualifiedName("GetUsersByIDs"),
-                ProviderUtil.list_to_string<Guid>(userIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(userIds), ','));
         }
 
         public static User get_user(Guid? applicationId, Guid userId)
@@ -579,6 +579,26 @@ namespace RaaiVan.Modules.Users
         public static bool is_approved(Guid applicationId, Guid userId, bool? isApproved = null)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("IsApproved"), applicationId, userId, isApproved);
+        }
+
+        public static bool set_about_me(Guid? applicationId, Guid userId, string text)
+        {
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetAboutMe"), userId, text);
+        }
+
+        public static bool set_city(Guid? applicationId, Guid userId, string city)
+        {
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetCity"), userId, city);
+        }
+
+        public static bool set_organization(Guid applicationId, Guid userId, string organization)
+        {
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetOrganization"), applicationId, userId, organization);
+        }
+
+        public static bool set_department(Guid applicationId, Guid userId, string department)
+        {
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetDepartment"), applicationId, userId, department);
         }
 
         public static bool set_job_title(Guid applicationId, Guid userId, string jobTitle)

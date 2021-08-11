@@ -254,9 +254,8 @@ namespace RaaiVan.Web.API
                     _return_response(ref context, ref responseText);
                     return;
                 case "SetEmploymentType":
-                    EmploymentType employmentType = new EmploymentType();
-                    if (!Enum.TryParse<EmploymentType>(Base64.decode(context.Request.Params["EmploymentType"]), out employmentType))
-                        employmentType = EmploymentType.NotSet;
+                    EmploymentType employmentType = PublicMethods.parse_enum<EmploymentType>(
+                        context.Request.Params["EmploymentType"], defaultValue: EmploymentType.NotSet);
 
                     set_employment_type(mixedUserId, employmentType, ref responseText);
                     _return_response(ref context, ref responseText);
@@ -268,9 +267,8 @@ namespace RaaiVan.Web.API
                     return;
                 case "SetPhoneNumber":
                     {
-                        PhoneType phoneType = new PhoneType();
-                        if (!Enum.TryParse<PhoneType>(context.Request.Params["PhoneNumberType"], out phoneType))
-                            phoneType = PhoneType.NotSet;
+                        PhoneType phoneType = PublicMethods.parse_enum<PhoneType>(
+                            context.Request.Params["PhoneNumberType"], defaultValue: PhoneType.NotSet);
 
                         set_phone_number(mixedUserId,
                             PublicMethods.parse_string(context.Request.Params["PhoneNumber"]), phoneType, ref responseText);
@@ -279,9 +277,8 @@ namespace RaaiVan.Web.API
                     return;
                 case "EditPhoneNumber":
                     {
-                        PhoneType phoneType = new PhoneType();
-                        if (!Enum.TryParse<PhoneType>(context.Request.Params["PhoneNumberType"], out phoneType))
-                            phoneType = PhoneType.NotSet;
+                        PhoneType phoneType = PublicMethods.parse_enum<PhoneType>(
+                            context.Request.Params["PhoneNumberType"], defaultValue: PhoneType.NotSet);
 
                         edit_phone_number(PublicMethods.parse_guid(context.Request.Params["NumberID"]),
                             PublicMethods.parse_string(context.Request.Params["PhoneNumber"]), phoneType, ref responseText);
@@ -344,13 +341,11 @@ namespace RaaiVan.Web.API
                     _return_response(ref context, ref responseText);
                     return;
                 case "SetEducationalExperience":
-                    EducationalLevel degree = EducationalLevel.None;
-                    if (!Enum.TryParse<EducationalLevel>(context.Request.Params["Level"], out degree))
-                        degree = EducationalLevel.None;
+                    EducationalLevel degree = PublicMethods.parse_enum<EducationalLevel>(
+                        context.Request.Params["Level"], defaultValue: EducationalLevel.None);
 
-                    GraduateDegree educationLevel = GraduateDegree.None;
-                    if (!Enum.TryParse<GraduateDegree>(context.Request.Params["GraduateDegree"], out educationLevel))
-                        educationLevel = GraduateDegree.None;
+                    GraduateDegree educationLevel = PublicMethods.parse_enum<GraduateDegree>(
+                        context.Request.Params["GraduateDegree"], defaultValue: GraduateDegree.None);
 
                     set_educational_experience(PublicMethods.parse_guid(context.Request.Params["EducationID"]), mixedUserId,
                         PublicMethods.parse_string(context.Request.Params["School"]),
@@ -377,9 +372,8 @@ namespace RaaiVan.Web.API
                     _return_response(ref context, ref responseText);
                     return;
                 case "SetLanguage":
-                    LanguageLevel langLevel = LanguageLevel.None;
-                    if (!Enum.TryParse<LanguageLevel>(context.Request.Params["LanguageLevel"], out langLevel))
-                        langLevel = LanguageLevel.None;
+                    LanguageLevel langLevel = PublicMethods.parse_enum<LanguageLevel>(
+                        context.Request.Params["LanguageLevel"], defaultValue: LanguageLevel.None);
 
                     set_language(PublicMethods.parse_guid(context.Request.Params["ID"]),
                         PublicMethods.parse_string(context.Request.Params["LanguageName"]),
@@ -528,8 +522,8 @@ namespace RaaiVan.Web.API
                                 User user = !userId.HasValue ? null :
                                     UsersController.get_user(paramsContainer.ApplicationID, userId.Value);
 
-                                if (user != null) resDic["User"] = 
-                                    user.toJson(applicationId: paramsContainer.ApplicationID, profileImageUrl: true);
+                                if (user != null) resDic["User"] =
+                                    PublicMethods.fromJSON(user.toJson(applicationId: paramsContainer.ApplicationID, profileImageUrl: true));
 
                                 paramsContainer.return_response(PublicMethods.toJSON(resDic));
                             });
@@ -966,7 +960,7 @@ namespace RaaiVan.Web.API
             Dictionary<string, object> resDic = PublicMethods.fromJSON(responseText);
             User user = !userId.HasValue ? null : UsersController.get_user(paramsContainer.ApplicationID, userId.Value);
 
-            if (user != null) resDic["User"] = user.toJson(paramsContainer.ApplicationID, profileImageUrl: true);
+            if (user != null) resDic["User"] = PublicMethods.fromJSON(user.toJson(paramsContainer.ApplicationID, profileImageUrl: true));
 
             responseText = PublicMethods.toJSON(resDic);
         }
@@ -2433,7 +2427,7 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            bool result = true;
+            bool result = UsersController.set_about_me(paramsContainer.ApplicationID, userId, text);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -2457,7 +2451,7 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            bool result = true;
+            bool result = UsersController.set_city(paramsContainer.ApplicationID, userId, city);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -2481,7 +2475,8 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            bool result = true;
+            bool result = paramsContainer.ApplicationID.HasValue &&
+                UsersController.set_organization(paramsContainer.ApplicationID.Value, userId, organization);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -2505,7 +2500,8 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            bool result = true;
+            bool result = paramsContainer.ApplicationID.HasValue &&
+                UsersController.set_department(paramsContainer.ApplicationID.Value, userId, department);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -2671,7 +2667,7 @@ namespace RaaiVan.Web.API
             //end of Save Log
         }
 
-        protected void edit_phone_number(Guid? numberID, string phoneNumber, PhoneType phoneType, ref string responseText)
+        protected void edit_phone_number(Guid? numberId, string phoneNumber, PhoneType phoneType, ref string responseText)
         {
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
@@ -2682,16 +2678,16 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            PhoneNumber obj = !numberID.HasValue ? null : UsersController.get_phone_number(paramsContainer.ApplicationID, numberID.Value);
+            PhoneNumber obj = !numberId.HasValue ? null : UsersController.get_phone_number(paramsContainer.ApplicationID, numberId.Value);
             Guid? mainId = obj == null ? null : UsersController.get_main_phone(paramsContainer.ApplicationID, obj.UserID.Value);
 
-            if (mainId.HasValue && mainId == numberID)
+            if (mainId.HasValue && mainId == numberId)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
                 return;
             }
 
-            if (numberID.HasValue &&
+            if (numberId.HasValue &&
                 !PublicMethods.is_system_admin(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID.Value))
             {
                 if (obj == null || obj.UserID != paramsContainer.CurrentUserID)
@@ -2701,9 +2697,9 @@ namespace RaaiVan.Web.API
                 }
             }
 
-            bool result = !numberID.HasValue || phoneType == PhoneType.NotSet ? false :
+            bool result = !numberId.HasValue || phoneType == PhoneType.NotSet ? false :
                 UsersController.edit_phone_number(paramsContainer.ApplicationID, 
-                numberID.Value, phoneNumber, phoneType, paramsContainer.CurrentUserID.Value);
+                numberId.Value, phoneNumber, phoneType, paramsContainer.CurrentUserID.Value);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -2718,7 +2714,7 @@ namespace RaaiVan.Web.API
                     HostAddress = PublicMethods.get_client_ip(HttpContext.Current),
                     HostName = PublicMethods.get_client_host_name(HttpContext.Current),
                     Action = Modules.Log.Action.ModifyPhoneNumber,
-                    SubjectID = numberID,
+                    SubjectID = numberId,
                     Info = "{\"PhoneNumber\":\"" + Base64.encode(phoneNumber) + "\",\"PhoneType\":\"" + phoneType.ToString() + "\"}",
                     ModuleIdentifier = ModuleIdentifier.USR
                 });

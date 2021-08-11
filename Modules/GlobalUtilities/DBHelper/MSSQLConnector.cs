@@ -11,20 +11,21 @@ namespace RaaiVan.Modules.GlobalUtilities
 {
     public static class MSSQLConnector
     {
-        private static RVDataTable get_table(IDataReader reader)
+        private static RVDataTable get_table(IDataReader reader, DBReadOptions options)
         {
             RVDataTable tbl = new RVDataTable("tbl");
-            return !ProviderUtil.reader2table(ref reader, ref tbl, closeReader: false) ? null : tbl;
+            return !reader2table(ref reader, ref tbl, options, closeReader: false) ? null : tbl;
         }
 
-        public static DBResultSet read(Func<DBResultSet, bool> action, string procedureName, params object[] parameters)
+        public static DBResultSet read(Func<DBResultSet, bool> action, DBReadOptions options,
+            string procedureName, params object[] parameters)
         {
             procedureName = "[dbo].[" + procedureName + "]";
 
             try
             {
                 if (action != null || parameters.Any(p => p != null && typeof(IDBCompositeType).IsAssignableFrom(p.GetType())))
-                    return read_structured(action, procedureName, parameters);
+                    return read_structured(action, options, procedureName, parameters);
 
                 DBResultSet ret = new DBResultSet();
 
@@ -32,7 +33,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                 {
                     do
                     {
-                        ret.add_table(get_table(reader));
+                        ret.add_table(get_table(reader, options));
                     } while (reader.NextResult());
 
                     if (!reader.IsClosed) reader.Close();
@@ -46,7 +47,8 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
         }
 
-        private static DBResultSet read_structured(Func<DBResultSet, bool> action, string procedureName, params object[] parameters)
+        private static DBResultSet read_structured(Func<DBResultSet, bool> action, DBReadOptions options,
+            string procedureName, params object[] parameters)
         {
             DBResultSet ret = new DBResultSet();
 
@@ -89,7 +91,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                 {
                     do
                     {
-                        ret.add_table(get_table(reader));
+                        ret.add_table(get_table(reader, options));
                     } while (reader.NextResult());
 
                     if (!reader.IsClosed) reader.Close();
@@ -113,6 +115,50 @@ namespace RaaiVan.Modules.GlobalUtilities
             {
                 con.Close();
             }
+        }
+
+        public static bool reader2table(ref IDataReader reader, ref RVDataTable retTable, 
+            DBReadOptions options, bool closeReader = true)
+        {
+            try
+            {
+                int fieldCount = reader.FieldCount;
+
+                for (int i = 0; i < fieldCount; ++i)
+                {
+                    string colName = reader.GetName(i);
+                    if (string.IsNullOrEmpty(colName)) colName = PublicMethods.random_string(5);
+                    retTable.Columns.Add(colName, reader.GetFieldType(i));
+                }
+
+                while (reader.Read())
+                {
+                    object[] values = new object[fieldCount];
+
+                    for (int i = 0; i < fieldCount; ++i)
+                    {
+                        if (options != null && options.IsReport)
+                        {
+                            values[i] = reader[i].GetType() == typeof(string) && !string.IsNullOrEmpty((string)reader[i]) ?
+                                ((string)reader[i]).Substring(0, Math.Min(1000, ((string)reader[i]).Length)) : reader[i];
+                        }
+                        else values[i] = reader[i];
+                    }
+
+                    retTable.Rows.Add(values);
+                }
+            }
+            catch (Exception e) { closeReader = true; return false; }
+            finally
+            {
+                if (closeReader && !reader.IsClosed)
+                {
+                    reader.Close();
+                    reader.Dispose();
+                }
+            }
+
+            return true;
         }
     }
 }

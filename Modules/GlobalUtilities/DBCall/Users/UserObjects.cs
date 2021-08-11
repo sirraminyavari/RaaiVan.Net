@@ -330,6 +330,10 @@ namespace RaaiVan.Modules.Users
         public TwoStepAuthentication TwoStepAuthentication;
         public bool? EnableNewsLetter;
         public DateTime? Birthday;
+        public string AboutMe;
+        public string City;
+        public string Organization;
+        public string Department;
         public string JobTitle;
         public EmploymentType EmploymentType;
         public Guid? MainPhoneID;
@@ -379,8 +383,18 @@ namespace RaaiVan.Modules.Users
                     ",\"TwoStepAuthentication\":\"" + TwoStepAuthentication.ToString() + "\""
                 ) +
                 ",\"IncompleteProfile\":" + (!profileCompleted()).ToString().ToLower() +
-                (string.IsNullOrEmpty(JobTitle) ? string.Empty : ",\"JobTitle\":\"" + Base64.encode(JobTitle) + "\"") +
-                (string.IsNullOrEmpty(AvatarName) ? string.Empty : ",\"AvatarName\":\"" + AvatarName + "\"") +
+                (string.IsNullOrEmpty(AboutMe) ? string.Empty :
+                    ",\"AboutMe\":\"" + Base64.encode(AboutMe) + "\"") +
+                (string.IsNullOrEmpty(City) ? string.Empty :
+                    ",\"City\":\"" + Base64.encode(City) + "\"") +
+                (string.IsNullOrEmpty(Organization) ? string.Empty :
+                    ",\"Organization\":\"" + Base64.encode(Organization) + "\"") +
+                (string.IsNullOrEmpty(Department) ? string.Empty :
+                    ",\"Department\":\"" + Base64.encode(Department) + "\"") +
+                (string.IsNullOrEmpty(JobTitle) ? string.Empty : 
+                    ",\"JobTitle\":\"" + Base64.encode(JobTitle) + "\"") +
+                (string.IsNullOrEmpty(AvatarName) ? string.Empty : 
+                    ",\"AvatarName\":\"" + AvatarName + "\"") +
                 (string.IsNullOrEmpty(imageUrl) ? string.Empty :
                     ",\"ProfileImageURL\":\"" + imageUrl + "\"" +
                     ",\"ImageURL\":\"" + imageUrl + "\""

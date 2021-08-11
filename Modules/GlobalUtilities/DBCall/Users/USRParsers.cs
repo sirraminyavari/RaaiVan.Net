@@ -26,6 +26,10 @@ namespace RaaiVan.Modules.Users
 
                 if (!systemAlso && user.UserName.ToLower() == "system") continue;
 
+                user.AboutMe = table.GetString(i, "AboutMe");
+                user.City = table.GetString(i, "City");
+                user.Organization = table.GetString(i, "Organization");
+                user.Department = table.GetString(i, "Department");
                 user.JobTitle = table.GetString(i, "JobTitle");
                 user.Birthday = table.GetDate(i, "BirthDay");
                 user.MainPhoneID = table.GetGuid(i, "MainPhoneID");

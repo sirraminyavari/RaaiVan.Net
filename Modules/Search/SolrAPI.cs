@@ -60,7 +60,7 @@ namespace RaaiVan.Modules.Search
 
         public SearchDoc toSearchDoc()
         {
-            Guid? id = PublicMethods.parse_guid(ID);
+            Guid? id = PublicMethods.parse_guid(get_main_id());
             SearchDocType? tp = PublicMethods.parse_enum<SearchDocType>(SearchDocType);
 
             if (!id.HasValue || !tp.HasValue) return null;

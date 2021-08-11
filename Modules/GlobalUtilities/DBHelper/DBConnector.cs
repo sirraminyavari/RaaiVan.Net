@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace RaaiVan.Modules.GlobalUtilities
 {
+    public class DBReadOptions {
+        public bool IsReport = false;
+    }
+
     public static class DBConnector
     {
         //to be removed
@@ -23,7 +27,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             try
             {
-                return PostgreSQLConnector.read(action: null, procedureName, parameters);
+                return PostgreSQLConnector.read(action: null, options: null, procedureName, parameters);
             }
             catch {
                 return new DBResultSet();
@@ -31,7 +35,7 @@ namespace RaaiVan.Modules.GlobalUtilities
         }
         //end of to be removed
 
-        public static DBResultSet read(Func<DBResultSet, bool> action,
+        public static DBResultSet read(Func<DBResultSet, bool> action, DBReadOptions options,
             Guid? applicationId, string procedureName, params object[] parameters)
         {
             if (procedureName.ToLower().StartsWith("[dbo].["))
@@ -46,8 +50,8 @@ namespace RaaiVan.Modules.GlobalUtilities
             try
             {
                 return RaaiVanSettings.UsePostgreSQL ?
-                    PostgreSQLConnector.read(action, procedureName, parameters) :
-                    MSSQLConnector.read(action, procedureName, parameters);
+                    PostgreSQLConnector.read(action, options, procedureName, parameters) :
+                    MSSQLConnector.read(action, options, procedureName, parameters);
             }
             catch (Exception ex)
             {
@@ -68,6 +72,18 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                 return new DBResultSet();
             }
+        }
+
+        public static DBResultSet read(Func<DBResultSet, bool> action,
+            Guid? applicationId, string procedureName, params object[] parameters)
+        {
+            return read(action, options: null, applicationId, procedureName, parameters);
+        }
+
+        public static DBResultSet read(DBReadOptions options,
+            Guid? applicationId, string procedureName, params object[] parameters)
+        {
+            return read(action: null, options, applicationId, procedureName, parameters);
         }
 
         public static DBResultSet read(Guid? applicationId, string procedureName, params object[] parameters)

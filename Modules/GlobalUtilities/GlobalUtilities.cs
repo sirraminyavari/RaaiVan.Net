@@ -258,7 +258,8 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static MatchCollection get_matches(string input, string pattern)
         {
-            return string.IsNullOrEmpty(pattern) ? (MatchCollection)null : (new Regex(pattern)).Matches(input);
+            return string.IsNullOrEmpty(input) || string.IsNullOrEmpty(pattern) ? 
+                (MatchCollection)null : (new Regex(pattern)).Matches(input);
         }
 
         public static MatchCollection get_matches(string input, Patterns pattern)

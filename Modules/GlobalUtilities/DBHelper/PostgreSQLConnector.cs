@@ -78,7 +78,6 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             Type x = typeof(int);
 
-
             if (value == null)
             {
                 cmd.Parameters.AddWithValue(null);
@@ -114,7 +113,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             return true;
         }
 
-        private static RVDataTable get_table(NpgsqlDataReader reader)
+        private static RVDataTable get_table(NpgsqlDataReader reader, DBReadOptions options)
         {
             List<string> columnNames = reader.GetColumnSchema().Select(c => c.ColumnName).ToList();
 
@@ -131,13 +130,23 @@ namespace RaaiVan.Modules.GlobalUtilities
             {
                 object[] row = new object[tbl.Columns.Count];
                 int cnt = reader.GetValues(row);
+
+                if (options.IsReport) {
+                    for (int i = 0; i < row.Length; i++)
+                    {
+                        if (row[i] != null && row[i].GetType() == typeof(string) && !string.IsNullOrEmpty((string)row[i]))
+                            row[i] = ((string)row[i]).Substring(0, Math.Min(1000, ((string)row[i]).Length));
+                    }
+                }
+
                 tbl.Rows.Add(row);
             }
 
             return (RVDataTable)tbl;
         }
 
-        public static DBResultSet read(Func<DBResultSet, bool> action, string procedureName, params object[] parameters)
+        public static DBResultSet read(Func<DBResultSet, bool> action, DBReadOptions options,
+            string procedureName, params object[] parameters)
         {
             procedureName = MSSQL2PostgreSQL.resolve_table_name(procedureName);
 
@@ -177,7 +186,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                                 using (NpgsqlDataReader reader = cmd.ExecuteReader())
                                 {
-                                    ret.add_table(get_table(reader));
+                                    ret.add_table(get_table(reader, options));
                                     reader.Close();
                                 }
                             });

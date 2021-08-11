@@ -41,23 +41,18 @@ namespace RaaiVan.Web.API
 
                     List<string> paramsList = ListMaker.get_string_items(context.Request.Params["ParamsOrder"], '|');
 
-                    List<object> parameters = new List<object>()
-                    {
-                        paramsContainer.ApplicationID,
-                        paramsContainer.CurrentUserID
-                    };
+                    List<ReportParameter> parameters = new List<ReportParameter>();
+
+                    parameters.Add(ReportUtilities.get_parameter("CurrentUserID", "Guid", paramsContainer.CurrentUserID.ToString()));
 
                     for (int i = 0; i < paramsList.Count; ++i)
                     {
                         string[] item = paramsList[i].Split(':');
-
-                        if (item == null) item = new string[0];
-
-                        string paramName = item.Length < 1 ? string.Empty : item[0];
-                        string paramType = item.Length < 2 ? string.Empty : item[1];
+                        string paramName = item[0];
+                        string paramType = item[1];
                         string paramValue = context.Request.Params[paramName];
 
-                        parameters.Add(ReportUtilities.get_parameter_new(paramName, paramType, paramValue));
+                        parameters.Add(ReportUtilities.get_parameter(paramName, paramType, paramValue));
                     }
 
                     Dictionary<string, string> dictionary = _get_dictionary("Dictionary");
@@ -101,7 +96,7 @@ namespace RaaiVan.Web.API
 
         protected void get_report(ModuleIdentifier moduleIdentifier, string reportName, bool excel, bool rtl,
             bool isPersian, ref Dictionary<string, string> dic, int pageNumber, int pageSize, ref string responseText,
-            List<object> parameters, string password)
+            List<ReportParameter> parameters, string password)
         {
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
@@ -123,11 +118,13 @@ namespace RaaiVan.Web.API
                 return;
             }
 
+            RVDataTable tbl = new RVDataTable();
             string actions = string.Empty;
+
             Dictionary<string, string> columnsDic = new Dictionary<string, string>();
 
-            RVDataTable tbl = ReportsController.get_report(paramsContainer.Tenant.Id,
-                moduleIdentifier, reportName, ref actions, ref columnsDic, parameters);
+            ReportsController.get_report(paramsContainer.Tenant.Id,
+                moduleIdentifier, reportName, ref tbl, ref actions, ref columnsDic, parameters);
 
             int firstRow = excel ? 0 : (pageSize * (pageNumber - 1));
             int lastRow = (excel ? tbl.Rows.Count : Math.Min(firstRow + pageSize, tbl.Rows.Count)) - 1;
