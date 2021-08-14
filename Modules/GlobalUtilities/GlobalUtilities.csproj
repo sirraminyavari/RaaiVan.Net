@@ -333,6 +333,7 @@
     <Compile Include="DBCall\Forms\FGObjects.cs" />
     <Compile Include="DBCall\Forms\FGParsers.cs" />
     <Compile Include="DBCall\RV\GlobalController.cs" />
+    <Compile Include="FGImport.cs" />
     <Compile Include="GlobalUtilities.cs" />
     <Compile Include="DBHelper\MSSQL2PostgreSQL.cs" />
     <Compile Include="DBHelper\DBResultSet.cs" />
@@ -340,6 +341,7 @@
     <Compile Include="DBCall\Logs\LogController.cs" />
     <Compile Include="DBCall\Logs\LogObjects.cs" />
     <Compile Include="DBCall\Logs\LGParsers.cs" />
+    <Compile Include="ICallWebService.cs" />
     <Compile Include="RSSObjects.cs" />
     <Compile Include="RVDataTable.cs">
       <SubType>Component</SubType>

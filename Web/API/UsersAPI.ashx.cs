@@ -2279,8 +2279,16 @@ namespace RaaiVan.Web.API
 
             User theUser = !userId.HasValue ? null : UsersController.get_user(paramsContainer.Tenant.Id, userId.Value);
 
-            if (!userId.HasValue || theUser == null || string.IsNullOrEmpty(theUser.UserName) || theUser.UserName.ToLower() == "admin" ||
-                !AuthorizationManager.has_right(AccessRoleName.UsersManagement, paramsContainer.CurrentUserID))
+            bool hasRight = false;
+
+            if (theUser == null || string.IsNullOrEmpty(theUser.UserName) || theUser.UserName.ToLower() == "admin")
+                hasRight = false;
+            else if (!RaaiVanSettings.SAASBasedMultiTenancy)
+                hasRight = AuthorizationManager.has_right(AccessRoleName.UsersManagement, paramsContainer.CurrentUserID);
+            else
+                hasRight = userId.HasValue && userId == paramsContainer.CurrentUserID;
+
+            if (!hasRight)
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 return;

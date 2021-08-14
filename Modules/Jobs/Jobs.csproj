@@ -101,37 +101,13 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CoreNetwork\CoreNetwork.csproj">
-      <Project>{064b0ebe-7a12-4082-9a1c-5f96f3c2e990}</Project>
-      <Name>CoreNetwork</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DataExchange\DataExchange.csproj">
-      <Project>{5775df2f-c737-4bf4-a610-e1a73e782615}</Project>
-      <Name>DataExchange</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Documents\Documents.csproj">
-      <Project>{dcc8e88f-b8ac-41c8-ba0d-b0537c15ed56}</Project>
-      <Name>Documents</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\FormGenerator\FormGenerator.csproj">
-      <Project>{9bd7f493-2515-4884-96b4-7b9912c38593}</Project>
-      <Name>FormGenerator</Name>
-    </ProjectReference>
     <ProjectReference Include="..\GlobalUtilities\GlobalUtilities.csproj">
       <Project>{2b4f83ef-6e5d-49b7-a54e-6c72d0b3b9a4}</Project>
       <Name>GlobalUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Log\Log.csproj">
-      <Project>{6861294c-2a08-4c7b-9cdd-af2f9b3dd13c}</Project>
-      <Name>Log</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RaaiVanConfig\RaaiVanConfig.csproj">
       <Project>{d54aebe3-5826-4a94-bfd9-4029612a89b1}</Project>
       <Name>RaaiVanConfig</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Users\Users.csproj">
-      <Project>{b2f7609d-fe8d-4518-85bc-d03f081362da}</Project>
-      <Name>Users</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

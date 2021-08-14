@@ -40,7 +40,7 @@ namespace RaaiVan.Web.API
         public static bool set_value<T>(string key, T value)
         {
             IDatabase db = get_database();
-
+            
             if (db == null || value == null || !value.GetType().IsSerializable || string.IsNullOrEmpty(key)) return false;
 
             JsonSerializerSettings settings = new JsonSerializerSettings() { ContractResolver = new RVJsonContractResolver() };

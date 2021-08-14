@@ -26,13 +26,25 @@ namespace RaaiVan.Web
 
             // Any connection or hub wire up and configuration should go here
             if (RaaiVanSettings.RealTime(null))
+            {
+                string redisConnectionString = RedisAPI.Enabled ? 
+                    RedisSessionStateProviderSettings.getConnectionString() : string.Empty;
+
+                if (!string.IsNullOrEmpty(redisConnectionString)) {
+                    RedisScaleoutConfiguration redisConf = new RedisScaleoutConfiguration(redisConnectionString, "rv_teal_time");
+                    GlobalHost.DependencyResolver.UseStackExchangeRedis(redisConf);
+                }
+
                 app.MapSignalR("/signalr", new HubConfiguration());
-            else {
-                app.Map("/signalr", conf => {
+            }
+            else
+            {
+                app.Map("/signalr", conf =>
+                {
                     conf.Use((context, next) =>
                     {
                         ParamsContainer paramsContainer = new ParamsContainer(HttpContext.Current);
-                        paramsContainer.file_response("var daslkdjhalskfh84t94uthgk = {\"Message\":\"-)\"};", 
+                        paramsContainer.file_response("var messageFromRamin = {\"Message\":\"-)\"};",
                             "empty.js", "text/javascript", isAttachment: false);
                         return next();
                     });

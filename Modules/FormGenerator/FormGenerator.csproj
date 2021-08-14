@@ -67,7 +67,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
@@ -75,29 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FGImport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Documents\Documents.csproj">
-      <Project>{dcc8e88f-b8ac-41c8-ba0d-b0537c15ed56}</Project>
-      <Name>Documents</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GlobalUtilities\GlobalUtilities.csproj">
-      <Project>{2b4f83ef-6e5d-49b7-a54e-6c72d0b3b9a4}</Project>
-      <Name>GlobalUtilities</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Log\Log.csproj">
-      <Project>{6861294c-2a08-4c7b-9cdd-af2f9b3dd13c}</Project>
-      <Name>Log</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Users\Users.csproj">
-      <Project>{b2f7609d-fe8d-4518-85bc-d03f081362da}</Project>
-      <Name>Users</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

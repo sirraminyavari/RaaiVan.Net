@@ -243,11 +243,14 @@
     <Reference Include="Microsoft.AspNet.SessionState.SessionStateModule, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.SessionState.SessionStateModule.1.1.0\lib\Net462\Microsoft.AspNet.SessionState.SessionStateModule.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.3.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.4.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.4.2\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.AspNet.SignalR.SystemWeb.2.3.0\lib\net45\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
+    <Reference Include="Microsoft.AspNet.SignalR.StackExchangeRedis, Version=2.4.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.StackExchangeRedis.2.4.2\lib\net461\Microsoft.AspNet.SignalR.StackExchangeRedis.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.4.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.SystemWeb.2.4.2\lib\net45\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.1.1.1\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
@@ -1192,11 +1195,13 @@
     <Content Include="Page\View\Reports.aspx" />
     <Content Include="Page\View\Search.aspx" />
     <Content Include="Page\View\SearchUsers.aspx" />
+    <Content Include="Script\jQuery\jquery.signalr.js" />
     <Content Include="Script\AdvancedListViewer-v1\NewAdvancedListViewer.js" />
     <Content Include="Script\CN\RelatedNodesViewer.js" />
     <Content Include="Script\FormsManager\FormsManager.js" />
     <Content Include="Script\jQuery\jquery.dad.js" />
     <Content Include="Script\LoginPage\lp_modern_29_1.js" />
+    <Content Include="Script\lottie-player.js" />
     <Content Include="Script\RaaiVanHelp\HelpAdmin.js" />
     <Content Include="Script\RemoteServers\RemoteSearch.js" />
     <Content Include="Script\Reports\ReportOptions\CN_RelatedNodesCountReport.js" />
@@ -1697,7 +1702,7 @@
     <Content Include="Script\JIT\base.css" />
     <Content Include="Script\JIT\excanvas.js" />
     <Content Include="Script\JIT\jit.js" />
-    <Content Include="Script\jQuery\jquery.signalr.js" />
+    <Content Include="Script\jQuery\jquery.signalr_.js" />
     <Content Include="Script\jQuery\highlight\highlight.pack.js" />
     <Content Include="Script\jQuery\highlight\styles\vs.css" />
     <Content Include="Script\jQuery\images\animated-overlay.gif" />
@@ -2432,6 +2437,7 @@
     <Content Include="Fonts\BKoodak\BKoodakBold.ttf" />
     <Content Include="Fonts\BKoodak\BKoodakBold.woff" />
     <Content Include="Fonts\DroidNaskhRegular\DroidNaskhRegular.ttf" />
+    <Content Include="Images\loading.json" />
     <None Include="Properties\PublishProfiles\Default - AnyCPU.pubxml" />
     <None Include="Properties\PublishProfiles\Default - x64.pubxml" />
     <Content Include="Script\DataTables\Persian.json" />
