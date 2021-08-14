@@ -7,7 +7,7 @@ using System.DirectoryServices.AccountManagement;
 using System.Threading.Tasks;
 using RaaiVan.Modules.GlobalUtilities;
 using RaaiVan.Modules.Log;
-
+using RaaiVan.Modules.CoreNetwork;
 
 namespace RaaiVan.Modules.Users
 {
@@ -340,6 +340,7 @@ namespace RaaiVan.Modules.Users
         public Guid? MainEmailID;
         public List<PhoneNumber> PhoneNumbers;
         public List<EmailAddress> Emails;
+        public List<NodeMember> MembershipAreas;
         public bool? IsApproved;
         public bool? IsLockedOut;
         public DateTime? LastLockoutDate;
@@ -350,6 +351,7 @@ namespace RaaiVan.Modules.Users
             EmploymentType = EmploymentType.NotSet;
             PhoneNumbers = new List<PhoneNumber>();
             Emails = new List<EmailAddress>();
+            MembershipAreas = new List<NodeMember>();
         }
         
         public string FullName {
@@ -376,12 +378,17 @@ namespace RaaiVan.Modules.Users
                 ",\"UserName\":\"" + Base64.encode(UserName) + "\"" +
                 ",\"FirstName\":\"" + Base64.encode(FirstName) + "\"" +
                 ",\"LastName\":\"" + Base64.encode(LastName) + "\"" +
+                (Birthday.HasValue ? ",\"Birthday\":\"" + PublicMethods.get_local_date(Birthday.Value) + "\"" : string.Empty) +
+                (EmploymentType == EmploymentType.NotSet ? string.Empty : 
+                    ",\"EmploymentType\":\"" + EmploymentType.ToString() + "\"") +
                 (!EnableNewsLetter.HasValue || !EnableNewsLetter.Value ? string.Empty :
                     ",\"EnableNewsLetter\":" + EnableNewsLetter.Value.ToString().ToLower()
                 ) +
                 (TwoStepAuthentication == TwoStepAuthentication.None ? string.Empty : 
                     ",\"TwoStepAuthentication\":\"" + TwoStepAuthentication.ToString() + "\""
                 ) +
+                (MainPhoneID.HasValue ? ",\"MainPhoneID\":\"" + MainPhoneID.ToString() + "\"" : string.Empty) +
+                (MainEmailID.HasValue ? ",\"MainEmailID\":\"" + MainEmailID.ToString() + "\"" : string.Empty) +
                 ",\"IncompleteProfile\":" + (!profileCompleted()).ToString().ToLower() +
                 (string.IsNullOrEmpty(AboutMe) ? string.Empty :
                     ",\"AboutMe\":\"" + Base64.encode(AboutMe) + "\"") +
@@ -404,6 +411,17 @@ namespace RaaiVan.Modules.Users
                     DocumentUtilities.get_cover_photo_url(applicationId, UserID.Value, networkAddress: false, highQuality: false) + "\"") +
                 (!highQualityCoverPhotoUrl || !UserID.HasValue ? string.Empty : ",\"HighQualityCoverPhotoURL\":\"" +
                     DocumentUtilities.get_cover_photo_url(applicationId, UserID.Value, networkAddress: false, highQuality: true) + "\"") +
+                (PhoneNumbers == null || PhoneNumbers.Count == 0 ? string.Empty :
+                    ",\"PhoneNumbers\":[" + string.Join(",", PhoneNumbers.Select(n => n.toJson())) + "]") +
+                (Emails == null || Emails.Count == 0 ? string.Empty : 
+                    ",\"Emails\":[" + string.Join(",", Emails.Select(e => e.toJson())) + "]") +
+                (MembershipAreas == null || MembershipAreas.Count == 0 ? string.Empty : 
+                    ",\"Nodes\":[" + string.Join(",", MembershipAreas.Select(nm => {
+                    return "{\"NodeID\":\"" + nm.Node.NodeID.ToString() + "\"" +
+                        ",\"Name\":\"" + Base64.encode(nm.Node.Name) + "\"" +
+                        ",\"NodeTypeID\":\"" + nm.Node.NodeTypeID.ToString() + "\"" +
+                        "}";
+                    })) + "]") +
                 "}";
         }
     }

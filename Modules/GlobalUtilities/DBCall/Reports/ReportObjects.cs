@@ -114,11 +114,13 @@ namespace RaaiVan.Modules.Reports
 
         public static object get_parameter_new(string name, string type, string value)
         {
-            if (string.IsNullOrEmpty(name)) return null;
+            if (string.IsNullOrEmpty(type)) type = string.Empty;
 
-            switch (name.ToLower())
+            switch (type.ToLower())
             {
                 case "structure":
+                    value = Base64.decode(value);
+
                     Dictionary<string, object> composite = PublicMethods.fromJSON(value);
 
                     string compositeName = PublicMethods.get_dic_value(composite, "Name");

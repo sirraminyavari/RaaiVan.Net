@@ -113,8 +113,11 @@ namespace RaaiVan.Web.API
                     bool? getPhoneNumbers = PublicMethods.parse_bool(context.Request.Params["GetPhoneNumbers"]);
                     bool? getEmails = PublicMethods.parse_bool(context.Request.Params["GetEmails"]);
 
-                    Guid? userId = command == "GetUser" ?
-                        PublicMethods.parse_guid(context.Request.Params["UserID"]) : paramsContainer.CurrentUserID;
+                    //Guid? userId = command == "GetUser" ?
+                    //    PublicMethods.parse_guid(context.Request.Params["UserID"]) : paramsContainer.CurrentUserID;
+
+                    Guid? userId =
+                        PublicMethods.parse_guid(context.Request.Params["UserID"], alternatvieValue: paramsContainer.CurrentUserID);
 
                     get_user(userId,
                         hidePhoneIfNotFriends || (getPhoneNumbers.HasValue && getPhoneNumbers.Value),
@@ -1783,37 +1786,16 @@ namespace RaaiVan.Web.API
                 )
             );
 
-            List<PhoneNumber> numbers = showPhones ? 
+            user.PhoneNumbers = showPhones ? 
                 UsersController.get_phone_numbers(paramsContainer.ApplicationID, userId.Value) : new List<PhoneNumber>();
-            List<EmailAddress> emails = showMails ?
+
+            user.Emails = showMails ?
                 UsersController.get_email_addresses(paramsContainer.ApplicationID, userId.Value) : new List<EmailAddress>();
 
-            List<NodeMember> membershipAreas =
+            user.MembershipAreas =
                 CNController.get_member_nodes(paramsContainer.Tenant.Id, userId.Value, ref membNodetypeIdLst);
 
-            responseText = "{\"UserID\":\"" + user.UserID.Value.ToString() + "\"" +
-                ",\"UserName\":\"" + Base64.encode(user.UserName) + "\"" +
-                ",\"FirstName\":\"" + Base64.encode(user.FirstName) + "\"" +
-                ",\"LastName\":\"" + Base64.encode(user.LastName) + "\"" +
-                ",\"JobTitle\":\"" + Base64.encode(user.JobTitle) + "\"" +
-                ",\"Birthday\":\"" + (user.Birthday.HasValue ? PublicMethods.get_local_date(user.Birthday.Value) : string.Empty) + "\"" +
-                ",\"EmploymentType\":\"" + (user.EmploymentType == EmploymentType.NotSet ?
-                    string.Empty : user.EmploymentType.ToString()) + "\"" +
-                ",\"MainPhoneID\":\"" + (user.MainPhoneID.HasValue ? user.MainPhoneID.ToString() : string.Empty) + "\"" +
-                ",\"MainEmailID\":\"" + (user.MainEmailID.HasValue ? user.MainEmailID.ToString() : string.Empty) + "\"" +
-                ",\"ProfileImageURL\":\"" + DocumentUtilities.get_personal_image_address(paramsContainer.Tenant.Id,
-                    user.UserID.Value) + "\"" +
-                ",\"HighQualityImageURL\":\"" + DocumentUtilities.get_personal_image_address(paramsContainer.Tenant.Id,
-                    user.UserID.Value, false, true) + "\"" +
-                ",\"PhoneNumbers\":[" + string.Join(",", numbers.Select(n => n.toJson())) + "]" + 
-                ",\"Emails\":[" + string.Join(",", emails.Select(e => e.toJson())) + "]" + 
-                ",\"Nodes\":[" + string.Join(",", membershipAreas.Select(nm => {
-                        return "{\"NodeID\":\"" + nm.Node.NodeID.ToString() + "\"" +
-                            ",\"Name\":\"" + Base64.encode(nm.Node.Name) + "\"" +
-                            ",\"NodeTypeID\":\"" + nm.Node.NodeTypeID.ToString() + "\"" +
-                            "}";
-                    })) + "]" + 
-                "}";
+            responseText = user.toJson(paramsContainer.ApplicationID, profileImageUrl: true, highQualityProfileImageUrl: true);
         }
 
         protected void set_theme(string theme, ref string responseText)

@@ -15,14 +15,6 @@ namespace RaaiVan.Modules.Reports
             return "[dbo]." + "[" + moduleIdentifier.ToString() + "_" + name + "]"; //'[dbo].' is database owner and 'RPT_' is module qualifier
         }
 
-        public static void get_report(Guid applicationId, ModuleIdentifier moduleIdentifier, string reportName,
-            ref RVDataTable retReport, ref string retActions, ref Dictionary<string, string> columnsDic, 
-            List<ReportParameter> parameters)
-        {
-            DataProvider.GetReport(applicationId,
-                moduleIdentifier, reportName, ref retReport, ref retActions, ref columnsDic, parameters);
-        }
-
         public static RVDataTable get_report(Guid applicationId, ModuleIdentifier moduleIdentifier, string reportName, 
             ref string retActions, ref Dictionary<string, string> columnsDic, List<object> parameters)
         {

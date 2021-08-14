@@ -278,6 +278,8 @@
     <Compile Include="DBCall\QA\QAController.cs" />
     <Compile Include="DBCall\QA\QAObjects.cs" />
     <Compile Include="DBCall\QA\QAParsers.cs" />
+    <Compile Include="DBCall\Reports\ReportObjects.cs" />
+    <Compile Include="DBCall\Reports\ReportsController.cs" />
     <Compile Include="DBCall\RV\RVParsers.cs" />
     <Compile Include="DBCall\Search\SearchController.cs" />
     <Compile Include="DBCall\Search\SearchObjects.cs" />
