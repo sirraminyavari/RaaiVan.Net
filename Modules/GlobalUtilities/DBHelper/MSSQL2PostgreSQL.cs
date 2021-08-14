@@ -352,17 +352,22 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         private static int rows_count_from_ms_sql(string tableName)
         {
-            SqlConnection con = new SqlConnection(ProviderUtil.ConnectionString);
+            SqlConnection con = new SqlConnection(MSSQLConnector.ConnectionString);
             SqlCommand cmd = new SqlCommand();
 
             cmd.Connection = con;
             cmd.CommandText = "SELECT COUNT(*) FROM dbo." + tableName;
 
             con.Open();
-
+            
             try
             {
-                return ProviderUtil.succeed_int((IDataReader)cmd.ExecuteReader());
+                IDataReader reader = (IDataReader)cmd.ExecuteReader();
+
+                RVDataTable tbl = new RVDataTable("tbl");
+                MSSQLConnector.reader2table(ref reader, ref tbl, options: null);
+
+                return tbl.GetInt(row: 0, column: 0, defaultValue: 0).Value;
             }
             catch (Exception ex) { return 0; }
             finally { con.Close(); }
@@ -370,7 +375,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         private static DataTable read_from_ms_sql(string tableName, int from, int to, string orderBy)
         {
-            SqlConnection con = new SqlConnection(ProviderUtil.ConnectionString);
+            SqlConnection con = new SqlConnection(MSSQLConnector.ConnectionString);
             SqlCommand cmd = new SqlCommand();
 
             if (string.IsNullOrEmpty(orderBy)) orderBy = "GETDATE()";
@@ -393,7 +398,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                 RVDataTable dt = new RVDataTable("tbl");
 
-                if (ProviderUtil.reader2table(ref reader, ref dt)) return dt;
+                if (MSSQLConnector.reader2table(ref reader, ref dt, options: null)) return dt;
                 else return null;
             }
             catch (Exception ex) { return null; }

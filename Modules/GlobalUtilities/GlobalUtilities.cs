@@ -638,7 +638,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             {
                 Guid applicationId = (Guid)appId;
 
-                string dbName = ProviderUtil.ConnectionString.Split(';').ToList().Select(u => u.Trim().ToLower()).Where(
+                string dbName = MSSQLConnector.ConnectionString.Split(';').ToList().Select(u => u.Trim().ToLower()).Where(
                     v => v.IndexOf("database") == 0).FirstOrDefault().Split('=')[1].Trim();
 
                 string persianNow = get_local_date(DateTime.Now);
@@ -649,12 +649,12 @@ namespace RaaiVan.Modules.GlobalUtilities
                 if (!Directory.Exists(backupFolder)) Directory.CreateDirectory(backupFolder);
                 string backupFilePath = backupFolder + "/" + backupFileName;
 
-                if (!System.IO.File.Exists(backupFilePath.Replace("/", "\\")))
+                if (!File.Exists(backupFilePath.Replace("/", "\\")))
                 {
                     string cmd = "BACKUP DATABASE [" + dbName + "] TO DISK = N'" + backupFilePath + "' " +
                         "WITH COMPRESSION, NOFORMAT, INIT, NAME = N'" + backupFileName + "', SKIP, NOREWIND, NOUNLOAD, STATS = 10";
 
-                    System.Data.SqlClient.SqlConnection Sqlcon = new System.Data.SqlClient.SqlConnection(ProviderUtil.ConnectionString);
+                    System.Data.SqlClient.SqlConnection Sqlcon = new System.Data.SqlClient.SqlConnection(MSSQLConnector.ConnectionString);
                     System.Data.SqlClient.SqlCommand Sqlcom = new System.Data.SqlClient.SqlCommand(cmd, Sqlcon);
                     try
                     {

@@ -5,12 +5,29 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.ApplicationBlocks.Data;
 using RaaiVan.Modules.GlobalUtilities.DBCompositeTypes;
 
 namespace RaaiVan.Modules.GlobalUtilities
 {
     public static class MSSQLConnector
     {
+        private static string _connectionString;
+        public static string ConnectionString
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_connectionString))
+                {
+                    string name = "EKMConnectionString";
+                    string env = RaaiVanSettings.UseLocalVariables ? string.Empty : PublicMethods.get_environment_variable("rv_" + name);
+                    _connectionString = !string.IsNullOrEmpty(env) ? env :
+                        System.Configuration.ConfigurationManager.ConnectionStrings[name].ConnectionString;
+                }
+                return _connectionString;
+            }
+        }
+
         private static RVDataTable get_table(IDataReader reader, DBReadOptions options)
         {
             RVDataTable tbl = new RVDataTable("tbl");
@@ -29,7 +46,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                 DBResultSet ret = new DBResultSet();
 
-                using (IDataReader reader = ProviderUtil.execute_reader(procedureName, parameters))
+                using (IDataReader reader = (IDataReader)SqlHelper.ExecuteReader(ConnectionString, procedureName, parameters))
                 {
                     do
                     {
@@ -52,7 +69,7 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             DBResultSet ret = new DBResultSet();
 
-            SqlConnection con = new SqlConnection(ProviderUtil.ConnectionString);
+            SqlConnection con = new SqlConnection(ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
 

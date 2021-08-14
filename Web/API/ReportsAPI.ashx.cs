@@ -57,7 +57,7 @@ namespace RaaiVan.Web.API
                         string paramType = item.Length < 2 ? string.Empty : item[1];
                         string paramValue = context.Request.Params[paramName];
 
-                        parameters.Add(ReportUtilities.get_parameter_new(paramName, paramType, paramValue));
+                        parameters.Add(ReportUtilities.get_parameter(paramName, paramType, paramValue));
                     }
 
                     Dictionary<string, string> dictionary = _get_dictionary("Dictionary");

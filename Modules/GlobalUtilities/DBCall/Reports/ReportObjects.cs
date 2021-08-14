@@ -112,7 +112,7 @@ namespace RaaiVan.Modules.Reports
             }
         }
 
-        public static object get_parameter_new(string name, string type, string value)
+        public static object get_parameter(string name, string type, string value)
         {
             if (string.IsNullOrEmpty(type)) type = string.Empty;
 
@@ -152,113 +152,5 @@ namespace RaaiVan.Modules.Reports
                     return get_generic_parameter(name, type, value);
             }
         }
-
-        public static ReportParameter get_parameter(string name, string type, string value)
-        {
-            ReportParameter newParam = new ReportParameter();
-
-            newParam.Name = name;
-            newParam.Value = DBNull.Value;
-
-            switch (type.ToLower())
-            {
-                case "bool":
-                    newParam.Type = typeof(bool);
-                    newParam.Value = PublicMethods.parse_bool(value);
-                    break;
-                case "string":
-                    newParam.Type = typeof(string);
-                    if (!string.IsNullOrEmpty(value)) newParam.Value = value;
-                    break;
-                case "base64":
-                    newParam.Type = typeof(string);
-                    if (!string.IsNullOrEmpty(value)) newParam.Value = Base64.decode(value);
-                    break;
-                case "char":
-                    newParam.Type = typeof(char);
-                    if (!string.IsNullOrEmpty(value)) newParam.Value = (char)value[0];
-                    break;
-                case "guid":
-                    newParam.Type = typeof(Guid);
-                    newParam.Value = PublicMethods.parse_guid(value);
-                    break;
-                case "long":
-                    newParam.Type = typeof(long);
-                    newParam.Value = PublicMethods.parse_long(value);
-                    break;
-                case "int":
-                    newParam.Type = typeof(int);
-                    newParam.Value = PublicMethods.parse_int(value);
-                    break;
-                case "float":
-                case "double":
-                    newParam.Type = typeof(double);
-                    newParam.Value = PublicMethods.parse_double(value);
-                    break;
-                case "datetime":
-                    newParam.Type = typeof(DateTime);
-                    if (!string.IsNullOrEmpty(value))
-                    {
-                        List<string> lst = new List<string>() {
-                            "dateto", "todate", "enddate", "finishdate", "uppercreationdatelimit"
-                        };
-
-                        int days2Add = lst.Any(u => name.ToLower().IndexOf(u) >= 0) ? 1 : 0;
-
-                        newParam.Value = PublicMethods.parse_date(value, days2Add);
-                    }
-                    break;
-                case "now":
-                    newParam.Type = typeof(DateTime);
-                    newParam.Value = DateTime.Now;
-                    break;
-                case "structure":
-                    if (string.IsNullOrEmpty(value)) break;
-                    List<string> _data = ListMaker.get_string_items(Base64.decode(value), '|');
-                    if (_data.Count < 2) break;
-
-                    List<string> names = ListMaker.get_string_items(_data[0], ':');
-                    List<string> types = ListMaker.get_string_items(_data[1], ':');
-                    List<string> values = _data.Count <= 2 ? new List<string>() : ListMaker.get_string_items(_data[2], ':');
-
-                    if (names.Count < 2 || types.Count != (names.Count - 2)) break;
-
-                    newParam.Name = name;
-                    newParam.TypeName = names[0];
-                    int recordsCount = int.Parse(names[1]);
-
-                    if (values.Count != 0 && values.Count != (types.Count * recordsCount)) break;
-
-                    newParam.StructuredParameters = new List<ReportParameter>();
-                    for (var i = 2; i < names.Count; ++i)
-                        newParam.StructuredParameters.Add(get_parameter(names[i], types[i - 2], string.Empty));
-
-                    newParam.StructuredData = new List<List<ReportParameter>>();
-
-                    for (int i = 0, fieldsCount = types.Count; i < recordsCount; ++i)
-                    {
-                        List<ReportParameter> p = new List<ReportParameter>();
-
-                        for (int j = 0; j < newParam.StructuredParameters.Count; ++j)
-                            p.Add(get_parameter(names[j + 2], types[j], values[(i * fieldsCount) + j]));
-
-                        newParam.StructuredData.Add(p);
-                    }
-                    
-                    break;
-            }
-
-            return newParam;
-        }
-    }
-
-    public class ReportParameter
-    {
-        public string Name;
-        public Type Type;
-        public string TypeName;
-        public object Value;
-        public List<ReportParameter> StructuredParameters;
-        public List<List<ReportParameter>> StructuredData;
     }
 }
