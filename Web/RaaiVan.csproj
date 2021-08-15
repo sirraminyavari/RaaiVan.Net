@@ -1200,6 +1200,7 @@
     <Content Include="Script\CN\RelatedNodesViewer.js" />
     <Content Include="Script\FormsManager\FormsManager.js" />
     <Content Include="Script\jQuery\jquery.dad.js" />
+    <Content Include="Script\jQuery\TextNTags\rvtextarea.js" />
     <Content Include="Script\LoginPage\lp_modern_29_1.js" />
     <Content Include="Script\lottie-player.js" />
     <Content Include="Script\RaaiVanHelp\HelpAdmin.js" />
