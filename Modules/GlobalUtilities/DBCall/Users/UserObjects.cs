@@ -344,6 +344,7 @@ namespace RaaiVan.Modules.Users
         public bool? IsApproved;
         public bool? IsLockedOut;
         public DateTime? LastLockoutDate;
+        public Dictionary<string, object> Settings;
         
         public User()
         {
@@ -352,6 +353,7 @@ namespace RaaiVan.Modules.Users
             PhoneNumbers = new List<PhoneNumber>();
             Emails = new List<EmailAddress>();
             MembershipAreas = new List<NodeMember>();
+            Settings = new Dictionary<string, object>();
         }
         
         public string FullName {
@@ -379,12 +381,12 @@ namespace RaaiVan.Modules.Users
                 ",\"FirstName\":\"" + Base64.encode(FirstName) + "\"" +
                 ",\"LastName\":\"" + Base64.encode(LastName) + "\"" +
                 (Birthday.HasValue ? ",\"Birthday\":\"" + PublicMethods.get_local_date(Birthday.Value) + "\"" : string.Empty) +
-                (EmploymentType == EmploymentType.NotSet ? string.Empty : 
+                (EmploymentType == EmploymentType.NotSet ? string.Empty :
                     ",\"EmploymentType\":\"" + EmploymentType.ToString() + "\"") +
                 (!EnableNewsLetter.HasValue || !EnableNewsLetter.Value ? string.Empty :
                     ",\"EnableNewsLetter\":" + EnableNewsLetter.Value.ToString().ToLower()
                 ) +
-                (TwoStepAuthentication == TwoStepAuthentication.None ? string.Empty : 
+                (TwoStepAuthentication == TwoStepAuthentication.None ? string.Empty :
                     ",\"TwoStepAuthentication\":\"" + TwoStepAuthentication.ToString() + "\""
                 ) +
                 (MainPhoneID.HasValue ? ",\"MainPhoneID\":\"" + MainPhoneID.ToString() + "\"" : string.Empty) +
@@ -398,9 +400,9 @@ namespace RaaiVan.Modules.Users
                     ",\"Organization\":\"" + Base64.encode(Organization) + "\"") +
                 (string.IsNullOrEmpty(Department) ? string.Empty :
                     ",\"Department\":\"" + Base64.encode(Department) + "\"") +
-                (string.IsNullOrEmpty(JobTitle) ? string.Empty : 
+                (string.IsNullOrEmpty(JobTitle) ? string.Empty :
                     ",\"JobTitle\":\"" + Base64.encode(JobTitle) + "\"") +
-                (string.IsNullOrEmpty(AvatarName) ? string.Empty : 
+                (string.IsNullOrEmpty(AvatarName) ? string.Empty :
                     ",\"AvatarName\":\"" + AvatarName + "\"") +
                 (string.IsNullOrEmpty(imageUrl) ? string.Empty :
                     ",\"ProfileImageURL\":\"" + imageUrl + "\"" +
@@ -413,15 +415,18 @@ namespace RaaiVan.Modules.Users
                     DocumentUtilities.get_cover_photo_url(applicationId, UserID.Value, networkAddress: false, highQuality: true) + "\"") +
                 (PhoneNumbers == null || PhoneNumbers.Count == 0 ? string.Empty :
                     ",\"PhoneNumbers\":[" + string.Join(",", PhoneNumbers.Select(n => n.toJson())) + "]") +
-                (Emails == null || Emails.Count == 0 ? string.Empty : 
+                (Emails == null || Emails.Count == 0 ? string.Empty :
                     ",\"Emails\":[" + string.Join(",", Emails.Select(e => e.toJson())) + "]") +
-                (MembershipAreas == null || MembershipAreas.Count == 0 ? string.Empty : 
-                    ",\"Nodes\":[" + string.Join(",", MembershipAreas.Select(nm => {
-                    return "{\"NodeID\":\"" + nm.Node.NodeID.ToString() + "\"" +
-                        ",\"Name\":\"" + Base64.encode(nm.Node.Name) + "\"" +
-                        ",\"NodeTypeID\":\"" + nm.Node.NodeTypeID.ToString() + "\"" +
-                        "}";
+                (MembershipAreas == null || MembershipAreas.Count == 0 ? string.Empty :
+                    ",\"Nodes\":[" + string.Join(",", MembershipAreas.Select(nm =>
+                    {
+                        return "{\"NodeID\":\"" + nm.Node.NodeID.ToString() + "\"" +
+                            ",\"Name\":\"" + Base64.encode(nm.Node.Name) + "\"" +
+                            ",\"NodeTypeID\":\"" + nm.Node.NodeTypeID.ToString() + "\"" +
+                            "}";
                     })) + "]") +
+                (Settings == null || Settings.Keys.Count == 0 ? string.Empty :
+                    ",\"Settings\":" + PublicMethods.toJSON(Settings)) +
                 "}";
         }
     }

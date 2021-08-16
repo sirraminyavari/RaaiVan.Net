@@ -4,20 +4,6 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
     <asp:HiddenField ID="initialJson" runat="server" ClientIDMode="Static" Value="" />
 
-    <script type="text/javascript" src="../../Script/jQuery/TextNTags/rvtextarea.js"></script>
-
-    <div class="small-10 medium-10 large-10" style="padding:3rem;">
-        <div class="textntags-wrapper">
-            <textarea id="rvtextarea" class="rv-input" style="min-height:37px;"></textarea>
-        </div>
-    </div>
-
-    <script type="text/javascript">
-        (function () {
-            jQuery(document.getElementById("rvtextarea")).rvtextarea({});
-        })();
-    </script>
-
     <div id="homeArea" class="small-12 medium-12 large-12 row align-center" style="margin:0;"></div>
 
     <script type="text/javascript">

@@ -593,6 +593,12 @@ namespace RaaiVan.Web.API
                         PublicMethods.parse_guid(context.Request.Params["InvitationID"]),
                         ref responseText);
                     break;
+                case "SetPassword":
+                    set_password(PublicMethods.parse_string(context.Request.Params["VerificationToken"], false),
+                        PublicMethods.parse_long(context.Request.Params["Code"]),
+                        PublicMethods.parse_bool(context.Request.Params["Login"]),
+                        ref responseText);
+                    break;
                 case "ChangePassword":
                     change_password(PublicMethods.parse_string(context.Request.Params["CurrentPassword"]),
                         PublicMethods.parse_string(context.Request.Params["NewPassword"]),
@@ -601,10 +607,20 @@ namespace RaaiVan.Web.API
                 case "ValidatePassword":
                     validate_password(PublicMethods.parse_string(context.Request.Params["Password"]), ref responseText);
                     break;
-                case "SetPassword":
-                    set_password(PublicMethods.parse_string(context.Request.Params["VerificationToken"], false),
+                case "ModifyEmailTicket":
+                    if (!Captcha.check(context, PublicMethods.parse_string(context.Request.Params["Captcha"], decode: false)))
+                    {
+                        responseText = "{\"ErrorText\":\"" + Messages.CaptchaIsNotValid + "\"}";
+                        break;
+                    }
+                    
+                    modify_email_ticket(PublicMethods.parse_guid(context.Request.Params["EmailID"]), 
+                        PublicMethods.parse_string(context.Request.Params["Address"]),
+                        ref responseText);
+                    break;
+                case "ModifyEmail":
+                    modify_email(PublicMethods.parse_string(context.Request.Params["VerificationToken"], false),
                         PublicMethods.parse_long(context.Request.Params["Code"]),
-                        PublicMethods.parse_bool(context.Request.Params["Login"]),
                         ref responseText);
                     break;
                 case "SetTheme":
@@ -612,6 +628,22 @@ namespace RaaiVan.Web.API
                     break;
                 case "GetTheme":
                     get_theme(ref responseText);
+                    break;
+                case "SetVerificationCodeMedia":
+                    {
+                        TwoStepAuthentication media = PublicMethods.parse_enum<TwoStepAuthentication>(
+                            PublicMethods.parse_string(context.Request.Params["Media"], decode: false), TwoStepAuthentication.None);
+
+                        set_verification_code_media(media, ref responseText);
+                    }
+                    break;
+                case "SaveUserSettingsItem":
+                    {
+                        save_user_settings_item(PublicMethods.parse_string(context.Request.Params["Name"], decode: false),
+                            PublicMethods.parse_string(context.Request.Params["Value"], decode: false),
+                            PublicMethods.parse_string(context.Request.Params["Type"], decode: false), 
+                            ref responseText);
+                    }
                     break;
                 case "GetApplicationUsers":
                     {
@@ -1641,6 +1673,106 @@ namespace RaaiVan.Web.API
                 RaaiVanUtil.password_change_not_needed(HttpContext.Current);
         }
 
+        public void modify_email_ticket(Guid? emailId, string emailAddress, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            if (!PublicMethods.is_email(emailAddress))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.EmailIsNotValid + "\"}";
+                return;
+            }
+            else if (UsersController.email_exists(paramsContainer.ApplicationID, emailAddress))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.ThisEmailBelongsToAnExistingUser + "\"}";
+                return;
+            }
+
+            Guid? mainEmailId = !paramsContainer.CurrentUserID.HasValue ? null :
+                UsersController.get_main_email(paramsContainer.ApplicationID, paramsContainer.CurrentUserID.Value);
+
+            EmailAddress address = !emailId.HasValue ? null :
+                UsersController.get_email_address(paramsContainer.ApplicationID, emailId.Value);
+
+            User user = !paramsContainer.CurrentUserID.HasValue ? null :
+                UsersController.get_user(paramsContainer.ApplicationID, paramsContainer.CurrentUserID.Value);
+
+            if (user == null || (emailId.HasValue && address == null) || (mainEmailId.HasValue && mainEmailId != emailId))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+                return;
+            }
+
+            Dictionary<string, object> customData = new Dictionary<string, object>();
+            customData["UserID"] = user.UserID;
+            customData["UserName"] = user.UserName;
+            customData["FirstName"] = user.FirstName;
+            customData["LastName"] = user.LastName;
+            customData["EmailID"] = emailId;
+            customData["Email"] = emailAddress;
+
+            VerificationCode.process_request(paramsContainer.ApplicationID, emailAddress: emailAddress,
+                phoneNumber: null, responseText: ref responseText, customData: PublicMethods.toJSON(customData));
+        }
+
+        public void modify_email(string token, long? code, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            if (string.IsNullOrEmpty(token) || !code.HasValue)
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.InvalidInput + "\"}";
+                return;
+            }
+
+            string customData = string.Empty;
+
+            bool result = VerificationCode.process_request(paramsContainer.ApplicationID, token: token, code: code, ref customData);
+
+            if (!result)
+            {
+                responseText = customData;
+                return;
+            }
+
+            Dictionary<string, object> dic = PublicMethods.fromJSON(customData);
+
+            Guid? emailId = PublicMethods.parse_guid(PublicMethods.get_dic_value(dic, "EmailID"));
+            string address = PublicMethods.get_dic_value(dic, "Email");
+
+            if (UsersController.email_exists(paramsContainer.ApplicationID.Value, address))
+            {
+                responseText = "{\"ErrorText\":\"" + Messages.EmailAlreadyExists + "\"}";
+                return;
+            }
+
+            bool succeed = false;
+
+            if (emailId.HasValue)
+            {
+                succeed = UsersController.edit_email_address(paramsContainer.ApplicationID,
+                    emailId.Value, address, paramsContainer.CurrentUserID.Value);
+            }
+            else {
+                emailId = Guid.NewGuid();
+
+                succeed = UsersController.set_email_address(paramsContainer.ApplicationID, emailId.Value,
+                    paramsContainer.CurrentUserID.Value, address, isMainEmail: true, paramsContainer.CurrentUserID.Value);
+            }
+
+            EmailAddress emailObj = !succeed ? new EmailAddress() : new EmailAddress() {
+                EmailID = emailId,
+                Address = address,
+                IsMain = true,
+                UserID = paramsContainer.CurrentUserID
+            };
+
+            responseText = !succeed ? "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}" :
+                "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" + ",\"Email\":" + emailObj.toJson() + "}";
+        }
+
         public void create_user(string username, string firstName, string lastName, ref string responseText)
         {
             //Privacy Check: OK
@@ -1820,6 +1952,59 @@ namespace RaaiVan.Web.API
             if (string.IsNullOrEmpty(theme)) theme = "Default";
 
             responseText = "{\"Theme\":\"" + theme + "\"}";
+        }
+
+        protected void set_verification_code_media(TwoStepAuthentication media, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+            
+            bool result = UsersController.set_verification_code_media(paramsContainer.Tenant.Id, 
+                paramsContainer.CurrentUserID.Value, media);
+
+            responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
+                "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+        }
+
+        protected void save_user_settings_item(string name, string value, string type, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            if (string.IsNullOrEmpty(type)) type = string.Empty;
+
+            Dictionary<string, object> currentSettings = new Dictionary<string, object>(); //fetch from database
+
+            switch (type.ToLower())
+            {
+                case "number":
+                    {
+                        double? val = PublicMethods.parse_double(value);
+
+                        if (!val.HasValue && currentSettings.ContainsKey(name)) currentSettings.Remove(name);
+                        else currentSettings[name] = val;
+                    }
+                    break;
+                case "boolean":
+                    {
+                        bool? val = PublicMethods.parse_bool(value);
+
+                        if (!val.HasValue && currentSettings.ContainsKey(name)) currentSettings.Remove(name);
+                        else currentSettings[name] = val;
+                    }
+                    break;
+                default:
+                    {
+                        if (string.IsNullOrEmpty(value) && currentSettings.ContainsKey(name)) currentSettings.Remove(name);
+                        else currentSettings[name] = value;
+                    }
+                    break;
+            }
+
+            bool result = true; //save PublicMethods.toJSON(currentSettings)
+
+            responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
+                "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
         }
 
         private void update_friend_suggestions(Guid userId, bool? full, ref string responseText)
@@ -2831,7 +3016,7 @@ namespace RaaiVan.Web.API
             }
 
             bool result = UsersController.set_email_address(paramsContainer.ApplicationID, 
-                newEmailId, userId, address, paramsContainer.CurrentUserID.Value);
+                newEmailId, userId, address, isMainEmail: false, paramsContainer.CurrentUserID.Value);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully +
                 "\",\"EmailID\":\"" + newEmailId.ToString() + "\"}" : "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";

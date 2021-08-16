@@ -257,14 +257,16 @@ namespace RaaiVan.Web.API
             switch (command) {
                 case "abc222":
                     {
-                        object results = DBCompositeType<object>.fromJson("BigIntTableType", new List<string>()
-                        {
-                            "{\"Value\":2}",
-                            "{\"Value\":\"3434sdsdfsfd343\"}",
-                            "{\"Value\":8}"
-                        });
+                        RabbitMQAPI.initialize();
 
-                        paramsContainer.return_response("result: ok " + results.ToString());
+                        paramsContainer.return_response("result: ok");
+                        return true;
+                    }
+                case "abc223":
+                    {
+                        RabbitMQAPI.create_consumer();
+
+                        paramsContainer.return_response("result: ok");
                         return true;
                     }
                 case "abc123":

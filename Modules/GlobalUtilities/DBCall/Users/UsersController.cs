@@ -445,6 +445,12 @@ namespace RaaiVan.Modules.Users
             return DBConnector.get_string(applicationId, GetFullyQualifiedName("GetTheme"), userId);
         }
 
+        public static bool set_verification_code_media(Guid? applicationId, Guid userId, TwoStepAuthentication media)
+        {
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetVerificationCodeMedia"), 
+                userId, media == TwoStepAuthentication.None ? null : media.ToString());
+        }
+
         public static List<Guid> get_approved_user_ids(Guid applicationId, List<Guid> userIds)
         {
             return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetApprovedUserIDs"),
@@ -641,10 +647,11 @@ namespace RaaiVan.Modules.Users
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetMainPhone"), numberId, userId);
         }
 
-        public static bool set_email_address(Guid? applicationId, Guid emailId, Guid userId, string address, Guid currentUserId)
+        public static bool set_email_address(Guid? applicationId, Guid emailId, Guid userId, 
+            string address, bool isMainEmail, Guid currentUserId)
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetEmailAddress"),
-                emailId, userId, address, currentUserId, DateTime.Now);
+                emailId, userId, address, isMainEmail, currentUserId, DateTime.Now);
         }
 
         public static bool edit_email_address(Guid? applicationId, Guid emailId, string address, Guid currentUserId)
@@ -690,7 +697,7 @@ namespace RaaiVan.Modules.Users
                 DBConnector.read(applicationId, GetFullyQualifiedName("GetEmailAddress"), emailId)).FirstOrDefault();
         }
 
-        public static List<string> get_not_existing_emails(Guid applicationId, List<string> emails)
+        public static List<string> get_not_existing_emails(Guid? applicationId, List<string> emails)
         {
             if (emails == null) emails = new List<string>();
 
@@ -700,7 +707,7 @@ namespace RaaiVan.Modules.Users
             return DBConnector.get_string_list(applicationId, GetFullyQualifiedName("GetNotExistingEmails"), applicationId, emailsParam);
         }
 
-        public static bool email_exists(Guid applicationId, string email)
+        public static bool email_exists(Guid? applicationId, string email)
         {
             return get_not_existing_emails(applicationId, new List<string>() { email }).Count == 0;
         }
