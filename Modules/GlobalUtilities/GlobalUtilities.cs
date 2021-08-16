@@ -291,11 +291,15 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             MatchCollection matches = get_matches(input, pattern);
             List<string> retList = new List<string>();
+
+            if (matches == null) return retList;
+
             foreach (Match mth in matches)
             {
                 string val = get_value(mth, pattern);
                 if (!retList.Any(u => u == val)) retList.Add(val);
             }
+
             return retList;
         }
 

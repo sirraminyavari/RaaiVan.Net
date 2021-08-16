@@ -57,13 +57,22 @@ namespace RaaiVan.Modules.GlobalUtilities
                         return false;
                     }
 
+                    //configure the task distributor so that it doesn't give a task to a worker that is still on its previosu task
+                    //so, each new task will be transfered to an idle worker
+                    channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
                     channel.ExchangeDeclare(exchange: "ex.fanout", type: "fanout", durable: true, autoDelete: false);
 
                     channel.QueueDeclare(queue: "my.queue1", durable: true, exclusive: false, autoDelete: false);
                     channel.QueueDeclare(queue: "my.queue2", durable: true, exclusive: false, autoDelete: false);
 
                     channel.QueueBind(queue: "my.queue1", exchange: "ex.fanout", routingKey: string.Empty);
-                    channel.QueueBind(queue: "my.queue2", exchange: "ex.fanout", routingKey: string.Empty);
+
+                    channel.QueueBind(queue: "my.queue2", exchange: "ex.fanout", routingKey: string.Empty, 
+                        arguments: new Dictionary<string, object>() {
+                            { "x-match", "all" },
+                            { "status", "done" }
+                        });
 
                     channel.Close();
                     conn.Close();
@@ -152,6 +161,8 @@ namespace RaaiVan.Modules.GlobalUtilities
                 };
 
                 string consumerTag = channel.BasicConsume(queue: "my.queue1", autoAck: false, consumer: consumer);
+
+                //channel.BasicCancel(consumerTag); //Unsubscribe
             }
             catch { }
         }
