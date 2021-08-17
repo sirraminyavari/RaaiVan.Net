@@ -115,8 +115,6 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         private static RVDataTable get_table(NpgsqlDataReader reader, DBReadOptions options)
         {
-            List<string> columnNames = reader.GetColumnSchema().Select(c => c.ColumnName).ToList();
-
             RVDataTable tbl = new RVDataTable("tbl", postgreSqlMode: true);
 
             reader.GetColumnSchema().ToList().ForEach(col =>
@@ -174,9 +172,30 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                             using (NpgsqlDataReader reader = cmd.ExecuteReader())
                             {
-                                while (reader.Read())
-                                    cursors.Add((string)reader[0]);
+                                RVDataTable tbl = get_table(reader, options);
+
                                 if (!reader.IsClosed) reader.Close();
+
+                                //check if the results are cursors
+                                //if the return table has only one column and the column name is not determined in the query,
+                                //the column name will be exactly same as function name.
+                                //this is true for cursors. besides, first character of a cursor is '<'
+
+                                object firstValue = tbl.Columns.Count != 1 || 
+                                    tbl.ColumnNames[0].ToLower() != procedureName.ToLower() ? null : tbl.GetValue(row: 0, column: 0);
+
+                                string firstString = firstValue == null || firstValue.GetType() != typeof(string) ?
+                                    null : (string)firstValue;
+
+                                bool isCursor = !string.IsNullOrEmpty(firstString) && firstString[0] == '<';
+                                //end of check if the results are cursors
+
+                                if (!isCursor)
+                                    ret.add_table(tbl);
+                                else {
+                                    for (int i = 0; i < tbl.Rows.Count; i++)
+                                        cursors.Add(tbl.GetString(row: i, column: 0));
+                                }
                             }
 
                             cursors.ForEach(cr =>
@@ -187,7 +206,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                                 using (NpgsqlDataReader reader = cmd.ExecuteReader())
                                 {
                                     ret.add_table(get_table(reader, options));
-                                    reader.Close();
+                                    if(!reader.IsClosed) reader.Close();
                                 }
                             });
                         }

@@ -1936,7 +1936,7 @@ namespace RaaiVan.Web.API
             if (!paramsContainer.GBEdit) return;
 
             if (!string.IsNullOrEmpty(theme)) theme = theme.Split(',')[0];
-
+            
             bool result = UsersController.set_theme(paramsContainer.ApplicationID, paramsContainer.CurrentUserID.Value, theme);
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :

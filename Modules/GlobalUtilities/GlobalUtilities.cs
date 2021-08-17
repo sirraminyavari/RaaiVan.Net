@@ -319,9 +319,13 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static string replace(string input, string pattern, string replacement = " ")
         {
-            if (string.IsNullOrEmpty(input)) return input;
-            if (pattern == Patterns.HTMLTag.ToString()) input = HttpUtility.HtmlDecode(input);
-            return Regex.Replace(input, pattern, replacement);
+            try
+            {
+                if (string.IsNullOrEmpty(input)) return input;
+                if (pattern == Patterns.HTMLTag.ToString()) input = HttpUtility.HtmlDecode(input);
+                return Regex.Replace(input, pattern, replacement);
+            }
+            catch { return input; }
         }
 
         public static string replace(string input, Patterns pattern, string replacement = " ")

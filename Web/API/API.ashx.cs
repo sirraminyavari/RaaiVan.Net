@@ -310,11 +310,33 @@ namespace RaaiVan.Web.API
                         paramsContainer.return_response("result: ok " + results.ToString());
                         return true;
                     }
+                case "pg1":
+                case "pg2":
+                case "pg3":
+                    {
+                        string funcName = command == "pg1" ? "func_test_4" :
+                            (command == "pg2" ? "func_test_5" : "func_test_6");
+
+                        RVDataTable tbl = DBConnector.read_postgre(paramsContainer.ApplicationID, funcName).get_table();
+
+                        ArrayList retList = new ArrayList();
+                        Dictionary<string, object> results = new Dictionary<string, object>() { { "result", retList } };
+
+                        for (int i = 0; i < tbl.Rows.Count; i++)
+                        {
+                            Dictionary<string, object> row = new Dictionary<string, object>();
+                            tbl.ColumnNames.ForEach(col => row[col] = tbl.GetValue(i, col));
+                            retList.Add(row);
+                        }
+
+                        paramsContainer.return_response(PublicMethods.toJSON(results));
+                        return true;
+                    }
                 case "sql_scripts":
                     {
                         string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), decode: false);
                         paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(PublicMethods.generate_script_file(fileName)),
-                            fileName: "script.sql", contentType: "application/sql", isAttachment: true);
+                            fileName: "scripts.sql", contentType: "application/sql", isAttachment: true);
                         return true;
                     }
                 case "postgresql_scripts":
@@ -322,7 +344,7 @@ namespace RaaiVan.Web.API
                         string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), decode: false);
                         string scriptContent = MSSQL2PostgreSQL.convert_mssql_to_postgresql(PublicMethods.generate_script_file(fileName));
                         paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(scriptContent),
-                            fileName: "postgresql_script.sql", contentType: "application/sql", isAttachment: true);
+                            fileName: "postgresql_scripts.sql", contentType: "application/sql", isAttachment: true);
                         return true;
                     }
                 case "postgresql_schema":

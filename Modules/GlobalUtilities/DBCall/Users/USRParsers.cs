@@ -37,6 +37,7 @@ namespace RaaiVan.Modules.Users
                 user.IsApproved = table.GetBool(i, "IsApproved");
                 user.IsLockedOut = table.GetBool(i, "IsLockedOut");
                 user.EmploymentType = table.GetEnum<EmploymentType>(i, "EmploymentType", EmploymentType.NotSet);
+                user.TwoStepAuthentication = table.GetEnum<TwoStepAuthentication>(i, "TwoStepAuthentication", TwoStepAuthentication.None);
                 user.Settings = PublicMethods.fromJSON(table.GetString(i, "Settings"));
 
                 retList.Add(user);

@@ -387,7 +387,8 @@ namespace RaaiVan.Modules.Users
                     ",\"EnableNewsLetter\":" + EnableNewsLetter.Value.ToString().ToLower()
                 ) +
                 (TwoStepAuthentication == TwoStepAuthentication.None ? string.Empty :
-                    ",\"TwoStepAuthentication\":\"" + TwoStepAuthentication.ToString() + "\""
+                    ",\"TwoStepAuthentication\":\"" + TwoStepAuthentication.ToString() + "\"" +
+                    ",\"VerificationCodeMedia\":\"" + TwoStepAuthentication.ToString() + "\""
                 ) +
                 (MainPhoneID.HasValue ? ",\"MainPhoneID\":\"" + MainPhoneID.ToString() + "\"" : string.Empty) +
                 (MainEmailID.HasValue ? ",\"MainEmailID\":\"" + MainEmailID.ToString() + "\"" : string.Empty) +

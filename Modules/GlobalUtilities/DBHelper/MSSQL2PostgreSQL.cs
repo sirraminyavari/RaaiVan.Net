@@ -502,7 +502,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             return resolvedName.ToLower() == name.ToLower() ? script : convert_boolean_check_or_assignment(script, resolvedName);
         }
 
-        private static string convert_mssql_to_postgresql_one_line(string script)
+        private static string convert_mssql_to_postgresql_one_line(string script, int lineNumber)
         {
             //resove pattern: [dbo].[table_name]
             {
@@ -694,8 +694,27 @@ namespace RaaiVan.Modules.GlobalUtilities
             //end of convert DROP PROCEDURE statements
 
 
+            //convert datatypes
+            script = Expressions.replace(script, @"[uU][nN][iI][qQ][uU][eE][iI][dD][eE][nN][tT][iI][fF][iI][eE][rR]", "UUID");
+            script = Expressions.replace(script, @"\s[bB][iI][tT](?![a-zA-Z0-9_])", " BOOLEAN");
+            script = Expressions.replace(script, @"\s[iI][nN][tT](?![a-zA-Z0-9_])", " INTEGER");
+            script = Expressions.replace(script, @"\s[dD][aA][tT][eE][tT][iI][mM][eE](?![a-zA-Z0-9_])", " TIMESTAMP");
+            script = Expressions.replace(script, @"\s[nN][vV][aA][rR][cC][hH][aA][rR]\(", " VARCHAR(");
+            script = Expressions.replace(script, @"\s[vV][aA][rR][cC][hH][aA][rR]\([mM][aA][xX]\)", " VARCHAR");
+            //end of convert datatypes
+
+
+            //convert variable names
+            Expressions.get_matches_string(script, @"\@[a-zA-Z0-9_]+")
+                .Distinct()
+                .Select(mth => mth.Substring(1)) //remove the @ character
+                .ToList()
+                .ForEach(mth => script = script.Replace("@" + mth, "vr_" + resolve_name(mth)));
+            //end of convert variable names
+
+
             //convert the script line by line
-            script = string.Join("\n", script.Split('\n').Select(ln => convert_mssql_to_postgresql_one_line(ln)));
+            script = string.Join("\n", script.Split('\n').Select((ln, ind) => convert_mssql_to_postgresql_one_line(ln, ind)));
 
 
             return script;
