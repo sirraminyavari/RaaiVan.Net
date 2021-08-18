@@ -1,12 +1,19 @@
 ﻿var map = {
-    path: "\\SupportFiles\\DB Scripts\\",
+    path: "\\SupportFiles\\DB Scripts PostgreSQL\\Scripts",
     sub: [
-        "02 - Views",
+        "01 - Views",
+        "02 - Retern Value Composite Types",
         {
-            path: "05 - Functions & Stored Procedures",
+            path: "03 - Functions",
             sub: [
-                "02 - Global Functions",
-                "03 - Stored Procedures"
+                "CN",
+                "GFN"
+            ]
+        },
+        {
+            path: "04 - Stored Procedures",
+            sub: [
+                "SH"
             ]
         }
     ]

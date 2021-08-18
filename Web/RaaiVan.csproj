@@ -1963,6 +1963,7 @@
     <Content Include="Services\Knowledge.asmx" />
     <Content Include="Global.asax" />
     <Content Include="sql_map.js" />
+    <Content Include="sql_map_convert.js" />
     <Content Include="sql_map_postgre.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>

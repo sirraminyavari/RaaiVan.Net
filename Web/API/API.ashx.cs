@@ -334,16 +334,26 @@ namespace RaaiVan.Web.API
                     }
                 case "sql_scripts":
                     {
-                        string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), decode: false);
+                        string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), 
+                            decode: false, defaultValue: "sql_map.js");
                         paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(PublicMethods.generate_script_file(fileName)),
                             fileName: "scripts.sql", contentType: "application/sql", isAttachment: true);
                         return true;
                     }
-                case "postgresql_scripts":
+                case "mssql2postgresql":
                     {
-                        string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), decode: false);
+                        string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"),
+                            decode: false, defaultValue: "sql_map_convert.js");
                         string scriptContent = MSSQL2PostgreSQL.convert_mssql_to_postgresql(PublicMethods.generate_script_file(fileName));
                         paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(scriptContent),
+                            fileName: "mssql2postgresql_scripts.sql", contentType: "application/sql", isAttachment: true);
+                        return true;
+                    }
+                case "postgresql_scripts":
+                    {
+                        string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"),
+                            decode: false, defaultValue: "sql_map_postgre.js");
+                        paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(PublicMethods.generate_script_file(fileName)),
                             fileName: "postgresql_scripts.sql", contentType: "application/sql", isAttachment: true);
                         return true;
                     }
