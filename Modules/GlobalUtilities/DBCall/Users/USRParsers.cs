@@ -9,7 +9,8 @@ namespace RaaiVan.Modules.Users
 {
     public static class USRParsers
     {
-        public static List<User> users(DBResultSet results, ref long totalCount, bool systemAlso = false)
+        public static List<User> users(DBResultSet results, ref long totalCount, 
+            bool systemAlso = false, bool parseSettings = false)
         {
             List<User> retList = new List<User>();
 
@@ -38,7 +39,7 @@ namespace RaaiVan.Modules.Users
                 user.IsLockedOut = table.GetBool(i, "IsLockedOut");
                 user.EmploymentType = table.GetEnum<EmploymentType>(i, "EmploymentType", EmploymentType.NotSet);
                 user.TwoStepAuthentication = table.GetEnum<TwoStepAuthentication>(i, "TwoStepAuthentication", TwoStepAuthentication.None);
-                user.Settings = PublicMethods.fromJSON(table.GetString(i, "Settings"));
+                if (parseSettings) user.Settings = PublicMethods.fromJSON(table.GetString(i, "Settings"));
 
                 retList.Add(user);
             }
@@ -48,10 +49,10 @@ namespace RaaiVan.Modules.Users
             return retList;
         }
 
-        public static List<User> users(DBResultSet results, bool systemAlso = false)
+        public static List<User> users(DBResultSet results, bool systemAlso = false, bool parseSettings = false)
         {
             long totalCount = 0;
-            return users(results, ref totalCount, systemAlso);
+            return users(results, ref totalCount, systemAlso, parseSettings);
         }
 
         public static List<ApplicationUsers> application_users(DBResultSet results)

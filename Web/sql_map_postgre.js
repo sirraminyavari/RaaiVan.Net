@@ -7,7 +7,13 @@
             path: "03 - Functions",
             sub: [
                 "CN",
-                "GFN"
+                "DCT",
+                "FG",
+                "GFN",
+                "PRVC",
+                "USR",
+                "WF",
+                "WK"
             ]
         },
         {

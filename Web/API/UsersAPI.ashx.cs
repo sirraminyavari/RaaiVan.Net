@@ -1966,20 +1966,21 @@ namespace RaaiVan.Web.API
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
         }
 
-        protected void save_user_settings_item(string name, string value, string type, ref string responseText)
-        {
-            //Privacy Check: OK
-            if (!paramsContainer.GBEdit) return;
-
+        protected bool save_user_settings_item(User user, string name, object value, string type)
+        {            
             if (string.IsNullOrEmpty(type)) type = string.Empty;
 
-            Dictionary<string, object> currentSettings = new Dictionary<string, object>(); //fetch from database
+            if (user == null) return false;
+
+            Dictionary<string, object> currentSettings = user.Settings == null ? new Dictionary<string, object>() : user.Settings;
+
+            string strValue = value == null ? null : value.ToString();
 
             switch (type.ToLower())
             {
                 case "number":
                     {
-                        double? val = PublicMethods.parse_double(value);
+                        double? val = PublicMethods.parse_double(strValue);
 
                         if (!val.HasValue && currentSettings.ContainsKey(name)) currentSettings.Remove(name);
                         else currentSettings[name] = val;
@@ -1987,23 +1988,40 @@ namespace RaaiVan.Web.API
                     break;
                 case "boolean":
                     {
-                        bool? val = PublicMethods.parse_bool(value);
+                        bool? val = PublicMethods.parse_bool(strValue);
 
                         if (!val.HasValue && currentSettings.ContainsKey(name)) currentSettings.Remove(name);
                         else currentSettings[name] = val;
                     }
                     break;
+                case "object":
+                    {
+                        if (value == null && currentSettings.ContainsKey(name)) currentSettings.Remove(name);
+                        else currentSettings[name] = value;
+                    }
+                    break;
                 default:
                     {
-                        if (string.IsNullOrEmpty(value) && currentSettings.ContainsKey(name)) currentSettings.Remove(name);
-                        else currentSettings[name] = value;
+                        if (string.IsNullOrEmpty(strValue) && currentSettings.ContainsKey(name)) currentSettings.Remove(name);
+                        else currentSettings[name] = Base64.decode(strValue);
                     }
                     break;
             }
 
-            bool result = true; //save PublicMethods.toJSON(currentSettings)
+            return UsersController.save_user_settings(paramsContainer.ApplicationID,
+                paramsContainer.CurrentUserID.Value, PublicMethods.toJSON(currentSettings));
+        }
 
-            responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
+        protected void save_user_settings_item(string name, string value, string type, ref string responseText)
+        {
+            //Privacy Check: OK
+            if (!paramsContainer.GBEdit) return;
+
+            User user = !paramsContainer.CurrentUserID.HasValue ? null :
+                UsersController.get_user(paramsContainer.ApplicationID, paramsContainer.CurrentUserID.Value);
+
+            responseText = save_user_settings_item(user, name, value, type) ?
+                "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
         }
 

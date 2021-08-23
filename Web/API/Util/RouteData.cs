@@ -99,6 +99,8 @@ namespace RaaiVan.Web.API
 
         public void set_redirect_to_change_password() { Data["RedirectToChangePassword"] = true; }
 
+        public void set_redirect_to_onboarding() { Data["RedirectToOnboarding"] = true; }
+
         public void set_redirect_to_url(string url)
         {
             if (!string.IsNullOrEmpty(url)) url = url.Trim();
@@ -229,7 +231,9 @@ namespace RaaiVan.Web.API
                 RouteName.onboarding,
                 RouteName.profile,
                 RouteName.accessdenied,
-                RouteName.error
+                RouteName.error,
+                RouteName.teams,
+                RouteName.help
             };
 
             bool isProfilePage = RouteName == RouteName.profile;
@@ -266,8 +270,8 @@ namespace RaaiVan.Web.API
                 RouteName.onboarding,
                 RouteName.teams,
                 RouteName.help,
-                RaaiVanSettings.SAASBasedMultiTenancy ? RouteName.login : RouteName.none,
-                RaaiVanSettings.SAASBasedMultiTenancy ? RouteName.profile : RouteName.none
+                RaaiVanSettings.SAASBasedMultiTenancy ? RouteName.login : RouteName.none
+                //, RaaiVanSettings.SAASBasedMultiTenancy ? RouteName.profile : RouteName.none
             }.Where(n => n != RouteName.none).ToList();
 
             if (input.ParamsContainer.ApplicationID.HasValue)

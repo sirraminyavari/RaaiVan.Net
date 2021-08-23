@@ -652,6 +652,12 @@ namespace RaaiVan.Web.API
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
+            User user = !paramsContainer.CurrentUserID.HasValue ? null :
+                UsersController.get_user(paramsContainer.ApplicationID, paramsContainer.CurrentUserID.Value);
+
+            //true means that the user has already passed the tour
+            bool tourIntro = user != null && PublicMethods.get_dic_value<bool>(user.Settings, "tour_intro", defaultValue: false);
+
             List<Application> apps = !applicationId.HasValue || !paramsContainer.CurrentUserID.HasValue ? new List<Application>() :
                 GlobalController.get_user_applications(paramsContainer.CurrentUserID.Value);
 
@@ -660,10 +666,10 @@ namespace RaaiVan.Web.API
             if (app != null) PublicMethods.set_current_application(app);
 
             responseText = app == null ? "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}" :
-                "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" + 
-                    ",\"IsSystemAdmin\":" + (paramsContainer.CurrentUserID.HasValue && 
+                "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" +
+                    ",\"IsSystemAdmin\":" + (paramsContainer.CurrentUserID.HasValue &&
                         PublicMethods.is_system_admin(applicationId, paramsContainer.CurrentUserID.Value)).ToString().ToLower() +
-                    //",\"Onboarding\":{\"Name\":\"intro\",\"Step\":" + PublicMethods.get_random_number(1, 4).ToString() + "}" + 
+                    (tourIntro ? null : ",\"ProductTour\":{\"Name\":\"intro\",\"Step\":0}") +
                 "}";
         }
 

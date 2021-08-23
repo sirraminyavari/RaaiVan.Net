@@ -264,26 +264,36 @@ namespace RaaiVan.Modules.Users
             return get_users(applicationId, searchText, lowerBoundary, count, isOnline, ref totalCount, isApproved);
         }
 
-        public static List<User> get_users(Guid? applicationId, List<Guid> userIds)
+        private static List<User> _get_users(Guid? applicationId, List<Guid> userIds, bool parseSettings = false)
         {
             return userIds == null || userIds.Count == 0 ? new List<User>() :
                 USRParsers.users(DBConnector.read(applicationId, GetFullyQualifiedName("GetUsersByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(userIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(userIds), ','), parseSettings: parseSettings);
+        }
+
+        public static List<User> get_users(Guid? applicationId, List<Guid> userIds)
+        {
+            return _get_users(applicationId, userIds);
         }
 
         public static User get_user(Guid? applicationId, Guid userId)
         {
-            return get_users(applicationId, new List<Guid>() { userId }).FirstOrDefault();
+            return _get_users(applicationId, new List<Guid>() { userId }, parseSettings: true).FirstOrDefault();
+        }
+
+        private static List<User> _get_users(Guid? applicationId, List<string> usernames, bool parseSettings = false)
+        {
+            return _get_users(applicationId, get_user_ids(applicationId, usernames), parseSettings);
         }
 
         public static List<User> get_users(Guid? applicationId, List<string> usernames)
         {
-            return get_users(applicationId, get_user_ids(applicationId, usernames));
+            return _get_users(applicationId, usernames);
         }
 
         public static User get_user(Guid? applicationId, string username)
         {
-            return get_users(applicationId, new List<string>() { username }).FirstOrDefault();
+            return _get_users(applicationId, new List<string>() { username }, parseSettings: true).FirstOrDefault();
         }
 
         public static List<ApplicationUsers> get_application_users_partitioned(List<Guid> applicationIds, int? count)
@@ -449,6 +459,11 @@ namespace RaaiVan.Modules.Users
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetVerificationCodeMedia"), 
                 userId, media == TwoStepAuthentication.None ? null : media.ToString());
+        }
+
+        public static bool save_user_settings(Guid? applicationId, Guid userId, string settings)
+        {
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SaveUserSettings"), userId, settings);
         }
 
         public static List<Guid> get_approved_user_ids(Guid applicationId, List<Guid> userIds)
