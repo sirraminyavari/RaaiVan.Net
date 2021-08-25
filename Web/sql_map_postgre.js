@@ -10,7 +10,9 @@
                 "DCT",
                 "FG",
                 "GFN",
+                "KW",
                 "PRVC",
+                "QA",
                 "USR",
                 "WF",
                 "WK"
