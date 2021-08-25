@@ -510,26 +510,18 @@ namespace RaaiVan.Web.API
                             break;
                         }
 
-                        sign_in_with_google(PublicMethods.parse_string(context.Request.Params["GoogleToken"], false),
-                            PublicMethods.parse_string(context.Request.Params["Email"], decode: false),
-                            PublicMethods.parse_string(context.Request.Params["FirstName"]),
-                            PublicMethods.parse_string(context.Request.Params["LastName"]),
-                            PublicMethods.parse_string(context.Request.Params["GoogleID"], decode: false),
-                            PublicMethods.parse_string(context.Request.Params["ImageURL"], decode: false),
-                            PublicMethods.parse_guid(context.Request.Params["InvitationID"]),
-                            HttpContext.Current,
-                            callback: (userId, res) =>
-                            {
-                                Dictionary<string, object> resDic = PublicMethods.fromJSON(res);
+                        LoginUtil loginUtil = new LoginUtil(paramsContainer: paramsContainer,
+                            invitationId: PublicMethods.parse_guid(context.Request.Params["InvitationID"]));
 
-                                User user = !userId.HasValue ? null :
-                                    UsersController.get_user(paramsContainer.ApplicationID, userId.Value);
+                        loginUtil.login_with_google(
+                            token: PublicMethods.parse_string(context.Request.Params["GoogleToken"], false),
+                            email: PublicMethods.parse_string(context.Request.Params["Email"], decode: false),
+                            firstName: PublicMethods.parse_string(context.Request.Params["FirstName"]),
+                            lastName: PublicMethods.parse_string(context.Request.Params["LastName"]),
+                            googleId: PublicMethods.parse_string(context.Request.Params["GoogleID"], decode: false),
+                            imageUrl: PublicMethods.parse_string(context.Request.Params["ImageURL"], decode: false),
+                            callback: (res) => paramsContainer.return_response(res));
 
-                                if (user != null) resDic["User"] =
-                                    PublicMethods.fromJSON(user.toJson(applicationId: paramsContainer.ApplicationID, profileImageUrl: true));
-
-                                paramsContainer.return_response(PublicMethods.toJSON(resDic));
-                            });
                         isAsync = true;
                     }
                     break;
@@ -977,183 +969,17 @@ namespace RaaiVan.Web.API
 
             Dictionary<string, object> dic = PublicMethods.fromJSON(customData);
 
-            string email = PublicMethods.get_dic_value(dic, "Email");
-            string phone = PublicMethods.get_dic_value(dic, "Phone");
-            Guid? invitationId = PublicMethods.parse_guid(PublicMethods.get_dic_value(dic, "InvitationID"));
+            LoginUtil loginUtil = new LoginUtil(paramsContainer: paramsContainer,
+                invitationId: PublicMethods.parse_guid(PublicMethods.get_dic_value(dic, "InvitationID")));
 
-            Guid? userId = finalize_user_sign_up(username: PublicMethods.get_dic_value(dic, "UserName"),
-                email: email,
-                phone: phone,
-                firstName: PublicMethods.get_dic_value(dic, "FirstName"),
-                lastName: PublicMethods.get_dic_value(dic, "LastName"),
+            responseText = loginUtil.login_via_signup(
+                username: PublicMethods.get_dic_value(dic, "UserName"),
                 password: PublicMethods.get_dic_value(dic, "Password"),
-                invitationId: invitationId,
-                login: login,
-                context: HttpContext.Current,
-                responseText: ref responseText);
-
-            Dictionary<string, object> resDic = PublicMethods.fromJSON(responseText);
-            User user = !userId.HasValue ? null : UsersController.get_user(paramsContainer.ApplicationID, userId.Value);
-
-            if (user != null) resDic["User"] = PublicMethods.fromJSON(user.toJson(paramsContainer.ApplicationID, profileImageUrl: true));
-
-            responseText = PublicMethods.toJSON(resDic);
-        }
-
-        public async void sign_in_with_google(string token, string email, string firstName, string lastName, 
-            string googleId, string imageUrl, Guid? invitationId, HttpContext context, Action<Guid?, string> callback)
-        {
-            //Privacy Check: OK
-            if (!RaaiVanSettings.UserSignUp(paramsContainer.ApplicationID) &&
-                !RaaiVanSettings.SignUpViaInvitation(paramsContainer.ApplicationID)) return;
-
-            //this is temporary and we only need it because google has block server-side checks from Iran!
-            bool ignoreServerSideCheck = !string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(email) &&
-                !string.IsNullOrEmpty(firstName) && !string.IsNullOrEmpty(googleId);
-
-            if (!ignoreServerSideCheck)
-            {
-                Google.Apis.Auth.GoogleJsonWebSignature.Payload payload = null;
-
-                try
-                {
-                    payload = await Google.Apis.Auth.GoogleJsonWebSignature.ValidateAsync(token);
-                }
-                catch (Exception ex)
-                {
-                    string strEx = ex.ToString();
-                }
-
-                if (payload == null)
-                {
-                    callback(null, "{\"ErrorText\":\"" + Messages.TokenValidationFailed.ToString() + "\"}");
-                    return;
-                }
-
-                email = payload.Email;
-                firstName = string.IsNullOrEmpty(payload.Name) ? payload.GivenName : payload.Name;
-                lastName = string.IsNullOrEmpty(payload.FamilyName) ? payload.GivenName : payload.FamilyName;
-
-                if (string.IsNullOrEmpty(email))
-                {
-                    callback(null, "{\"ErrorText\":\"" + Messages.EmailIsNotValid.ToString() + "\"}");
-                    return;
-                }
-                else if (!payload.EmailVerified)
-                {
-                    callback(null, "{\"ErrorText\":\"" + Messages.EmailIsNotVerified.ToString() + "\"}");
-                    return;
-                }
-            }
-
-            EmailAddress address = UsersController.get_email_owners(paramsContainer.ApplicationID, new List<string>() { email })
-               .Where(e => e.IsMain.HasValue && e.IsMain.Value).FirstOrDefault();
-
-            string responseText = string.Empty;
-            Guid? userId = null;
-
-            //if address is null, then this is a sign up
-            if (address == null)
-            {
-                if (string.IsNullOrEmpty(firstName)) firstName = email.Substring(0, email.IndexOf('@'));
-                if (string.IsNullOrEmpty(lastName)) lastName = email.Substring(0, email.IndexOf('@'));
-
-                userId = finalize_user_sign_up(username: PublicMethods.random_string(8).ToLower(),
-                    email: email,
-                    phone: null,
-                    firstName: firstName,
-                    lastName: lastName,
-                    password: PublicMethods.random_string(10),
-                    invitationId: invitationId,
-                    login: true,
-                    context: context,
-                    responseText: ref responseText);
-            }
-            else {
-                userId = address.UserID;
-
-                Guid? appId = paramsContainer.ApplicationID.HasValue ? paramsContainer.ApplicationID :
-                    (!invitationId.HasValue ? null : UsersController.get_invitation_application_id(invitationId.Value, checkIfNotUsed: true));
-
-                if (appId.HasValue && !GlobalController.add_user_to_application(appId.Value, address.UserID.Value))
-                    appId = null;
-
-                user_sign_up_is_complete(applicationId: appId, userId: address.UserID,
-                    succeed: true, login: true, context: context, responseText: ref responseText);
-            }
-
-            callback(userId, responseText);
-        }
-
-        //returns UserID
-        private Guid? finalize_user_sign_up(string username, string email, string phone, string firstName, 
-            string lastName, string password, Guid? invitationId, bool? login, HttpContext context, ref string responseText)
-        {
-            if (!string.IsNullOrEmpty(email) &&
-                UsersController.get_email_owners(paramsContainer.ApplicationID, new List<string>() { email })
-                    .Any(e => e.IsMain.HasValue && e.IsMain.Value))
-            {
-                responseText = "{\"ErrorText\":\"" + Messages.EmailAlreadyExists + "\"}";
-                return null;
-            }
-            else if (!string.IsNullOrEmpty(phone) &&
-                UsersController.get_phone_owners(paramsContainer.ApplicationID, new List<string>() { phone })
-                    .Any(e => e.IsMain.HasValue && e.IsMain.Value))
-            {
-                responseText = "{\"ErrorText\":\"" + Messages.PhoneNumberAlreadyExists + "\"}";
-                return null;
-            }
-
-            User newUser = new User()
-            {
-                UserID = Guid.NewGuid(),
-                UserName = username,
-                FirstName = firstName,
-                LastName = lastName,
-                Password = password,
-                Emails = string.IsNullOrEmpty(email) ? new List<EmailAddress>() :
-                    new List<EmailAddress>() { new EmailAddress() { Address = email } },
-                PhoneNumbers = string.IsNullOrEmpty(phone) ? new List<PhoneNumber>() :
-                    new List<PhoneNumber>() { new PhoneNumber() { Number = phone } }
-            };
-
-            if (string.IsNullOrEmpty(newUser.UserName) || string.IsNullOrEmpty(newUser.FirstName) ||
-                string.IsNullOrEmpty(newUser.LastName) || string.IsNullOrEmpty(newUser.Password))
-            {
-                responseText = "{\"ErrorText\":\"" + Messages.InvalidInput + "\"}";
-                return null;
-            }
-            else if (UsersController.get_user(paramsContainer.ApplicationID, newUser.UserName) != null)
-            {
-                responseText = "{\"ErrorText\":\"" + Messages.UserNameAlreadyExists + "\"}";
-                return null;
-            }
-
-            Guid? appId = paramsContainer.ApplicationID.HasValue ? paramsContainer.ApplicationID :
-                (!invitationId.HasValue ? null : UsersController.get_invitation_application_id(invitationId.Value, checkIfNotUsed: true));
-
-            bool succeed = UsersController.create_user(appId, newUser, passAutoGenerated: false);
-
-            user_sign_up_is_complete(applicationId: appId, userId: newUser.UserID, 
-                succeed: succeed, login: login.HasValue && login.Value, context: context, responseText: ref responseText);
-
-            return succeed ? newUser.UserID : null;
-        }
-
-        private void user_sign_up_is_complete(Guid? applicationId, Guid? userId, bool succeed, bool login, 
-            HttpContext context, ref string responseText) {
-            string authCookie = string.Empty;
-
-            if (succeed && login)
-            {
-                RaaiVanUtil.after_login_procedures(applicationId, userId.Value, rememberMe: false,
-                    invitationId: null, loggedInWithActiveDirectory: false, context, ref authCookie);
-            }
-            
-            responseText = !succeed ? "{\"ErrorText\":\"" + Messages.UserCreationFailed + "\"}" :
-                "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" +
-                (string.IsNullOrEmpty(authCookie) ? string.Empty : ",\"AuthCookie\":" + authCookie) +
-                "}";
+                email: PublicMethods.get_dic_value(dic, "Email"),
+                phone: PublicMethods.get_dic_value(dic, "Phone"),
+                firstName: PublicMethods.get_dic_value(dic, "FirstName"),
+                lastName: PublicMethods.get_dic_value(dic, "Password"),
+                login: login.HasValue && login.Value);
         }
 
         public void create_temporary_user(string username, string firstName, string lastName, string email,
@@ -1618,32 +1444,13 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            Guid? userId = PublicMethods.parse_guid(PublicMethods.get_dic_value(dic, "UserID"));
-            Guid? invitationId = PublicMethods.parse_guid(PublicMethods.get_dic_value(dic, "InvitationID"));
+            LoginUtil loginUtil = new LoginUtil(paramsContainer: paramsContainer,
+                invitationId: PublicMethods.parse_guid(PublicMethods.get_dic_value(dic, "InvitationID")));
 
-            string password = PublicMethods.get_dic_value(dic, "Password");
-
-            string errorMessage = string.Empty;
-
-            bool succeed = userId.HasValue && UsersController.set_password(paramsContainer.ApplicationID,
-                userId.Value, password, false, false, ref errorMessage);
-
-            responseText = succeed ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
-                "{\"ErrorText\":\"" + (string.IsNullOrEmpty(errorMessage) ? Messages.OperationFailed.ToString() : errorMessage) + "\"}";
-
-            if (succeed) RaaiVanUtil.password_change_not_needed(HttpContext.Current);
-
-            if(succeed && login.HasValue && login.Value)
-            {
-                string authCookie = string.Empty;
-
-                RaaiVanUtil.after_login_procedures(tenantId: null, userId.Value, rememberMe: false,
-                    invitationId: invitationId, loggedInWithActiveDirectory: false, HttpContext.Current, ref authCookie);
-
-                responseText = "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" +
-                    (string.IsNullOrEmpty(authCookie) ? string.Empty : ",\"AuthCookie\":" + authCookie) +
-                    "}";
-            }
+            responseText = loginUtil.login_via_change_password(
+                userId: PublicMethods.parse_guid(PublicMethods.get_dic_value(dic, "UserID")),
+                password: PublicMethods.get_dic_value(dic, "Password"),
+                login: login.HasValue && login.Value);
         }
 
         public void set_random_password(Guid? userId, ref string responseText)

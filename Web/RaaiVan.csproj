@@ -2023,6 +2023,7 @@
     <Compile Include="API\QAAPI.ashx.cs">
       <DependentUpon>QAAPI.ashx</DependentUpon>
     </Compile>
+    <Compile Include="API\Util\LoginUtil.cs" />
     <Compile Include="API\Util\PDFTemplates.cs" />
     <Compile Include="API\Util\RaaiVanUtil.cs" />
     <Compile Include="API\ReportsAPI.ashx.cs">

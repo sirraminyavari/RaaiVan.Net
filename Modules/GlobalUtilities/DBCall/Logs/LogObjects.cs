@@ -701,6 +701,15 @@ namespace RaaiVan.Modules.Log
         public string Info;
         public ModuleIdentifier? ModuleIdentifier;
         public bool? NotAuthorized;
+
+        public string toJson()
+        {
+            return "{\"Action\":\"" + (!Action.HasValue ? string.Empty : Action.ToString()) + "\"" +
+                ",\"Date\":\"" + (!Date.HasValue ? string.Empty : PublicMethods.get_local_date(Date.Value, true)) + "\"" +
+                ",\"HostAddress\":\"" + (string.IsNullOrEmpty(HostAddress) ? string.Empty : HostAddress) + "\"" +
+                ",\"HostName\":\"" + (string.IsNullOrEmpty(HostName) ? string.Empty : HostName) + "\"" +
+                "}";
+        }
     }
 
     public class ErrorLog

@@ -466,7 +466,8 @@ namespace RaaiVan.Web.API
 
             bool loggedInWithActiveDirectory = false;
 
-            bool success = RaaiVanUtil.authenticate_user(paramsContainer.ApplicationID, username, password, string.Empty, false,
+            bool success = new LoginUtil(paramsContainer: paramsContainer, invitationId: null)
+                .authenticate_user(username, password, activeDirDomain: null, hasValidCaptcha: false,
                 ref loggedInWithActiveDirectory, ref failureText, ref remainingLockoutTime);
             
             if (success)

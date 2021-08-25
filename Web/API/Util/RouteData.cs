@@ -184,8 +184,9 @@ namespace RaaiVan.Web.API
             if (RouteName == RouteName.login && input.ParamsContainer.IsAuthenticated)
             {
                 Guid? invitationId = PublicMethods.parse_guid(input.ParamsContainer.request_param("inv"));
-                
-                RaaiVanUtil.init_user_application(invitationId, input.ParamsContainer.CurrentUserID.Value);
+                User user = new User() { UserID = input.ParamsContainer.CurrentUserID.Value };
+
+                RaaiVanUtil.init_user_application(invitationId, user, hasAlreadyLoggedIn: true);
                 
                 if (!input.ParamsContainer.ApplicationID.HasValue && RaaiVanSettings.SAASBasedMultiTenancy)
                     input.set_redirect_to_teams();
@@ -699,17 +700,22 @@ namespace RaaiVan.Web.API
                 input.Data["IgnoreReturnURL"] = true;
 
             bool disableLogin = false;
-            string loginErrorMessage = string.Empty;
             bool loggedIn = false;
-            string authCookie = string.Empty;
-            Guid? userId = null;
             bool shouldRedirect = false;
 
             bool? local = PublicMethods.parse_bool(input.ParamsContainer.request_param("Local"));
 
-            if ((!local.HasValue || !local.Value) && RaaiVanSettings.SSO.Enabled(input.ParamsContainer.ApplicationID) &&
-                !(loggedIn = RaaiVanUtil.sso_login(input.ParamsContainer, true,
-                ref loginErrorMessage, ref userId, ref authCookie, ref shouldRedirect))) disableLogin = true;
+            if ((!local.HasValue || !local.Value) && RaaiVanSettings.SSO.Enabled(input.ParamsContainer.ApplicationID))
+            {
+                Dictionary<string, object> ssoLoginResult = new Dictionary<string, object>();
+
+                loggedIn = new LoginUtil(paramsContainer: input.ParamsContainer, invitationId: null)
+                    .login_sso(skipRedirect: true, shouldRedirect: ref shouldRedirect, ref ssoLoginResult);
+
+                if (!loggedIn) disableLogin = true;
+
+                ssoLoginResult.Keys.ToList().ForEach(key => input.Data[key] = ssoLoginResult[key]);
+            }
 
             if (shouldRedirect)
             {
@@ -724,19 +730,7 @@ namespace RaaiVan.Web.API
             input.Data["LoginPageModel"] = RaaiVanSettings.LoginPageModel(input.ParamsContainer.ApplicationID);
             input.Data["LoggedIn"] = loggedIn;
             input.Data["DisableLogin"] = disableLogin;
-            input.Data["LoginErrorMessage"] = loginErrorMessage;
             input.Data["NeedsSSORedirect"] = shouldRedirect;
-
-            if (!string.IsNullOrEmpty(authCookie))
-                input.Data["AuthCookie"] = authCookie;
-
-            if (loggedIn)
-            {
-                input.Data["LoginMessage"] =
-                    Base64.encode(RVAPI.get_login_message(input.ParamsContainer.ApplicationID, userId));
-
-                input.Data["LastLogins"] = PublicMethods.fromJSON(RVAPI.get_last_logins(input.ParamsContainer.ApplicationID, userId));
-            }
 
             //login page info
             string[] info = null;

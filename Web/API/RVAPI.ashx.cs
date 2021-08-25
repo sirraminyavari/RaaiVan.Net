@@ -309,104 +309,25 @@ namespace RaaiVan.Web.API
                 case "Login":
                 case "LoginStepTwo":
                     {
-                        string failureText = string.Empty;
-
-                        int remainingLockoutTime = 0;
-
-                        Guid? userId = null;
-
-                        string authCookie = string.Empty;
-                        bool result = false, stepTwoNeeded = false, codeDisposed = false;
+                        LoginUtil loginUtil = new LoginUtil(paramsContainer: paramsContainer,
+                            invitationId: PublicMethods.parse_guid(context.Request.Params["InvitationID"]));
 
                         if (command == "Login")
                         {
-                            string captcha = PublicMethods.parse_string(context.Request.Params["Captcha"]);
-                            bool hasValidCaptcha = !string.IsNullOrEmpty(captcha) &&
-                                Captcha.check(HttpContext.Current, captcha);
-
-                            if (!string.IsNullOrEmpty(captcha) && !hasValidCaptcha)
-                                failureText = Messages.CaptchaIsNotValid.ToString();
-                            
-                            result = string.IsNullOrEmpty(failureText) && RaaiVanUtil.login(paramsContainer.ApplicationID,
-                                PublicMethods.parse_string(context.Request.Params["UserName"]),
-                                PublicMethods.parse_string(context.Request.Params["Password"]),
-                                PublicMethods.parse_string(context.Request.Params["DomainName"]),
-                                PublicMethods.parse_bool(context.Request.Params["RememberMe"]),
-                                PublicMethods.parse_guid(context.Request.Params["InvitationID"]),
-                                hasValidCaptcha,
-                                ref failureText, ref remainingLockoutTime, ref stepTwoNeeded, 
-                                ref userId, ref context, ref authCookie);
+                            responseText = loginUtil.login_normal(
+                                username: PublicMethods.parse_string(context.Request.Params["UserName"]),
+                                password: PublicMethods.parse_string(context.Request.Params["Password"]),
+                                activeDirDomain: PublicMethods.parse_string(context.Request.Params["DomainName"]),
+                                rememberMe: PublicMethods.parse_bool(context.Request.Params["RememberMe"]),
+                                captcha: PublicMethods.parse_string(context.Request.Params["Captcha"]));
                         }
                         else if (command == "LoginStepTwo")
                         {
-                            result = RaaiVanUtil.login_step_two(paramsContainer.ApplicationID,
-                                PublicMethods.parse_string(context.Request.Params["TwoStepToken"], false),
-                                PublicMethods.parse_long(context.Request.Params["Code"]),
-                                PublicMethods.parse_bool(context.Request.Params["RememberMe"]),
-                                PublicMethods.parse_guid(context.Request.Params["InvitationID"]),
-                                ref failureText, ref codeDisposed, ref userId, ref context, ref authCookie);
+                            responseText = loginUtil.login_two_step(
+                                token: PublicMethods.parse_string(context.Request.Params["TwoStepToken"], false),
+                                code: PublicMethods.parse_long(context.Request.Params["Code"]),
+                                rememberMe: PublicMethods.parse_bool(context.Request.Params["RememberMe"]));
                         }
-
-                        if (!result)
-                        {
-                            //Save Log
-                            if (!stepTwoNeeded)
-                            {
-                                try
-                                {
-                                    LogController.save_log(paramsContainer.ApplicationID, new Log()
-                                    {
-                                        UserID = userId,
-                                        HostAddress = PublicMethods.get_client_ip(HttpContext.Current),
-                                        HostName = PublicMethods.get_client_host_name(HttpContext.Current),
-                                        Action = Modules.Log.Action.Login_Failed,
-                                        SubjectID = userId,
-                                        Info = "{\"UserName\":\"" + context.Request.Params["UserName"] + "\"" +
-                                            ",\"Error\":\"" + Base64.encode(failureText) + "\"" +
-                                            ",\"RemainingLockoutTime\":" + remainingLockoutTime.ToString() +
-                                            "}",
-                                        ModuleIdentifier = ModuleIdentifier.RV
-                                    });
-                                }
-                                catch { }
-                            }
-                            //end of Save Log
-                        }
-                        else if (userId.HasValue && paramsContainer.ApplicationID.HasValue)
-                        {
-                            Log lg = LogController.get_logs(paramsContainer.ApplicationID, new List<Guid>() { userId.Value },
-                                new List<Modules.Log.Action>() { Modules.Log.Action.Login },
-                                null, null, null, 1).FirstOrDefault();
-
-                            if (lg == null && paramsContainer.CurrentUserID.HasValue)
-                            {
-                                GlobalController.set_variable(paramsContainer.ApplicationID,
-                                    userId.ToString() + "_LastVersionSeen",
-                                    "{\"Version\":\"" + PublicMethods.SystemVersion + "\",\"Tour\":\"Seen\"}",
-                                    paramsContainer.CurrentUserID.Value);
-                            }
-                        }
-
-                        string loginMessage = !result ? string.Empty : get_login_message(paramsContainer.ApplicationID, userId);
-                        string strLastLogins = !result ? string.Empty : get_last_logins(paramsContainer.ApplicationID, userId);
-
-                        if (string.IsNullOrEmpty(failureText) || failureText[0] != '{')
-                            failureText = "\"" + failureText + "\"";
-
-                        User user = !result || !userId.HasValue ? null : 
-                            UsersController.get_user(paramsContainer.ApplicationID, userId.Value);
-
-                        responseText = result ?
-                            "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" +
-                            ",\"User\":" + (user == null ? "null" : user.toJson(paramsContainer.ApplicationID, profileImageUrl: true)) + 
-                            ",\"LoginMessage\":\"" + Base64.encode(loginMessage) + "\"" +
-                            ",\"AuthCookie\":" + (string.IsNullOrEmpty(authCookie) ? "null" : authCookie) +
-                            (string.IsNullOrEmpty(strLastLogins) ? string.Empty : ",\"LastLogins\":" + strLastLogins) +
-                            "}" :
-                            "{\"ErrorText\":" + failureText +
-                            ",\"CodeDisposed\":" + codeDisposed.ToString().ToLower() +
-                            ",\"RemainingLockoutTime\":" + remainingLockoutTime.ToString() +
-                            "}";
                     }
                     break;
                 case "ResendVerificationCode":
@@ -656,7 +577,8 @@ namespace RaaiVan.Web.API
                 UsersController.get_user(paramsContainer.ApplicationID, paramsContainer.CurrentUserID.Value);
 
             //true means that the user has already passed the tour
-            bool tourIntro = user != null && PublicMethods.get_dic_value<bool>(user.Settings, "tour_intro", defaultValue: false);
+            bool showTourIntro = user != null && RaaiVanSettings.SAASBasedMultiTenancy &&
+                !PublicMethods.get_dic_value<bool>(user.Settings, "tour_intro", defaultValue: false);
 
             List<Application> apps = !applicationId.HasValue || !paramsContainer.CurrentUserID.HasValue ? new List<Application>() :
                 GlobalController.get_user_applications(paramsContainer.CurrentUserID.Value);
@@ -669,7 +591,7 @@ namespace RaaiVan.Web.API
                 "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" +
                     ",\"IsSystemAdmin\":" + (paramsContainer.CurrentUserID.HasValue &&
                         PublicMethods.is_system_admin(applicationId, paramsContainer.CurrentUserID.Value)).ToString().ToLower() +
-                    (tourIntro ? null : ",\"ProductTour\":{\"Name\":\"intro\",\"Step\":0}") +
+                    (showTourIntro ? ",\"ProductTour\":{\"Name\":\"intro\",\"Step\":0}" : string.Empty) +
                 "}";
         }
 
