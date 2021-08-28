@@ -21,6 +21,7 @@
         {
             path: "04 - Stored Procedures",
             sub: [
+				"CN",
                 "SH"
             ]
         }

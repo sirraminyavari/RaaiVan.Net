@@ -102,12 +102,12 @@ namespace RaaiVan.Web.API
 
         protected void convert2image(DocFileInfo file, string password, DocFileInfo destFile, bool? repair, ref string responseText)
         {
-            bool? status = PDFUtil.pdf2image_isprocessing(file.FileID.Value);
+            bool? status = PDF2ImageProcessing.is_processing(file.FileID.Value);
 
             if ((!status.HasValue || !status.Value) && repair.HasValue && repair.Value)
             {
                 PublicMethods.set_timeout(() => {
-                    PDFUtil.pdf2image(paramsContainer.Tenant.Id, file, password, destFile, ImageFormat.Png, true);
+                    PDFUtil.pdf2image(paramsContainer.Tenant.Id, file, password, destFile, ImageFormat.Png, repair: true);
                 }, 0);
 
                 responseText = "{\"Status\":\"" + "Processing" + "\"}";
@@ -120,7 +120,7 @@ namespace RaaiVan.Web.API
             else
             {
                 PublicMethods.set_timeout(() => {
-                    PDFUtil.pdf2image(paramsContainer.Tenant.Id, file, password, destFile, ImageFormat.Png, false);
+                    PDFUtil.pdf2image(paramsContainer.Tenant.Id, file, password, destFile, ImageFormat.Png, repair: false);
                 }, 0);
 
                 responseText = "{\"Status\":\"" + "Processing" + "\"}";

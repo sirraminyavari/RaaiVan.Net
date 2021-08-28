@@ -48,10 +48,19 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             if (string.IsNullOrEmpty(searchText)) return searchText;
 
-            return "ISABOUT(" + string.Join(",", 
-                PublicMethods.convert_numbers_from_local(searchText.Replace("\"", " ").Replace("'", " "))
-                .Split(' ').Select(u => u.Trim()).Where(x => !string.IsNullOrEmpty(x))
-                .Select(v => "\"" + v + (startWith ? "*" : "") + "\"")) + ")";
+            if (RaaiVanSettings.UsePostgreSQL)
+            {
+                return string.Join(" OR ",
+                    PublicMethods.convert_numbers_from_local(searchText.Replace("\"", " ").Replace("'", " "))
+                    .Split(' ').Select(u => u.Trim()).Where(x => !string.IsNullOrEmpty(x)));
+            }
+            else
+            {
+                return "ISABOUT(" + string.Join(",",
+                    PublicMethods.convert_numbers_from_local(searchText.Replace("\"", " ").Replace("'", " "))
+                    .Split(' ').Select(u => u.Trim()).Where(x => !string.IsNullOrEmpty(x))
+                    .Select(v => "\"" + v + (startWith ? "*" : "") + "\"")) + ")";
+            }
 
             /*
             searchText = PublicMethods.convert_numbers_from_persian(searchText.Replace("\"", " ").Replace("'", " ").Replace("(", " ").Replace(")", " "));

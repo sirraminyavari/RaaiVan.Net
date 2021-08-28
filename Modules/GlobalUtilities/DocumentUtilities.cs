@@ -686,7 +686,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
         }
 
-        private static string _get_folder_path(Guid? applicationId, FolderNames folderName, ref bool isPublic, bool cephMode = false)
+        private string _get_folder_path(Guid? applicationId, FolderNames folderName, ref bool isPublic, bool cephMode = false)
         {
             bool isAppLogo = folderName == FolderNames.ApplicationIcons || folderName == FolderNames.HighQualityApplicationIcon;
             bool isProfileImage = folderName == FolderNames.ProfileImages || folderName == FolderNames.HighQualityProfileImage;
@@ -773,7 +773,12 @@ namespace RaaiVan.Modules.GlobalUtilities
         private string get_folder_address(Guid? applicationId, ref bool isPublic)
         {
             if (!FolderName.HasValue) return string.Empty;
+
             string sub = !has_sub_folder(FolderName.Value) ? string.Empty : "\\" + get_sub_folder();
+
+            if (FolderName == FolderNames.PDFImages && FileID.HasValue)
+                sub += "\\" + FileID.Value.ToString();
+
             return map_path(applicationId, ref isPublic, dest: sub);
         }
 

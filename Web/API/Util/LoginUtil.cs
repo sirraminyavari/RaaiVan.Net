@@ -35,8 +35,8 @@ namespace RaaiVan.Web.API
         {
             if (RedisAPI.Enabled)
             {
-                DateTime dt = RedisAPI.get_value<DateTime>(get_redis_key(userId));
-                return dt > DateTime.Now;
+                DateTime? dt = RedisAPI.get_value<DateTime?>(get_redis_key(userId));
+                return dt.HasValue && dt > DateTime.Now;
             }
             else return _LoggedInUsers.ContainsKey(userId) && _LoggedInUsers[userId] > DateTime.Now;
         }
@@ -904,9 +904,11 @@ namespace RaaiVan.Web.API
             return retList;
         }
 
-        private string create_response(bool loginResult, string failureText, bool actionResult = true)
+        private string create_response(bool loginResult, string failureText, bool? actionResult = null)
         {
-            if (actionResult)
+            if (!actionResult.HasValue) actionResult = loginResult;
+
+            if (actionResult.HasValue && actionResult.Value)
             {
                 Response["Succeed"] = Messages.OperationCompletedSuccessfully.ToString();
 

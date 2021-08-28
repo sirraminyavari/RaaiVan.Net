@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.S3;
+using Amazon.S3.IO;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 
@@ -72,7 +73,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                     utility.Upload(request);
                 }
-
+                
                 return true;
             }
             catch(Exception ex) { return false; }
@@ -85,17 +86,29 @@ namespace RaaiVan.Modules.GlobalUtilities
                 AmazonS3Client client = get_client();
                 if (client == null) return new List<KeyValuePair<string, DateTime>>();
 
-                ListObjectsRequest request = new ListObjectsRequest();
+                /*
+                if (!string.IsNullOrEmpty(folderName)) folderName = folderName.Replace("/", "\\");
+
+                S3DirectoryInfo dir = new S3DirectoryInfo(client, RaaiVanSettings.CephStorage.Bucket, folderName);
+
+                S3FileInfo[] files = dir.GetFiles();
+
+                return files == null ? new List<KeyValuePair<string, DateTime>>() :
+                    files.Take(Math.Min(files.Length, maxCount <= 0 ? 2000 : maxCount))
+                    .Select(f => new KeyValuePair<string, DateTime>(f.Name, f.LastWriteTime)).ToList();
+                */
+
+                ListObjectsV2Request request = new ListObjectsV2Request();
                 request.BucketName = RaaiVanSettings.CephStorage.Bucket;
                 request.Prefix = folderName + "/";
+                //request.Delimiter = "/";
                 request.MaxKeys = maxCount <= 0 ? 2000 : maxCount;
 
-                ListObjectsResponse response = client.ListObjects(request);
-                
-                return response.S3Objects == null ? new List<KeyValuePair<string, DateTime>>() : 
+                ListObjectsV2Response response = client.ListObjectsV2(request);
+
+                return response.S3Objects == null ? new List<KeyValuePair<string, DateTime>>() :
                     response.S3Objects.Select(o => new KeyValuePair<string, DateTime>(o.Key, o.LastModified)).ToList();
             }
-
             catch (AmazonS3Exception ex)
             {
                 bool notFound = ex.StatusCode == System.Net.HttpStatusCode.NotFound;

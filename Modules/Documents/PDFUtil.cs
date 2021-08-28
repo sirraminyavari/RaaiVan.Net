@@ -11,6 +11,7 @@ using ImageMagick;
 using RaaiVan.Modules.GlobalUtilities;
 using RaaiVan.Modules.Log;
 using iTextSharp.text.exceptions;
+using System.Collections.Concurrent;
 /*
 using org.apache.pdfbox.pdmodel;
 using org.apache.pdfbox.pdfviewer;
@@ -18,6 +19,34 @@ using org.apache.pdfbox.pdfviewer;
 
 namespace RaaiVan.Modules.Documents
 {
+    public static class PDF2ImageProcessing
+    {
+        private static ConcurrentDictionary<Guid, bool> Files = new ConcurrentDictionary<Guid, bool>();
+
+        private static string redis_key(Guid fileId)
+        {
+            return fileId.ToString() + "_pdf_processing";
+        }
+
+        public static bool? is_processing(Guid fileId)
+        {
+            if (RedisAPI.Enabled)
+                return RedisAPI.get_value<bool?>(redis_key(fileId));
+            else
+            {
+                if (!Files.ContainsKey(fileId)) return null;
+                else return Files[fileId];
+            }
+        }
+
+        public static void is_processing(Guid fileId, bool value)
+        {
+            if (RedisAPI.Enabled)
+                RedisAPI.set_value<bool>(redis_key(fileId), value);
+            else Files[fileId] = value;
+        }
+    }
+
     public static class PDFUtil
     {
         public static PdfReader open_pdf_file(Guid applicationId, byte[] fileBytes, string password, ref bool invalidPassword) {
@@ -110,27 +139,20 @@ namespace RaaiVan.Modules.Documents
             }
         }
 
-        private static Dictionary<Guid, bool> PDF2ImageProcessing = new Dictionary<Guid, bool>();
-
-        public static bool? pdf2image_isprocessing(Guid fileId)
-        {
-            if (!PDF2ImageProcessing.ContainsKey(fileId)) return null;
-            else return PDF2ImageProcessing[fileId];
-        }
-
         public static void pdf2image(Guid applicationId,
             DocFileInfo pdf, string password, DocFileInfo destFile, ImageFormat imageFormat, bool repair)
         {
             //MagickNET.SetGhostscriptDirectory("[GhostScript DLL Dir]");
             //MagickNET.SetTempDirectory("[a temp dir]");
-            
+
+            bool? isProcessing = !pdf.FileID.HasValue ? null : PDF2ImageProcessing.is_processing(pdf.FileID.Value);
+
             if (!pdf.FileID.HasValue) return;
-            else if (PDF2ImageProcessing.ContainsKey(pdf.FileID.Value) &&
-                (!repair || PDF2ImageProcessing[pdf.FileID.Value])) return;
-            else PDF2ImageProcessing[pdf.FileID.Value] = true;
+            else if (isProcessing.HasValue && (!repair || isProcessing.Value)) return;
+            else PDF2ImageProcessing.is_processing(pdf.FileID.Value, true);
 
             if (destFile.file_exists_in_folder(applicationId) && !repair) {
-                PDF2ImageProcessing[pdf.FileID.Value] = false;
+                PDF2ImageProcessing.is_processing(pdf.FileID.Value, false);
                 return;
             }
 
@@ -210,7 +232,7 @@ namespace RaaiVan.Modules.Documents
                 LogController.save_error_log(applicationId, null, "ConvertPDFToImage", ex, ModuleIdentifier.DCT);
             }
 
-            PDF2ImageProcessing[pdf.FileID.Value] = false;
+            PDF2ImageProcessing.is_processing(pdf.FileID.Value, false);
         }
 
         public static byte[] merge_documents(List<object> docs)

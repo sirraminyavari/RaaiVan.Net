@@ -18,7 +18,7 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static bool initialize(Guid applicationId)
         {
-            return DBConnector.succeed(applicationId, GetFullyQualifiedName("Initialize"), applicationId);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("Initialize"), applicationId, DateTime.Now);
         }
 
         public static bool add_node_type(Guid applicationId, NodeType info, Guid? templateFormId = null)
