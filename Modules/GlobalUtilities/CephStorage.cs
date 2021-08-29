@@ -13,33 +13,19 @@ namespace RaaiVan.Modules.GlobalUtilities
 {
     public class CephStorage
     {
-        private static bool Inited = false;
-
-        private static AmazonS3Config config;
-
-        private static void init()
-        {
-            if (Inited || !RaaiVanSettings.CephStorage.Enabled) return;
-            Inited = true;
-
-            config = new AmazonS3Config()
-            {
-                ServiceURL = RaaiVanSettings.CephStorage.URL
-            };
-        }
-
         private static AmazonS3Client get_client()
         {
-            init();
-
-            if (config == null) return null;
-
-            AmazonS3Client client = new AmazonS3Client(
-                RaaiVanSettings.CephStorage.AccessKey,
-                RaaiVanSettings.CephStorage.SecretKey,
-                config);
-
-            return client;
+            try
+            {
+                return new AmazonS3Client(
+                    RaaiVanSettings.CephStorage.AccessKey,
+                    RaaiVanSettings.CephStorage.SecretKey,
+                    new AmazonS3Config()
+                    {
+                        ServiceURL = RaaiVanSettings.CephStorage.URL
+                    });
+            }
+            catch { return null; }
         }
 
         public static List<string> get_buckets()
@@ -83,31 +69,31 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             try
             {
-                AmazonS3Client client = get_client();
-                if (client == null) return new List<KeyValuePair<string, DateTime>>();
+                using (AmazonS3Client client = get_client())
+                {
+                    if (client == null) return new List<KeyValuePair<string, DateTime>>();
 
-                /*
-                if (!string.IsNullOrEmpty(folderName)) folderName = folderName.Replace("/", "\\");
+                    /*
+                    if (!string.IsNullOrEmpty(folderName)) folderName = folderName.Replace("/", "\\");
 
-                S3DirectoryInfo dir = new S3DirectoryInfo(client, RaaiVanSettings.CephStorage.Bucket, folderName);
+                    S3DirectoryInfo dir = new S3DirectoryInfo(client, RaaiVanSettings.CephStorage.Bucket, folderName);
 
-                S3FileInfo[] files = dir.GetFiles();
+                    S3FileInfo[] files = dir.GetFiles();
 
-                return files == null ? new List<KeyValuePair<string, DateTime>>() :
-                    files.Take(Math.Min(files.Length, maxCount <= 0 ? 2000 : maxCount))
-                    .Select(f => new KeyValuePair<string, DateTime>(f.Name, f.LastWriteTime)).ToList();
-                */
+                    return files == null ? new List<KeyValuePair<string, DateTime>>() :
+                        files.Take(Math.Min(files.Length, maxCount <= 0 ? 2000 : maxCount))
+                        .Select(f => new KeyValuePair<string, DateTime>(f.Name, f.LastWriteTime)).ToList();
+                    */
 
-                ListObjectsV2Request request = new ListObjectsV2Request();
-                request.BucketName = RaaiVanSettings.CephStorage.Bucket;
-                request.Prefix = folderName + "/";
-                //request.Delimiter = "/";
-                request.MaxKeys = maxCount <= 0 ? 2000 : maxCount;
+                    ListObjectsV2Response response = client.ListObjectsV2(new ListObjectsV2Request() {
+                        BucketName = RaaiVanSettings.CephStorage.Bucket,
+                        Prefix = folderName + "/",
+                        MaxKeys = maxCount <= 0 ? 2000 : maxCount
+                    });
 
-                ListObjectsV2Response response = client.ListObjectsV2(request);
-
-                return response.S3Objects == null ? new List<KeyValuePair<string, DateTime>>() :
-                    response.S3Objects.Select(o => new KeyValuePair<string, DateTime>(o.Key, o.LastModified)).ToList();
+                    return response?.S3Objects == null ? new List<KeyValuePair<string, DateTime>>() :
+                        response.S3Objects.Select(o => new KeyValuePair<string, DateTime>(o.Key, o.LastModified)).ToList();
+                }
             }
             catch (AmazonS3Exception ex)
             {
@@ -125,16 +111,18 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             try
             {
-                AmazonS3Client client = get_client();
-                if (client == null) return false;
+                using (AmazonS3Client client = get_client())
+                {
+                    if (client == null) return false;
 
-                GetObjectMetadataRequest request = new GetObjectMetadataRequest();
-                request.BucketName = RaaiVanSettings.CephStorage.Bucket;
-                request.Key = fileName;
+                    GetObjectMetadataRequest request = new GetObjectMetadataRequest();
+                    request.BucketName = RaaiVanSettings.CephStorage.Bucket;
+                    request.Key = fileName;
 
-                GetObjectMetadataResponse response = client.GetObjectMetadata(request);
-
-                return true;
+                    GetObjectMetadataResponse response = client.GetObjectMetadata(request);
+                    
+                    return true;
+                }
             }
 
             catch (AmazonS3Exception ex)
@@ -148,18 +136,20 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             try
             {
-                AmazonS3Client client = get_client();
-                if (client == null) return new byte[0];
-
-                GetObjectRequest request = new GetObjectRequest();
-                request.BucketName = RaaiVanSettings.CephStorage.Bucket;
-                request.Key = fileName;
-                
-                using (GetObjectResponse response = client.GetObject(request))
-                using (MemoryStream stream = new MemoryStream())
+                using (AmazonS3Client client = get_client())
                 {
-                    response.ResponseStream.CopyTo(stream);
-                    return stream.ToArray();
+                    if (client == null) return new byte[0];
+
+                    GetObjectRequest request = new GetObjectRequest();
+                    request.BucketName = RaaiVanSettings.CephStorage.Bucket;
+                    request.Key = fileName;
+
+                    using (GetObjectResponse response = client.GetObject(request))
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        response.ResponseStream.CopyTo(stream);
+                        return stream.ToArray();
+                    }
                 }
             }
             catch { return new byte[0]; }
@@ -169,21 +159,23 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             try
             {
-                AmazonS3Client client = get_client();
-                if (client == null) return false;
+                using (AmazonS3Client client = get_client())
+                {
+                    if (client == null) return false;
 
-                CopyObjectRequest request = new CopyObjectRequest();
-                request.SourceBucket = request.DestinationBucket = RaaiVanSettings.CephStorage.Bucket;
-                request.SourceKey = oldFileName;
-                request.DestinationKey = newFileName;
-                if (isPublic) request.CannedACL = S3CannedACL.PublicRead;
+                    CopyObjectRequest request = new CopyObjectRequest();
+                    request.SourceBucket = request.DestinationBucket = RaaiVanSettings.CephStorage.Bucket;
+                    request.SourceKey = oldFileName;
+                    request.DestinationKey = newFileName;
+                    if (isPublic) request.CannedACL = S3CannedACL.PublicRead;
 
-                CopyObjectResponse response = client.CopyObject(request);
-                bool result = response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+                    CopyObjectResponse response = client.CopyObject(request);
+                    bool result = response.HttpStatusCode == System.Net.HttpStatusCode.OK;
 
-                if (result) delete_file(oldFileName);
+                    if (result) delete_file(oldFileName);
 
-                return result;
+                    return result;
+                }
             }
             catch { return false; }
         }
@@ -192,15 +184,17 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             try
             {
-                AmazonS3Client client = get_client();
-                if (client == null) return false;
-                
-                DeleteObjectRequest request = new DeleteObjectRequest();
-                request.BucketName = RaaiVanSettings.CephStorage.Bucket;
-                request.Key = fileName;
+                using (AmazonS3Client client = get_client())
+                {
+                    if (client == null) return false;
 
-                DeleteObjectResponse response = client.DeleteObject(request);
-                return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+                    DeleteObjectRequest request = new DeleteObjectRequest();
+                    request.BucketName = RaaiVanSettings.CephStorage.Bucket;
+                    request.Key = fileName;
+
+                    DeleteObjectResponse response = client.DeleteObject(request);
+                    return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
+                }
             }
             catch { return false; }
         }
@@ -214,18 +208,20 @@ namespace RaaiVan.Modules.GlobalUtilities
                 if (isPublic) return RaaiVanSettings.CephStorage.URL
                         .Replace("://", "://" + RaaiVanSettings.CephStorage.Bucket + ".") + "/" + fileName;
 
-                AmazonS3Client client = get_client();
-                if (client == null) return string.Empty;
+                using (AmazonS3Client client = get_client())
+                {
+                    if (client == null) return string.Empty;
 
-                if (expiresInMinutes <= 0) expiresInMinutes = 60 * 10;
+                    if (expiresInMinutes <= 0) expiresInMinutes = 60 * 10;
 
-                GetPreSignedUrlRequest request = new GetPreSignedUrlRequest();
-                request.BucketName = RaaiVanSettings.CephStorage.Bucket;
-                request.Key = fileName;
-                request.Expires = DateTime.UtcNow.AddMinutes(expiresInMinutes);
-                request.Protocol = RaaiVanSettings.CephStorage.URL.ToLower().StartsWith("https") ? Protocol.HTTPS : Protocol.HTTP;
+                    GetPreSignedUrlRequest request = new GetPreSignedUrlRequest();
+                    request.BucketName = RaaiVanSettings.CephStorage.Bucket;
+                    request.Key = fileName;
+                    request.Expires = DateTime.UtcNow.AddMinutes(expiresInMinutes);
+                    request.Protocol = RaaiVanSettings.CephStorage.URL.ToLower().StartsWith("https") ? Protocol.HTTPS : Protocol.HTTP;
 
-                return client.GetPreSignedURL(request);
+                    return client.GetPreSignedURL(request);
+                }
             }
             catch { return string.Empty; }
         }
