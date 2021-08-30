@@ -16,6 +16,8 @@ namespace RaaiVan.Modules.GlobalUtilities
         //to be removed
         public static DBResultSet read_postgre(Guid? applicationId, string procedureName, params object[] parameters)
         {
+            if (parameters == null) parameters = new object[0];
+
             if (procedureName.ToLower().StartsWith("[dbo].["))
                 procedureName = procedureName.Substring("[dbo].[".Length, procedureName.Length - "[dbo].[".Length - 1);
 
@@ -38,6 +40,8 @@ namespace RaaiVan.Modules.GlobalUtilities
         public static DBResultSet read(Func<DBResultSet, bool> action, DBReadOptions options,
             Guid? applicationId, string procedureName, params object[] parameters)
         {
+            if (parameters == null) parameters = new object[0];
+
             if (procedureName.ToLower().StartsWith("[dbo].["))
                 procedureName = procedureName.Substring("[dbo].[".Length, procedureName.Length - "[dbo].[".Length - 1);
 

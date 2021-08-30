@@ -84,7 +84,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                         files.Take(Math.Min(files.Length, maxCount <= 0 ? 2000 : maxCount))
                         .Select(f => new KeyValuePair<string, DateTime>(f.Name, f.LastWriteTime)).ToList();
                     */
-
+                    
                     ListObjectsV2Response response = client.ListObjectsV2(new ListObjectsV2Request() {
                         BucketName = RaaiVanSettings.CephStorage.Bucket,
                         Prefix = folderName + "/",

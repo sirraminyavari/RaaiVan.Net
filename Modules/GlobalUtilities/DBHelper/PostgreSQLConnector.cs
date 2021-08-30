@@ -80,7 +80,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             if (value == null)
             {
-                cmd.Parameters.AddWithValue(null);
+                cmd.Parameters.AddWithValue(DBNull.Value);
                 return true;
             }
             else if (typeof(IDBCompositeType).IsAssignableFrom(value.GetType()))
@@ -160,6 +160,9 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                     using (NpgsqlTransaction tran = con.BeginTransaction())
                     {
+                        bool handledError = false;
+                        Exception unhandledException = null;
+
                         try
                         {
                             cmd.Transaction = tran;
@@ -181,7 +184,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                                 //the column name will be exactly same as function name.
                                 //this is true for cursors. besides, first character of a cursor is '<'
 
-                                object firstValue = tbl.Columns.Count != 1 || 
+                                object firstValue = tbl.Columns.Count != 1 ||
                                     tbl.ColumnNames[0].ToLower() != procedureName.ToLower() ? null : tbl.GetValue(row: 0, column: 0);
 
                                 string firstString = firstValue == null || firstValue.GetType() != typeof(string) ?
@@ -192,7 +195,8 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                                 if (!isCursor)
                                     ret.add_table(tbl);
-                                else {
+                                else
+                                {
                                     for (int i = 0; i < tbl.Rows.Count; i++)
                                         cursors.Add(tbl.GetString(row: i, column: 0));
                                 }
@@ -206,17 +210,40 @@ namespace RaaiVan.Modules.GlobalUtilities
                                 using (NpgsqlDataReader reader = cmd.ExecuteReader())
                                 {
                                     ret.add_table(get_table(reader, options));
-                                    if(!reader.IsClosed) reader.Close();
+                                    if (!reader.IsClosed) reader.Close();
                                 }
                             });
                         }
+                        catch (PostgresException ex)
+                        {
+                            string msg = ex?.MessageText;
+                            Dictionary<string, object> hint = PublicMethods.fromJSON(ex?.Hint);
+
+                            if (PublicMethods.get_dic_value(hint, "Type") == "RVException")
+                            {
+                                handledError = true;
+
+                                int? code = PublicMethods.get_dic_value<int>(hint, "Code", defaultValue: 0);
+
+                                ret = new DBResultSet();
+                                RVDataTable tbl = new RVDataTable("tbl", postgreSqlMode: true);
+                                ret.add_table(tbl);
+
+                                tbl.Columns.Add("val", typeof(int));
+                                tbl.Columns.Add("msg", typeof(string));
+
+                                tbl.Rows.Add(code, msg);
+                            }
+                            else unhandledException = ex;
+                        }
                         catch (Exception ex)
                         {
-                            string strEx = ex.ToString();
-                            throw ex;
+                            unhandledException = ex;
                         }
 
-                        if (action != null)
+                        if (handledError || unhandledException != null)
+                            tran.Rollback();
+                        else if (action != null)
                         {
                             if (!action(ret)) tran.Rollback();
                             else tran.Commit();
@@ -225,6 +252,8 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                         tran.Dispose();
                         con.Close();
+
+                        if (unhandledException != null) throw unhandledException;
                     }
                 }
 

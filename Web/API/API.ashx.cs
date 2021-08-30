@@ -293,6 +293,13 @@ namespace RaaiVan.Web.API
                         paramsContainer.return_response("result: ok " + results.ToString());
                         return true;
                     }
+                case "abc444":
+                    {
+                        int? val = null;
+                        DBResultSet results = DBConnector.read_postgre(paramsContainer.ApplicationID, "test", val);
+                        paramsContainer.return_response("result: ok " + results.ToString());
+                        return true;
+                    }
                 case "abc1234":
                     {
                         DBResultSet results = DBConnector.read(paramsContainer.ApplicationID, "func_test_2",

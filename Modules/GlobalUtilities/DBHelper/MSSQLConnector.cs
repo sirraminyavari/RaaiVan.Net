@@ -39,6 +39,8 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             procedureName = "[dbo].[" + procedureName + "]";
 
+            IDataReader reader = null;
+
             try
             {
                 if (action != null || parameters.Any(p => p != null && typeof(IDBCompositeType).IsAssignableFrom(p.GetType())))
@@ -46,7 +48,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                 DBResultSet ret = new DBResultSet();
 
-                using (IDataReader reader = (IDataReader)SqlHelper.ExecuteReader(ConnectionString, procedureName, parameters))
+                using (reader = (IDataReader)SqlHelper.ExecuteReader(ConnectionString, procedureName, parameters))
                 {
                     do
                     {
@@ -60,6 +62,16 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
             catch (Exception ex)
             {
+                try
+                {
+                    if (reader != null && !reader.IsClosed)
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                    }
+                }
+                catch { }
+
                 throw ex;
             }
         }
@@ -72,6 +84,8 @@ namespace RaaiVan.Modules.GlobalUtilities
             SqlConnection con = new SqlConnection(ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
+
+            IDataReader reader = null;
 
             try
             {
@@ -104,7 +118,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                 SqlTransaction tran = action == null ? null : con.BeginTransaction();
                 if (tran != null) cmd.Transaction = tran;
 
-                using (IDataReader reader = (IDataReader)cmd.ExecuteReader())
+                using (reader = (IDataReader)cmd.ExecuteReader())
                 {
                     do
                     {
@@ -126,6 +140,16 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
             catch (Exception ex)
             {
+                try
+                {
+                    if (reader != null && !reader.IsClosed)
+                    {
+                        reader.Close();
+                        reader.Dispose();
+                    }
+                }
+                catch { }
+
                 throw ex;
             }
             finally
