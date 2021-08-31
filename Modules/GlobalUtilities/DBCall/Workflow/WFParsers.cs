@@ -81,6 +81,13 @@ namespace RaaiVan.Modules.WorkFlow
                         NodeType = table.GetString(i, "NodeType")
                     },
                     DirectorIsAdmin = table.GetBool(i, "Admin"),
+                    DirectorUser = new User()
+                    {
+                        UserID = table.GetGuid(i, "UserID"),
+                        UserName = table.GetString(i, "UserName"),
+                        FirstName = table.GetString(i, "FirstName"),
+                        LastName = table.GetString(i, "LastName")
+                    },
                     MaxAllowedRejections = table.GetInt(i, "MaxAllowedRejections"),
                     RejectionTitle = table.GetString(i, "RejectionTitle"),
                     RejectionRefStateID = table.GetGuid(i, "RejectionRefStateID"),

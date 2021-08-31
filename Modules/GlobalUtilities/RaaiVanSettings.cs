@@ -1340,7 +1340,7 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             get
             {
-                return get_value(null, RVSettingsItem.UsePostgreSQL).ToLower() == "true";
+                return true;// get_value(null, RVSettingsItem.UsePostgreSQL).ToLower() == "true";
             }
         }
     }

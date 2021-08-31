@@ -128,7 +128,7 @@ namespace RaaiVan.Modules.WorkFlow
         {
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetStateDirector"),
                 applicationId, info.WorkFlowID, info.StateID, info.ResponseType, info.RefStateID, 
-                info.DirectorNode.NodeID, info.DirectorIsAdmin, info.CreatorUserID, DateTime.Now);
+                info.DirectorNode.NodeID, info.DirectorIsAdmin, info.DirectorUser.UserID, info.CreatorUserID, DateTime.Now);
         }
 
         public static bool set_state_poll(Guid applicationId, Guid workflowId, Guid stateId, Guid? pollId, Guid currentUserId)

@@ -32,7 +32,6 @@ namespace RaaiVan.Web.API
             string responseText = string.Empty;
             string command = PublicMethods.parse_string(context.Request.Params["Command"], false);
 
-            Guid currentUserId = PublicMethods.get_current_user_id();
             Guid userId = string.IsNullOrEmpty(context.Request.Params["UserID"]) ? Guid.Empty : Guid.Parse(context.Request.Params["UserID"]);
             Guid formId = string.IsNullOrEmpty(context.Request.Params["FormID"]) ? Guid.Empty : Guid.Parse(context.Request.Params["FormID"]);
             Guid workFlowId = string.IsNullOrEmpty(context.Request.Params["WorkFlowID"]) ? Guid.Empty : Guid.Parse(context.Request.Params["WorkFlowID"]);
@@ -44,16 +43,10 @@ namespace RaaiVan.Web.API
             Guid nodeTypeId = string.IsNullOrEmpty(context.Request.Params["NodeTypeID"]) ? Guid.Empty : Guid.Parse(context.Request.Params["NodeTypeID"]);
             Guid ownerId = string.IsNullOrEmpty(context.Request.Params["OwnerID"]) ? Guid.Empty : Guid.Parse(context.Request.Params["OwnerID"]);
             Guid historyId = string.IsNullOrEmpty(context.Request.Params["HistoryID"]) ? Guid.Empty : Guid.Parse(context.Request.Params["HistoryID"]);
-            Guid instanceId = string.IsNullOrEmpty(context.Request.Params["InstanceID"]) ? Guid.Empty : Guid.Parse(context.Request.Params["InstanceID"]);
-            Guid serviceId = string.IsNullOrEmpty(context.Request.Params["ServiceID"]) ? Guid.Empty : Guid.Parse(context.Request.Params["ServiceID"]);
-
+            
             List<DocFileInfo> attachedFiles = string.IsNullOrEmpty(context.Request.Params["AttachedFiles"]) ? new List<DocFileInfo>() :
                 DocumentUtilities.get_files_info(context.Request.Params["AttachedFiles"]);
 
-            string strIsAdmin = string.IsNullOrEmpty(context.Request.Params["isAdmin"]) ? string.Empty : context.Request.Params["isAdmin"];
-            if (string.IsNullOrEmpty(strIsAdmin) && !string.IsNullOrEmpty(context.Request.Params["Admin"]))
-                strIsAdmin = context.Request.Params["Admin"];
-            bool admin = strIsAdmin.ToLower() == "true";
             string strAttachmentRequired = string.IsNullOrEmpty(context.Request.Params["AttachmentRequired"]) ?
                 string.Empty : context.Request.Params["AttachmentRequired"];
             bool attachmentRequired = strAttachmentRequired.ToLower() == "true" ? true : false;
@@ -71,11 +64,7 @@ namespace RaaiVan.Web.API
             string description = string.IsNullOrEmpty(context.Request.Params["Description"]) ? string.Empty : Base64.decode(context.Request.Params["Description"]);
             string attachmentTitle = string.IsNullOrEmpty(context.Request.Params["AttachmentTitle"]) ? string.Empty :
                 Base64.decode(context.Request.Params["AttachmentTitle"]);
-            string startString = string.IsNullOrEmpty(context.Request.Params["Text"]) ? string.Empty : Base64.decode(context.Request.Params["Text"]);
-
-            DateTime? startDate = PublicMethods.parse_date(context.Request.Params["StartDate"]);
-            DateTime? endDate = PublicMethods.parse_date(context.Request.Params["EndDate"]);
-
+            
             switch (command)
             {
                 case "CreateState":
@@ -140,17 +129,23 @@ namespace RaaiVan.Web.API
                     _return_response(ref responseText);
                     return;
                 case "SetStateDirector":
-                    Guid directorNodeId = string.IsNullOrEmpty(context.Request.Params["DirectorNodeID"]) ? Guid.Empty :
-                        Guid.Parse(context.Request.Params["DirectorNodeID"]);
+                    {
+                        StateResponseTypes responseType = PublicMethods.parse_enum<StateResponseTypes>(
+                            context.Request.Params["ResponseType"], defaultValue: StateResponseTypes.None);
 
-                    string strResponseType = string.IsNullOrEmpty(context.Request.Params["ResponseType"]) ? string.Empty :
-                        context.Request.Params["ResponseType"];
-                    StateResponseTypes responseType = new StateResponseTypes();
-                    try { responseType = (StateResponseTypes)Enum.Parse(typeof(StateResponseTypes), strResponseType); }
-                    catch { responseType = new StateResponseTypes(); }
+                        bool admin = PublicMethods.parse_bool(context.Request.Params["isAdmin"],
+                            defaultValue: PublicMethods.parse_bool(context.Request.Params["Admin"], defaultValue: false)).Value;
 
-                    set_state_director(workFlowId, stateId, responseType, refStateId, directorNodeId, admin, ref responseText);
-                    _return_response(ref responseText);
+                        set_state_director(PublicMethods.parse_guid(context.Request.Params["WorkFlowID"]),
+                            PublicMethods.parse_guid(context.Request.Params["StateID"]),
+                            responseType,
+                            PublicMethods.parse_guid(context.Request.Params["RefStateID"]),
+                            PublicMethods.parse_guid(context.Request.Params["DirectorNodeID"]),
+                            admin,
+                            PublicMethods.parse_guid(context.Request.Params["DirectorUserID"]),
+                            ref responseText);
+                        _return_response(ref responseText);
+                    }
                     return;
                 case "SetStatePoll":
                     set_state_poll(workFlowId, stateId,
@@ -196,15 +191,20 @@ namespace RaaiVan.Web.API
                     _return_response(ref responseText);
                     return;
                 case "SetStateDataNeed":
-                    Guid previousNodeTypeId = string.IsNullOrEmpty(context.Request.Params["PreviousNodeTypeID"]) ? Guid.Empty :
-                        Guid.Parse(context.Request.Params["PreviousNodeTypeID"]);
-                    string strMultiselect = string.IsNullOrEmpty(context.Request.Params["MultiSelect"]) ? 
-                        string.Empty : context.Request.Params["MultiSelect"];
-                    bool multiselect = strMultiselect.ToLower() == "true";
+                    {
+                        Guid previousNodeTypeId = string.IsNullOrEmpty(context.Request.Params["PreviousNodeTypeID"]) ? Guid.Empty :
+                            Guid.Parse(context.Request.Params["PreviousNodeTypeID"]);
+                        string strMultiselect = string.IsNullOrEmpty(context.Request.Params["MultiSelect"]) ?
+                            string.Empty : context.Request.Params["MultiSelect"];
+                        bool multiselect = strMultiselect.ToLower() == "true";
 
-                    set_state_data_need(workFlowId, stateId, nodeTypeId, previousNodeTypeId, formId, description,
-                        multiselect, admin, necessary, ref responseText);
-                    _return_response(ref responseText);
+                        bool admin = PublicMethods.parse_bool(context.Request.Params["isAdmin"],
+                            defaultValue: PublicMethods.parse_bool(context.Request.Params["Admin"], defaultValue: false)).Value;
+
+                        set_state_data_need(workFlowId, stateId, nodeTypeId, previousNodeTypeId, formId, description,
+                            multiselect, admin, necessary, ref responseText);
+                        _return_response(ref responseText);
+                    }
                     return;
                 case "RemoveStateDataNeed":
                     remove_state_data_need(workFlowId, stateId, nodeTypeId, ref responseText);
@@ -227,19 +227,27 @@ namespace RaaiVan.Web.API
                     _return_response(ref responseText);
                     return;
                 case "CreateStateDataNeedInstance":
-                    create_state_data_need_instance(historyId, nodeId, admin, formId, ref responseText);
-                    _return_response(ref responseText);
+                    {
+                        bool admin = PublicMethods.parse_bool(context.Request.Params["isAdmin"],
+                            defaultValue: PublicMethods.parse_bool(context.Request.Params["Admin"], defaultValue: false)).Value;
+
+                        create_state_data_need_instance(historyId, nodeId, admin, formId, ref responseText);
+                        _return_response(ref responseText);
+                    }
                     return;
                 case "GetStateDataNeedInstance":
-                    get_state_data_need_instance(instanceId, ref responseText);
+                    get_state_data_need_instance(PublicMethods.parse_guid(context.Request.Params["InstanceID"]), 
+                        ref responseText);
                     _return_response(ref responseText);
                     return;
                 case "SetStateDataNeedInstanceAsFilled":
-                    set_state_data_need_instance_as_filled(instanceId, ref responseText);
+                    set_state_data_need_instance_as_filled(PublicMethods.parse_guid(context.Request.Params["InstanceID"]), 
+                        ref responseText);
                     _return_response(ref responseText);
                     return;
                 case "SetStateDataNeedInstanceAsNotFilled":
-                    set_state_data_need_instance_as_not_filled(instanceId, ref responseText);
+                    set_state_data_need_instance_as_not_filled(PublicMethods.parse_guid(context.Request.Params["InstanceID"]), 
+                        ref responseText);
                     _return_response(ref responseText);
                     return;
                 case "RemoveStateDataNeedInstance":
@@ -290,27 +298,31 @@ namespace RaaiVan.Web.API
                     _return_response(ref responseText);
                     return;
                 case "SetAutoMessage":
-                    Guid _automessageId = string.IsNullOrEmpty(context.Request.Params["AutoMessageID"]) ? Guid.Empty :
-                        Guid.Parse(context.Request.Params["AutoMessageID"]);
-
-                    AudienceTypes audienceType = new AudienceTypes();
-                    if (!Enum.TryParse<AudienceTypes>(context.Request.Params["AudienceType"], out audienceType))
-                        audienceType = new AudienceTypes();
-
-                    if (_automessageId == Guid.Empty)
                     {
-                        add_auto_message(PublicMethods.parse_guid(context.Request.Params["OwnerID"]),
-                            PublicMethods.parse_string(context.Request.Params["BodyText"]),
-                            audienceType, refStateId, nodeId, admin, ref responseText);
-                    }
-                    else
-                    {
-                        modify_auto_message(_automessageId,
-                            PublicMethods.parse_string(context.Request.Params["BodyText"]),
-                            audienceType, refStateId, nodeId, admin, ref responseText);
-                    }
+                        Guid _automessageId = string.IsNullOrEmpty(context.Request.Params["AutoMessageID"]) ? Guid.Empty :
+                            Guid.Parse(context.Request.Params["AutoMessageID"]);
 
-                    _return_response(ref responseText);
+                        AudienceTypes audienceType = PublicMethods.parse_enum<AudienceTypes>(
+                            context.Request.Params["AudienceType"], defaultValue: AudienceTypes.SendToOwner);
+
+                        bool admin = PublicMethods.parse_bool(context.Request.Params["isAdmin"],
+                            defaultValue: PublicMethods.parse_bool(context.Request.Params["Admin"], defaultValue: false)).Value;
+
+                        if (_automessageId == Guid.Empty)
+                        {
+                            add_auto_message(PublicMethods.parse_guid(context.Request.Params["OwnerID"]),
+                                PublicMethods.parse_string(context.Request.Params["BodyText"]),
+                                audienceType, refStateId, nodeId, admin, ref responseText);
+                        }
+                        else
+                        {
+                            modify_auto_message(_automessageId,
+                                PublicMethods.parse_string(context.Request.Params["BodyText"]),
+                                audienceType, refStateId, nodeId, admin, ref responseText);
+                        }
+
+                        _return_response(ref responseText);
+                    }
                     return;
                 case "RemoveAutoMessage":
                     Guid automessageId = string.IsNullOrEmpty(context.Request.Params["AutoMessageID"]) ? Guid.Empty :
@@ -905,6 +917,19 @@ namespace RaaiVan.Web.API
                 Base64.encode(names[state.RefDataNeedsStateID.Value]) : string.Empty;
             string refDirectorStateTitle = state.RefStateID.HasValue ? Base64.encode(names[state.RefStateID.Value]) : string.Empty;
 
+            string strDirector = "{\"ResponseType\":\"" + (state.ResponseType.HasValue ? state.ResponseType.ToString() : string.Empty) + "\"" +
+                ",\"RefStateID\":\"" + (state.RefStateID.HasValue ? state.RefStateID.Value.ToString() : string.Empty) + "\"" +
+                ",\"RefStateTitle\":\"" + refDirectorStateTitle + "\"" +
+                ",\"NodeName\":\"" + Base64.encode(state.DirectorNode.Name) + "\"" +
+                ",\"NodeID\":\"" + (state.DirectorNode.NodeID.HasValue ? state.DirectorNode.NodeID.Value.ToString() : string.Empty) + "\"" +
+                ",\"NodeTypeID\":\"" + (state.DirectorNode.NodeTypeID.HasValue ?
+                    state.DirectorNode.NodeTypeID.Value.ToString() : string.Empty) + "\"" +
+                ",\"NodeType\":\"" + Base64.encode(state.DirectorNode.NodeType) + "\"" +
+                ",\"Admin\":" + (state.DirectorIsAdmin.HasValue ? state.DirectorIsAdmin.Value : false).ToString().ToLower() +
+                ",\"FullName\":\"" + Base64.encode(state.DirectorUser.FullName) + "\"" +
+                ",\"UserID\":\"" + (state.DirectorUser.UserID.HasValue ? state.DirectorUser.UserID.Value.ToString() : string.Empty) + "\"" +
+                "}";
+
             string str = "{\"ID\":\"" + state.ID.ToString() + "\"" +
                 ",\"StateID\":\"" + state.StateID.Value.ToString() + "\"" +
                 ",\"Title\":\"" + stateTitle + "\"" +
@@ -921,15 +946,7 @@ namespace RaaiVan.Web.API
                 ",\"EditPermission\":" + (state.EditPermission.HasValue ? state.EditPermission.Value.ToString().ToLower() : "false") +
                 ",\"FreeDataNeedRequests\":" + (state.FreeDataNeedRequests.HasValue ?
                     state.FreeDataNeedRequests.Value.ToString().ToLower() : "false") +
-                ",\"Director\":{\"ResponseType\":\"" + (state.ResponseType.HasValue ? state.ResponseType.ToString() : string.Empty) + "\"" +
-                ",\"RefStateID\":\"" + (state.RefStateID.HasValue ? state.RefStateID.Value.ToString() : string.Empty) + "\"" +
-                ",\"RefStateTitle\":\"" + refDirectorStateTitle + "\"" +
-                ",\"NodeName\":\"" + Base64.encode(state.DirectorNode.Name) + "\"" +
-                ",\"NodeID\":\"" + (state.DirectorNode.NodeID.HasValue ? state.DirectorNode.NodeID.Value.ToString() : string.Empty) + "\"" +
-                ",\"NodeTypeID\":\"" + (state.DirectorNode.NodeTypeID.HasValue ?
-                    state.DirectorNode.NodeTypeID.Value.ToString() : string.Empty) + "\"" +
-                ",\"NodeType\":\"" + Base64.encode(state.DirectorNode.NodeType) + "\"" +
-                ",\"Admin\":" + (state.DirectorIsAdmin.HasValue ? state.DirectorIsAdmin.Value : false).ToString().ToLower() + "}" +
+                ",\"Director\":" + strDirector +
                 ",\"MaxAllowedRejections\":" + (state.MaxAllowedRejections.HasValue ? state.MaxAllowedRejections.ToString() : "null") +
                 ",\"RejectionTitle\":\"" + Base64.encode(state.RejectionTitle) + "\"" +
                 ",\"RejectionRefStateID\":\"" + (state.RejectionRefStateID.HasValue ?
@@ -1286,8 +1303,8 @@ namespace RaaiVan.Web.API
             responseText += "]}";
         }
 
-        protected void set_state_director(Guid workflowId, Guid stateId, StateResponseTypes responseType, Guid refStateId,
-            Guid directorNodeId, bool admin, ref string responseText)
+        protected void set_state_director(Guid? workflowId, Guid? stateId, StateResponseTypes responseType, 
+            Guid? refStateId, Guid? directorNodeId, bool admin, Guid? directorUserId, ref string responseText)
         {
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
@@ -1307,12 +1324,13 @@ namespace RaaiVan.Web.API
                 RefStateID = refStateId,
                 DirectorIsAdmin = admin,
                 CreatorUserID = paramsContainer.CurrentUserID,
-                CreationDate = DateTime.Now
+                CreationDate = DateTime.Now,
+                DirectorNode = new Node() { NodeID = directorNodeId },
+                DirectorUser = new User() { UserID = directorUserId }
             };
 
-            state.DirectorNode.NodeID = directorNodeId;
-
-            bool succeed = WFController.set_state_director(paramsContainer.Tenant.Id, state);
+            bool succeed = workflowId.HasValue && stateId.HasValue &&
+                WFController.set_state_director(paramsContainer.Tenant.Id, state);
 
             responseText = succeed ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -1866,12 +1884,12 @@ namespace RaaiVan.Web.API
             //end of Send Notification
         }
 
-        protected void get_state_data_need_instance(Guid instanceId, ref string responseText)
+        protected void get_state_data_need_instance(Guid? instanceId, ref string responseText)
         {
             if (!paramsContainer.GBEdit) return;
 
-            StateDataNeedInstance instance =
-                WFController.get_state_data_need_instance(paramsContainer.Tenant.Id, instanceId);
+            StateDataNeedInstance instance = !instanceId.HasValue ? null :
+                WFController.get_state_data_need_instance(paramsContainer.Tenant.Id, instanceId.Value);
 
             if (instance == null)
             {
@@ -1880,12 +1898,12 @@ namespace RaaiVan.Web.API
             }
 
             History history = WFController.get_history(paramsContainer.Tenant.Id, instance.HistoryID.Value);
-            Modules.CoreNetwork.Node owner = CNController.get_node(paramsContainer.Tenant.Id, history.OwnerID.Value);
+            Node owner = CNController.get_node(paramsContainer.Tenant.Id, history.OwnerID.Value);
             StateDataNeed dataNeed = WFController.get_state_data_need(paramsContainer.Tenant.Id, history.WorkFlowID.Value,
                 history.State.StateID.Value, instance.DirectorNode.NodeTypeID.Value);
-            FormType form = FGController.get_owner_form_instances(paramsContainer.Tenant.Id, instanceId).FirstOrDefault();
+            FormType form = FGController.get_owner_form_instances(paramsContainer.Tenant.Id, instanceId.Value).FirstOrDefault();
             if (form == null) form = new FormType();
-            List<DocFileInfo> preAttachedFiles = DocumentsController.get_owner_files(paramsContainer.Tenant.Id, instanceId);
+            List<DocFileInfo> preAttachedFiles = DocumentsController.get_owner_files(paramsContainer.Tenant.Id, instanceId.Value);
             List<DocFileInfo> attachments = !instance.AttachmentID.HasValue ? new List<DocFileInfo>() :
                 DocumentsController.get_owner_files(paramsContainer.Tenant.Id, instance.AttachmentID.Value);
 
@@ -1911,24 +1929,27 @@ namespace RaaiVan.Web.API
                 ",\"Attachments\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, attachments) + "}";
         }
 
-        protected void set_state_data_need_instance_as_filled(Guid instanceId, ref string responseText)
+        protected void set_state_data_need_instance_as_filled(Guid? instanceId, ref string responseText)
         {
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            StateDataNeedInstance inst = WFController.get_state_data_need_instance(paramsContainer.Tenant.Id, instanceId);
+            StateDataNeedInstance inst = !instanceId.HasValue ? null : 
+                WFController.get_state_data_need_instance(paramsContainer.Tenant.Id, instanceId.Value);
 
-            if (!_has_workflow_permission(WFController.get_history_owner_id(paramsContainer.Tenant.Id, inst.HistoryID.Value)) &&
+            if (inst == null || (
+                !_has_workflow_permission(WFController.get_history_owner_id(paramsContainer.Tenant.Id, inst.HistoryID.Value)) &&
                 !CNController.is_node_member(paramsContainer.Tenant.Id, inst.DirectorNode.NodeID.Value,
-                paramsContainer.CurrentUserID.Value, inst.Admin, NodeMemberStatuses.Accepted))
+                paramsContainer.CurrentUserID.Value, inst.Admin, NodeMemberStatuses.Accepted)))
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 _save_error_log(Modules.Log.Action.SetStateDataNeedInstanceAsFilled_PermissionFailed, instanceId);
                 return;
             }
 
-            bool succeed = WFController.set_state_data_need_instance_as_filled(paramsContainer.Tenant.Id,
-                instanceId, paramsContainer.CurrentUserID.Value);
+            bool succeed = instanceId.HasValue && 
+                WFController.set_state_data_need_instance_as_filled(paramsContainer.Tenant.Id,
+                instanceId.Value, paramsContainer.CurrentUserID.Value);
 
             responseText = succeed ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -1950,14 +1971,16 @@ namespace RaaiVan.Web.API
             //end of Save Log
         }
 
-        protected void set_state_data_need_instance_as_not_filled(Guid instanceId, ref string responseText)
+        protected void set_state_data_need_instance_as_not_filled(Guid? instanceId, ref string responseText)
         {
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
-            StateDataNeedInstance inst = WFController.get_state_data_need_instance(paramsContainer.Tenant.Id, instanceId);
+            StateDataNeedInstance inst = !instanceId.HasValue ? null :
+                WFController.get_state_data_need_instance(paramsContainer.Tenant.Id, instanceId.Value);
 
-            if (!_has_workflow_permission(WFController.get_history_owner_id(paramsContainer.Tenant.Id, inst.HistoryID.Value)))
+            if (inst == null ||
+                !_has_workflow_permission(WFController.get_history_owner_id(paramsContainer.Tenant.Id, inst.HistoryID.Value)))
             {
                 responseText = "{\"ErrorText\":\"" + Messages.AccessDenied + "\"}";
                 _save_error_log(Modules.Log.Action.SetStateDataNeedInstanceAsNotFilled_PermissionFailed, instanceId);
@@ -1967,7 +1990,8 @@ namespace RaaiVan.Web.API
             List<Dashboard> sentDashboards = new List<Dashboard>();
             string errorText = string.Empty;
 
-            bool succeed = WFController.set_state_data_need_instance_as_not_filled(paramsContainer.Tenant.Id, instanceId,
+            bool succeed = instanceId.HasValue &&
+                WFController.set_state_data_need_instance_as_not_filled(paramsContainer.Tenant.Id, instanceId.Value,
                 paramsContainer.CurrentUserID.Value, ref sentDashboards, ref errorText);
 
             responseText = succeed ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"}" :
@@ -3143,7 +3167,7 @@ namespace RaaiVan.Web.API
         }
 
         public void find_director(Guid ownerId, Guid workflowId, Guid stateId,
-            Modules.CoreNetwork.Node nodeObject, ref Guid? directorNodeId, ref Guid? directorUserId)
+            Node nodeObject, ref Guid? directorNodeId, ref Guid? directorUserId)
         {
             State st = WFController.get_workflow_state(paramsContainer.Tenant.Id, workflowId, stateId);
 
@@ -3154,7 +3178,7 @@ namespace RaaiVan.Web.API
                 case StateResponseTypes.SendToOwner:
                     {
                         if (nodeObject == null) nodeObject = CNController.get_node(paramsContainer.Tenant.Id, ownerId);
-                        if (nodeObject != null) directorUserId = nodeObject.Creator.UserID;
+                        directorUserId = nodeObject?.Creator?.UserID;
                     }
                     break;
                 case StateResponseTypes.ContentAdmin:
@@ -3174,13 +3198,16 @@ namespace RaaiVan.Web.API
                     break;
                 case StateResponseTypes.RefState:
                     {
-                        History h = WFController.get_last_history(paramsContainer.Tenant.Id, ownerId, stateId, false);
+                        History h = WFController.get_last_history(paramsContainer.Tenant.Id, ownerId, st.RefStateID, false);
                         if (h != null)
                         {
-                            directorNodeId = h.DirectorNode.NodeID;
+                            directorNodeId = h.DirectorNode?.NodeID;
                             directorUserId = h.DirectorUserID;
                         }
                     }
+                    break;
+                case StateResponseTypes.SpecificUser:
+                    directorUserId = st.DirectorUser?.UserID;
                     break;
             }
         }
@@ -3278,7 +3305,7 @@ namespace RaaiVan.Web.API
             {
                 try
                 {
-                    Modules.CoreNetwork.Node node = new Modules.CoreNetwork.Node();
+                    Node node = new Node();
                     Dictionary<string, string> dic =
                         _get_replacement_dictionary(oldHistory.OwnerID.Value, description,
                         paramsContainer.CurrentUserID.Value, ref node);
@@ -3358,7 +3385,7 @@ namespace RaaiVan.Web.API
             History hist = WFController.get_last_history(paramsContainer.Tenant.Id, ownerId);
             State firstState = hist == null || !hist.WorkFlowID.HasValue ? null :
                 WFController.get_first_workflow_state(paramsContainer.Tenant.Id, hist.WorkFlowID.Value);
-            Modules.CoreNetwork.Node node = CNController.get_node(paramsContainer.Tenant.Id, ownerId);
+            Node node = CNController.get_node(paramsContainer.Tenant.Id, ownerId);
 
             if (firstState != null && firstState.StateID.HasValue && node != null)
             {

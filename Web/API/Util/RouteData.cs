@@ -696,6 +696,11 @@ namespace RaaiVan.Web.API
 
         private static void login(RouteActionParams input)
         {
+            //Check db connection with a fake stored procedure call named 'ping'
+            DBResultSet pingRes = DBConnector.read(applicationId: null, "ping");
+            if (!string.IsNullOrEmpty(pingRes.ConnectionErrorMessage))
+                input.Data["DBConnectionError"] = pingRes.ConnectionErrorMessage;
+            
             if (RaaiVanSettings.IgnoreReturnURLOnLogin(input.ParamsContainer.ApplicationID))
                 input.Data["IgnoreReturnURL"] = true;
 

@@ -14,7 +14,7 @@ namespace RaaiVan.Modules.GlobalUtilities
         private static string HOST = "localhost";
         private static string DBNAME = "ekm_app";
         private static string USERNAME = "postgres";
-        private static string PASSWORD = "hrdovjshjpvjo";
+        private static string PASSWORD = "hrdovjshjpvjo22";
 
         private static bool COMPOSITE_MAPPINGS_DONE = false;
 
@@ -115,7 +115,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         private static RVDataTable get_table(NpgsqlDataReader reader, DBReadOptions options)
         {
-            RVDataTable tbl = new RVDataTable("tbl", postgreSqlMode: true);
+            RVDataTable tbl = new RVDataTable(postgreSqlMode: true);
 
             reader.GetColumnSchema().ToList().ForEach(col =>
             {
@@ -226,7 +226,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                                 int? code = PublicMethods.get_dic_value<int>(hint, "Code", defaultValue: 0);
 
                                 ret = new DBResultSet();
-                                RVDataTable tbl = new RVDataTable("tbl", postgreSqlMode: true);
+                                RVDataTable tbl = new RVDataTable(postgreSqlMode: true);
                                 ret.add_table(tbl);
 
                                 tbl.Columns.Add("val", typeof(int));

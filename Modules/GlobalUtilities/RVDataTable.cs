@@ -9,9 +9,15 @@ namespace RaaiVan.Modules.GlobalUtilities
 {
     public class RVDataTable : DataTable
     {
+        //this should be true only if it is used as database result set
         private bool PostgreSQLMode = false;
 
-        public RVDataTable(bool postgreSqlMode = false) : base()
+        public RVDataTable() : base("tbl")
+        {
+            PostgreSQLMode = false;
+        }
+
+        public RVDataTable(bool postgreSqlMode) : base("tbl")
         {
             PostgreSQLMode = postgreSqlMode;
         }

@@ -18,6 +18,9 @@
             GlobalUtilities.load_files(["USR/LoginPageInitializer.js"], {
                 OnLoad: function () { new LoginPageInitializer("contentArea", initialJson); }
             });
+
+            if (initialJson.DBConnectionError)
+                alert(RVDic.MSG[initialJson.DBConnectionError] || initialJson.DBConnectionError, { Timeout: 20000 });
         })();
     </script>
 </asp:Content>

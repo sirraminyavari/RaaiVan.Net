@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -44,7 +46,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             if (procedureName.ToLower().StartsWith("[dbo].["))
                 procedureName = procedureName.Substring("[dbo].[".Length, procedureName.Length - "[dbo].[".Length - 1);
-
+            
             for (int i = 0; i < parameters.Length; i++)
             {
                 if (parameters[i] != null && parameters[i].GetType() == typeof(Guid) && (Guid)parameters[i] == Guid.Empty)
@@ -59,6 +61,10 @@ namespace RaaiVan.Modules.GlobalUtilities
             }
             catch (Exception ex)
             {
+                //check if the exception is related to the connection
+                DBResultSet connectionExceptionResult = handle_connection_exception(ex);
+                if (connectionExceptionResult != null) return connectionExceptionResult;
+
                 int index = procedureName.IndexOf("_");
 
                 if (!procedureName.ToLower().Contains("save") && !procedureName.ToLower().Contains("error") &&
@@ -93,6 +99,56 @@ namespace RaaiVan.Modules.GlobalUtilities
         public static DBResultSet read(Guid? applicationId, string procedureName, params object[] parameters)
         {
             return read(action: null, applicationId, procedureName, parameters);
+        }
+
+        public static DBResultSet handle_connection_exception(Exception ex)
+        {
+            if (ex == null) return null;
+            
+            string message = string.Empty;
+
+            if (RaaiVanSettings.UsePostgreSQL)
+            {
+                if (ex is NpgsqlException && !string.IsNullOrEmpty(ex.InnerException?.Message) &&
+                    ex.InnerException.Message.ToLower().Contains("timeout") &&
+                    ex.InnerException.Message.ToLower().Contains("connection"))
+                {
+                    message = Messages.CannotConnectToTheDatabaseServer.ToString();
+                }
+                else if (!string.IsNullOrEmpty(ex.Message) && ex.Message.ToLower().Contains("no such host is known"))
+                {
+                    message = Messages.CannotConnectToTheDatabaseServer.ToString();
+                }
+                else if (ex is PostgresException)
+                {
+                    PostgresException px = (PostgresException)ex;
+
+                    if (!string.IsNullOrEmpty(px.SqlState) && px.SqlState.ToLower() == "3D000".ToLower())
+                        message = Messages.CannotOpenTheDatabase.ToString();
+                    else if (!string.IsNullOrEmpty(px.SqlState) && px.SqlState.ToLower() == "28P01".ToLower())
+                        message = Messages.DatabaseLoginFailed.ToString();
+                }
+            }
+            else
+            {
+                if (!(ex is SqlException)) return null;
+
+                switch (((SqlException)ex).Number)
+                {
+                    case 53:
+                        message = Messages.CannotConnectToTheDatabaseServer.ToString();
+                        break;
+                    case 4060:
+                        message = Messages.CannotOpenTheDatabase.ToString();
+                        break;
+                    case 233:
+                    case 18456:
+                        message = Messages.DatabaseLoginFailed.ToString();
+                        break;
+                }
+            }
+
+            return string.IsNullOrEmpty(message) ? null : new DBResultSet(connectionErrorMessage: message);
         }
 
         public static bool succeed(Guid? applicationId, ref string errorMessage, 

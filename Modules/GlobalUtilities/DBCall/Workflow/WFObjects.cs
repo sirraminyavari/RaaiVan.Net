@@ -15,7 +15,8 @@ namespace RaaiVan.Modules.WorkFlow
         SendToOwner,
         RefState,
         SpecificNode,
-        ContentAdmin
+        ContentAdmin,
+        SpecificUser
     }
 
     public enum StateDataNeedsTypes
@@ -276,215 +277,42 @@ namespace RaaiVan.Modules.WorkFlow
 
     public class State
     {
-        private Guid? _ID;
-        private Guid? _StateID;
-        private Guid? _WorkFlowID;
-        private string _Title;
-        private string _Description;
-        private string _Tag;
-        private StateResponseTypes? _ResponseType;
-        private Guid? _RefStateID;
-        private Node _DirectorNode;
-        private bool? _DirectorIsAdmin;
-        private StateDataNeedsTypes? _DataNeedsType;
-        private Guid? _RefDataNeedsStateID;
-        private string _DataNeedsDescription;
-        private bool? _DescriptionNeeded;
-        private bool? _HideOwnerName;
-        private bool? _EditPermission;
-        private bool? _FreeDataNeedRequests;
-        private List<StateDataNeed> _DataNeeds;
-        private int? _MaxAllowedRejections;
-        private string _RejectionTitle;
-        private Guid? _RejectionRefStateID;
-        private string _RejectionRefStateTitle;
-        private Guid? _PollID;
-        private string _PollName;
-        private List<StateConnection> _Connections;
-        private Guid? _CreatorUserID;
-        private DateTime? _CreationDate;
-        private Guid? _LastModifierUserID;
-        private DateTime? _LastModificationDate;
-
+        public Guid? ID;
+        public Guid? StateID;
+        public Guid? WorkFlowID;
+        public string Title;
+        public string Description;
+        public string Tag;
+        public StateResponseTypes? ResponseType;
+        public Guid? RefStateID;
+        public Node DirectorNode;
+        public bool? DirectorIsAdmin;
+        public User DirectorUser;
+        public StateDataNeedsTypes? DataNeedsType;
+        public Guid? RefDataNeedsStateID;
+        public string DataNeedsDescription;
+        public bool? DescriptionNeeded;
+        public bool? HideOwnerName;
+        public bool? EditPermission;
+        public bool? FreeDataNeedRequests;
+        public List<StateDataNeed> DataNeeds;
+        public int? MaxAllowedRejections;
+        public string RejectionTitle;
+        public Guid? RejectionRefStateID;
+        public string RejectionRefStateTitle;
+        public Guid? PollID;
+        public string PollName;
+        public List<StateConnection> Connections;
+        public Guid? CreatorUserID;
+        public DateTime? CreationDate;
+        public Guid? LastModifierUserID;
+        public DateTime? LastModificationDate;
 
         public State()
         {
-            _DirectorNode = new Node();
-            _DataNeeds = new List<StateDataNeed>();
-        }
-
-        public Guid? ID
-        {
-            get { return _ID; }
-            set { _ID = value; }
-        }
-
-        public Guid? StateID
-        {
-            get { return _StateID; }
-            set { _StateID = value; }
-        }
-
-        public string Title
-        {
-            get { return _Title; }
-            set { _Title = value; }
-        }
-
-        public string Description
-        {
-            get { return _Description; }
-            set { _Description = value; }
-        }
-
-        public string Tag
-        {
-            get { return _Tag; }
-            set { _Tag = value; }
-        }
-
-        public StateResponseTypes? ResponseType
-        {
-            get { return _ResponseType; }
-            set { _ResponseType = value; }
-        }
-
-        public Guid? WorkFlowID
-        {
-            get { return _WorkFlowID; }
-            set { _WorkFlowID = value; }
-        }
-
-        public Guid? RefStateID
-        {
-            get { return _RefStateID; }
-            set { _RefStateID = value; }
-        }
-
-        public Node DirectorNode
-        {
-            get { return _DirectorNode; }
-            set { _DirectorNode = value; }
-        }
-
-        public bool? DirectorIsAdmin
-        {
-            get { return _DirectorIsAdmin; }
-            set { _DirectorIsAdmin = value; }
-        }
-
-        public StateDataNeedsTypes? DataNeedsType
-        {
-            get { return _DataNeedsType; }
-            set { _DataNeedsType = value; }
-        }
-
-        public Guid? RefDataNeedsStateID
-        {
-            get { return _RefDataNeedsStateID; }
-            set { _RefDataNeedsStateID = value; }
-        }
-
-        public string DataNeedsDescription
-        {
-            get { return _DataNeedsDescription; }
-            set { _DataNeedsDescription = value; }
-        }
-
-        public bool? DescriptionNeeded
-        {
-            get { return _DescriptionNeeded; }
-            set { _DescriptionNeeded = value; }
-        }
-
-        public bool? HideOwnerName
-        {
-            get { return _HideOwnerName; }
-            set { _HideOwnerName = value; }
-        }
-
-        public bool? EditPermission
-        {
-            get { return _EditPermission; }
-            set { _EditPermission = value; }
-        }
-
-        public bool? FreeDataNeedRequests
-        {
-            get { return _FreeDataNeedRequests; }
-            set { _FreeDataNeedRequests = value; }
-        }
-
-        public List<StateDataNeed> DataNeeds
-        {
-            get { return _DataNeeds; }
-            set { _DataNeeds = value; }
-        }
-
-        public int? MaxAllowedRejections
-        {
-            get { return _MaxAllowedRejections; }
-            set { _MaxAllowedRejections = value; }
-        }
-
-        public string RejectionTitle
-        {
-            get { return _RejectionTitle; }
-            set { _RejectionTitle = value; }
-        }
-
-        public Guid? RejectionRefStateID
-        {
-            get { return _RejectionRefStateID; }
-            set { _RejectionRefStateID = value; }
-        }
-
-        public string RejectionRefStateTitle
-        {
-            get { return _RejectionRefStateTitle; }
-            set { _RejectionRefStateTitle = value; }
-        }
-
-        public Guid? PollID
-        {
-            get { return _PollID; }
-            set { _PollID = value; }
-        }
-
-        public string PollName
-        {
-            get { return _PollName; }
-            set { _PollName = value; }
-        }
-
-        public List<StateConnection> Connections
-        {
-            get { return _Connections; }
-            set { _Connections = value; }
-        }
-
-        public Guid? CreatorUserID
-        {
-            get { return _CreatorUserID; }
-            set { _CreatorUserID = value; }
-        }
-
-        public DateTime? CreationDate
-        {
-            get { return _CreationDate; }
-            set { _CreationDate = value; }
-        }
-
-        public Guid? LastModifierUserID
-        {
-            get { return _LastModifierUserID; }
-            set { _LastModifierUserID = value; }
-        }
-
-        public DateTime? LastModificationDate
-        {
-            get { return _LastModificationDate; }
-            set { _LastModificationDate = value; }
+            DirectorNode = new Node();
+            DirectorUser = new User();
+            DataNeeds = new List<StateDataNeed>();
         }
     }
 

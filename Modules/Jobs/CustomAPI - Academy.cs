@@ -25,19 +25,18 @@ namespace RaaiVan.Modules.Jobs
             {
                 case "raaivanquestionaireabstract":
                 case "raaivan_questionaire_abstract":
-                    raaivan_questionaire_abstract(applicationId,
+                    response = raaivan_questionaire_abstract(applicationId,
                         PublicMethods.parse_bool(req.Params["DemoRequest"]),
                         PublicMethods.parse_bool(req.Params["DemoDone"]),
                         PublicMethods.parse_bool(req.Params["ProformaRequest"]),
                         PublicMethods.parse_bool(req.Params["ProformaDone"]),
                         PublicMethods.parse_bool(req.Params["ReportRequest"]),
                         PublicMethods.parse_bool(req.Params["ReportDone"]),
-                        PublicMethods.parse_bool(req.Params["HasRequest"]),
-                        ref response);
+                        PublicMethods.parse_bool(req.Params["HasRequest"]));
                     break;
                 case "raaivanquestionaireemailrecords":
                 case "raaivan_questionaire_email_records":
-                    raaivan_questionaire_email_records(applicationId,
+                    response = raaivan_questionaire_email_records(applicationId,
                         PublicMethods.parse_string(req.Params["Email"]),
                         PublicMethods.parse_bool(req.Params["DemoRequest"]),
                         PublicMethods.parse_bool(req.Params["DemoDone"]),
@@ -45,26 +44,25 @@ namespace RaaiVan.Modules.Jobs
                         PublicMethods.parse_bool(req.Params["ProformaDone"]),
                         PublicMethods.parse_bool(req.Params["ReportRequest"]),
                         PublicMethods.parse_bool(req.Params["ReportDone"]),
-                        PublicMethods.parse_bool(req.Params["HasRequest"]),
-                        ref response);
+                        PublicMethods.parse_bool(req.Params["HasRequest"]));
                     break;
                 case "isoquestionaireabstract":
                 case "iso_questionaire_abstract":
-                    iso_questionaire_abstract(applicationId, ref response);
+                    response = iso_questionaire_abstract(applicationId);
                     break;
                 case "isoquestionaireemailrecords":
                 case "iso_questionaire_email_records":
-                    iso_questionaire_email_records(applicationId,
-                        PublicMethods.parse_string(req.Params["Email"]), ref response);
+                    response = iso_questionaire_email_records(applicationId,
+                        PublicMethods.parse_string(req.Params["Email"]));
                     break;
                 case "gkmquestionaireabstract":
                 case "gkm_questionaire_abstract":
-                    gkm_questionaire_abstract(applicationId, ref response);
+                    response = gkm_questionaire_abstract(applicationId);
                     break;
                 case "gkmquestionaireemailrecords":
                 case "gkm_questionaire_email_records":
-                    gkm_questionaire_email_records(applicationId,
-                        PublicMethods.parse_string(req.Params["Email"]), ref response);
+                    response = gkm_questionaire_email_records(applicationId,
+                        PublicMethods.parse_string(req.Params["Email"]));
                     break;
                 case "sendemail":
                 case "send_email":
@@ -94,275 +92,178 @@ namespace RaaiVan.Modules.Jobs
             return PublicMethods.toJSON(response);
         }
 
-        private static Dictionary<string, object> _parse_raaivan_questionaire_abstract(ref IDataReader reader)
+        private static Dictionary<string, object> _parse_raaivan_questionaire_abstract(DBResultSet results)
         {
+            RVDataTable table = results.get_table();
+
             Dictionary<string, object> dic = new Dictionary<string, object>();
 
             ArrayList lst = null;
             dic["Items"] = lst = new ArrayList();
 
-            while (reader.Read())
+            for (int i = 0; i < table.Rows.Count; i++)
             {
-                try
-                {
-                    string email = string.Empty;
-                    DateTime creationDate = DateTime.MinValue;
+                string email = table.GetString(i, "Email");
+                DateTime? creationDate = table.GetDate(i, "Date");
 
-                    int count = 0;
-                    Guid instanceId = Guid.Empty;
-                    Guid detailInstanceId = Guid.Empty;
+                int count = table.GetInt(i, "Count", defaultValue: 0).Value;
+                Guid? instanceId = table.GetGuid(i, "InstanceID");
+                Guid? detailInstanceId = table.GetGuid(i, "DetailInstanceID");
 
-                    DateTime demoRequestDate = DateTime.MinValue;
-                    int demoRequestCount = 0;
-                    DateTime demoDone = DateTime.MinValue;
+                DateTime? demoRequestDate = table.GetDate(i, "DemoRequest");
+                int demoRequestCount = table.GetInt(i, "DemoRequestCount", defaultValue: 0).Value;
+                DateTime? demoDone = table.GetDate(i, "DemoDone");
 
-                    DateTime proformaRequestDate = DateTime.MinValue;
-                    int proformaRequestCount = 0;
-                    DateTime proformaDone = DateTime.MinValue;
+                DateTime? proformaRequestDate = table.GetDate(i, "ProformaRequest");
+                int proformaRequestCount = table.GetInt(i, "ProformaRequestCount", defaultValue: 0).Value;
+                DateTime? proformaDone = table.GetDate(i, "ProformaDone");
 
-                    DateTime reportRequestDate = DateTime.MinValue;
-                    int reportRequestCount = 0;
-                    DateTime reportDone = DateTime.MinValue;
+                DateTime? reportRequestDate = table.GetDate(i, "ReportRequest");
+                int reportRequestCount = table.GetInt(i, "ReportRequestCount", defaultValue: 0).Value;
+                DateTime? reportDone = table.GetDate(i, "ReportDone");
 
-                    DateTime lastRequestDate = DateTime.MinValue;
+                DateTime? lastRequestDate = table.GetDate(i, "LastRequestDate");
 
-                    if (!string.IsNullOrEmpty(reader["Email"].ToString())) email = (string)reader["Email"];
-                    if (!string.IsNullOrEmpty(reader["Date"].ToString())) creationDate = (DateTime)reader["Date"];
+                Dictionary<string, object> itm = new Dictionary<string, object>();
 
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(reader["Count"].ToString())) count = (int)reader["Count"];
-                    }
-                    catch { }
+                itm["Email"] = email;
+                if (creationDate.HasValue) itm["CreationDate"] = PublicMethods.get_local_date(creationDate, true);
+                itm["Count"] = count;
+                if (instanceId.HasValue) itm["InstanceID"] = instanceId;
+                if (detailInstanceId.HasValue) itm["DetailInstanceID"] = detailInstanceId;
+                if (demoRequestDate.HasValue) itm["DemoRequestDate"] = PublicMethods.get_local_date(demoRequestDate, true);
+                itm["DemoRequestCount"] = demoRequestCount;
+                if (demoDone.HasValue) itm["DemoDone"] = PublicMethods.get_local_date(demoDone, true);
+                if (proformaRequestDate.HasValue) itm["ProformaRequestDate"] = PublicMethods.get_local_date(proformaRequestDate, true);
+                itm["ProformaRequestCount"] = proformaRequestCount;
+                if (proformaDone.HasValue) itm["ProformaDone"] = PublicMethods.get_local_date(proformaDone, true);
+                if (reportRequestDate.HasValue) itm["ReportRequestDate"] = PublicMethods.get_local_date(reportRequestDate, true);
+                itm["ReportRequestCount"] = reportRequestCount;
+                if (reportDone.HasValue) itm["ReportDone"] = PublicMethods.get_local_date(reportDone, true);
+                if (lastRequestDate.HasValue) itm["LastRequestDate"] = PublicMethods.get_local_date(lastRequestDate, true);
 
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(reader["InstanceID"].ToString()))
-                            instanceId = (Guid)reader["InstanceID"];
-                    }
-                    catch { }
-
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(reader["DetailInstanceID"].ToString()))
-                            detailInstanceId = (Guid)reader["DetailInstanceID"];
-                    }
-                    catch { }
-
-                    bool isDetail = instanceId != Guid.Empty;
-
-                    if (!string.IsNullOrEmpty(reader["DemoRequest"].ToString()))
-                        demoRequestDate = (DateTime)reader["DemoRequest"];
-                    if (!isDetail && !string.IsNullOrEmpty(reader["DemoRequestCount"].ToString()))
-                        demoRequestCount = (int)reader["DemoRequestCount"];
-                    if (!string.IsNullOrEmpty(reader["DemoDone"].ToString()))
-                        demoDone = (DateTime)reader["DemoDone"];
-
-                    if (!string.IsNullOrEmpty(reader["ProformaRequest"].ToString()))
-                        proformaRequestDate = (DateTime)reader["ProformaRequest"];
-                    if (!isDetail && !string.IsNullOrEmpty(reader["ProformaRequestCount"].ToString()))
-                        proformaRequestCount = (int)reader["ProformaRequestCount"];
-                    if (!string.IsNullOrEmpty(reader["ProformaDone"].ToString()))
-                        proformaDone = (DateTime)reader["ProformaDone"];
-
-                    if (!string.IsNullOrEmpty(reader["ReportRequest"].ToString()))
-                        reportRequestDate = (DateTime)reader["ReportRequest"];
-                    if (!isDetail && !string.IsNullOrEmpty(reader["ReportRequestCount"].ToString()))
-                        reportRequestCount = (int)reader["ReportRequestCount"];
-                    if (!string.IsNullOrEmpty(reader["ReportDone"].ToString()))
-                        reportDone = (DateTime)reader["ReportDone"];
-
-                    if (!string.IsNullOrEmpty(reader["LastRequestDate"].ToString()))
-                        lastRequestDate = (DateTime)reader["LastRequestDate"];
-
-                    Dictionary<string, object> itm = new Dictionary<string, object>();
-
-                    itm["Email"] = email;
-                    if (creationDate != DateTime.MinValue)
-                        itm["CreationDate"] = PublicMethods.get_local_date(creationDate, true);
-                    itm["Count"] = count;
-                    if (instanceId != Guid.Empty) itm["InstanceID"] = instanceId;
-                    if (detailInstanceId != Guid.Empty) itm["DetailInstanceID"] = detailInstanceId;
-                    if (demoRequestDate != DateTime.MinValue)
-                        itm["DemoRequestDate"] = PublicMethods.get_local_date(demoRequestDate, true);
-                    itm["DemoRequestCount"] = demoRequestCount;
-                    if (demoDone != DateTime.MinValue)
-                        itm["DemoDone"] = PublicMethods.get_local_date(demoDone, true);
-                    if (proformaRequestDate != DateTime.MinValue)
-                        itm["ProformaRequestDate"] = PublicMethods.get_local_date(proformaRequestDate, true);
-                    itm["ProformaRequestCount"] = proformaRequestCount;
-                    if (proformaDone != DateTime.MinValue)
-                        itm["ProformaDone"] = PublicMethods.get_local_date(proformaDone, true);
-                    if (reportRequestDate != DateTime.MinValue)
-                        itm["ReportRequestDate"] = PublicMethods.get_local_date(reportRequestDate, true);
-                    itm["ReportRequestCount"] = reportRequestCount;
-                    if (reportDone != DateTime.MinValue)
-                        itm["ReportDone"] = PublicMethods.get_local_date(reportDone, true);
-                    if (lastRequestDate != DateTime.MinValue)
-                        itm["LastRequestDate"] = PublicMethods.get_local_date(lastRequestDate, true);
-
-                    lst.Add(itm);
-                }
-                catch (Exception ex) { string strEx = ex.ToString(); }
+                lst.Add(itm);
             }
-
-            if (!reader.IsClosed) reader.Close();
 
             return dic;
         }
 
-        private static Dictionary<string, object> _parse_iso_questionaire_abstract(ref IDataReader reader)
+        private static Dictionary<string, object> _parse_iso_questionaire_abstract(DBResultSet results)
         {
+            RVDataTable table = results.get_table();
+
             Dictionary<string, object> dic = new Dictionary<string, object>();
 
             ArrayList lst = null;
             dic["Items"] = lst = new ArrayList();
 
-            while (reader.Read())
+            for (int i = 0; i < table.Rows.Count; i++)
             {
-                try
-                {
-                    string email = string.Empty;
-                    DateTime creationDate = DateTime.MinValue;
+                string email = table.GetString(i, "Email");
+                DateTime? creationDate = table.GetDate(i, "Date");
 
-                    int count = 0;
-                    Guid instanceId = Guid.Empty;
-                    Guid detailInstanceId = Guid.Empty;
+                int count = table.GetInt(i, "Count", defaultValue: 0).Value;
+                Guid? instanceId = table.GetGuid(i, "InstanceID");
+                Guid? detailInstanceId = table.GetGuid(i, "DetailInstanceID");
 
-                    DateTime lastRequestDate = DateTime.MinValue;
+                DateTime? lastRequestDate = table.GetDate(i, "LastRequestDate");
 
-                    if (!string.IsNullOrEmpty(reader["Email"].ToString())) email = (string)reader["Email"];
+                Dictionary<string, object> itm = new Dictionary<string, object>();
 
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(reader["Date"].ToString())) creationDate = (DateTime)reader["Date"];
-                    }
-                    catch { }
+                itm["Email"] = email;
+                if (creationDate.HasValue) itm["CreationDate"] = PublicMethods.get_local_date(creationDate, true);
+                itm["Count"] = count;
+                if (instanceId.HasValue) itm["InstanceID"] = instanceId;
+                if (detailInstanceId.HasValue) itm["DetailInstanceID"] = detailInstanceId;
+                if (lastRequestDate.HasValue) itm["LastRequestDate"] = PublicMethods.get_local_date(lastRequestDate, true);
 
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(reader["Count"].ToString())) count = (int)reader["Count"];
-                    }
-                    catch { }
-
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(reader["InstanceID"].ToString()))
-                            instanceId = (Guid)reader["InstanceID"];
-                    }
-                    catch { }
-
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(reader["DetailInstanceID"].ToString()))
-                            detailInstanceId = (Guid)reader["DetailInstanceID"];
-                    }
-                    catch { }
-
-                    bool isDetail = instanceId != Guid.Empty;
-
-                    if (!string.IsNullOrEmpty(reader["LastRequestDate"].ToString()))
-                        lastRequestDate = (DateTime)reader["LastRequestDate"];
-
-                    Dictionary<string, object> itm = new Dictionary<string, object>();
-
-                    itm["Email"] = email;
-                    if (creationDate != DateTime.MinValue)
-                        itm["CreationDate"] = PublicMethods.get_local_date(creationDate, true);
-                    itm["Count"] = count;
-                    if (instanceId != Guid.Empty) itm["InstanceID"] = instanceId;
-                    if (detailInstanceId != Guid.Empty) itm["DetailInstanceID"] = detailInstanceId;
-                    if (lastRequestDate != DateTime.MinValue)
-                        itm["LastRequestDate"] = PublicMethods.get_local_date(lastRequestDate, true);
-
-                    lst.Add(itm);
-                }
-                catch (Exception ex) { string strEx = ex.ToString(); }
+                lst.Add(itm);
             }
-
-            if (!reader.IsClosed) reader.Close();
 
             return dic;
         }
 
-        protected static void raaivan_questionaire_abstract(Guid applicationId, bool? demoRequest, bool? demoDone,
-            bool? proformaRequest, bool? proformaDone, bool? reportRequest, bool? reportDone, bool? hasRequest,
-            ref Dictionary<string, object> response)
+        protected static Dictionary<string, object> raaivan_questionaire_abstract(Guid applicationId, bool? demoRequest, 
+            bool? demoDone, bool? proformaRequest, bool? proformaDone, bool? reportRequest, bool? reportDone, bool? hasRequest)
         {
-            string spName = "[dbo]." + "[EXT_RPT_RaaiVanQuestionaireAbstract]";
+            string spName = "EXT_RPT_RaaiVanQuestionaireAbstract";
 
             try
             {
-                IDataReader reader = ProviderUtil.execute_reader(spName, applicationId,
+                DBResultSet results = DBConnector.read(applicationId, spName, applicationId,
                     demoRequest, proformaRequest, reportRequest, hasRequest, demoDone, proformaDone, reportDone);
-                response = _parse_raaivan_questionaire_abstract(ref reader);
+
+                return _parse_raaivan_questionaire_abstract(results);
             }
-            catch (Exception ex) { }
+            catch (Exception ex) { return new Dictionary<string, object>(); }
         }
 
-        protected static void raaivan_questionaire_email_records(Guid applicationId, string email, bool? demoRequest,
-            bool? demoDone, bool? proformaRequest, bool? proformaDone, bool? reportRequest, bool? reportDone,
-            bool? hasRequest, ref Dictionary<string, object> response)
+        protected static Dictionary<string, object> raaivan_questionaire_email_records(Guid applicationId, 
+            string email, bool? demoRequest, bool? demoDone, bool? proformaRequest, bool? proformaDone, 
+            bool? reportRequest, bool? reportDone, bool? hasRequest)
         {
-            string spName = "[dbo]." + "[EXT_RPT_RaaiVanQuestionaireEmailRecords]";
+            string spName = "EXT_RPT_RaaiVanQuestionaireEmailRecords";
 
             try
             {
-                IDataReader reader = ProviderUtil.execute_reader(spName, applicationId, email,
+                DBResultSet results = DBConnector.read(applicationId, spName, applicationId, email,
                     demoRequest, proformaRequest, reportRequest, hasRequest, demoDone, proformaDone, reportDone);
-                response = _parse_raaivan_questionaire_abstract(ref reader);
+
+                return _parse_raaivan_questionaire_abstract(results);
             }
-            catch (Exception ex) { }
+            catch (Exception ex) { return new Dictionary<string, object>(); }
         }
 
-        protected static void iso_questionaire_abstract(Guid applicationId, ref Dictionary<string, object> response)
+        protected static Dictionary<string, object> iso_questionaire_abstract(Guid applicationId)
         {
-            string spName = "[dbo]." + "[EXT_RPT_ISOQuestionaireAbstract]";
+            string spName = "EXT_RPT_ISOQuestionaireAbstract";
 
             try
             {
-                IDataReader reader = ProviderUtil.execute_reader(spName, applicationId);
-                response = _parse_iso_questionaire_abstract(ref reader);
+                DBResultSet results = DBConnector.read(applicationId, spName, applicationId);
+
+                return _parse_iso_questionaire_abstract(results);
             }
-            catch (Exception ex) { }
+            catch (Exception ex) { return new Dictionary<string, object>(); }
         }
 
-        protected static void iso_questionaire_email_records(Guid applicationId, string email,
-            ref Dictionary<string, object> response)
+        protected static Dictionary<string, object> iso_questionaire_email_records(Guid applicationId, string email)
         {
-            string spName = "[dbo]." + "[EXT_RPT_ISOQuestionaireEmailRecords]";
+            string spName = "EXT_RPT_ISOQuestionaireEmailRecords";
 
             try
             {
-                IDataReader reader = ProviderUtil.execute_reader(spName, applicationId, email);
-                response = _parse_iso_questionaire_abstract(ref reader);
+                DBResultSet results = DBConnector.read(applicationId, spName, applicationId, email);
+
+                return _parse_iso_questionaire_abstract(results);
             }
-            catch (Exception ex) { }
+            catch (Exception ex) { return new Dictionary<string, object>(); }
         }
 
-        protected static void gkm_questionaire_abstract(Guid applicationId, ref Dictionary<string, object> response)
+        protected static Dictionary<string, object> gkm_questionaire_abstract(Guid applicationId)
         {
-            string spName = "[dbo]." + "[EXT_RPT_GKMQuestionaireAbstract]";
+            string spName = "EXT_RPT_GKMQuestionaireAbstract";
 
             try
             {
-                IDataReader reader = ProviderUtil.execute_reader(spName, applicationId);
-                response = _parse_iso_questionaire_abstract(ref reader);
+                DBResultSet results = DBConnector.read(applicationId, spName, applicationId);
+
+                return _parse_iso_questionaire_abstract(results);
             }
-            catch (Exception ex) { }
+            catch (Exception ex) { return new Dictionary<string, object>(); }
         }
 
-        protected static void gkm_questionaire_email_records(Guid applicationId, string email,
-            ref Dictionary<string, object> response)
+        protected static Dictionary<string, object> gkm_questionaire_email_records(Guid applicationId, string email)
         {
-            string spName = "[dbo]." + "[EXT_RPT_GKMQuestionaireEmailRecords]";
+            string spName = "EXT_RPT_GKMQuestionaireEmailRecords";
 
             try
             {
-                IDataReader reader = ProviderUtil.execute_reader(spName, applicationId, email);
-                response = _parse_iso_questionaire_abstract(ref reader);
+                DBResultSet results = DBConnector.read(applicationId, spName, applicationId, email);
+                
+                return _parse_iso_questionaire_abstract(results);
             }
-            catch (Exception ex) { }
+            catch (Exception ex) { return new Dictionary<string, object>(); }
         }
 
         protected static void send_email(Guid applicationId, string instanceId, string productName, string email,
@@ -673,30 +574,22 @@ namespace RaaiVan.Modules.Jobs
 
         //Dictionary
 
-        private static Dictionary<string, object> _parse_phrases(ref IDataReader reader)
+        private static Dictionary<string, object> _parse_phrases(DBResultSet results)
         {
+            RVDataTable table = results.get_table();
+
             Dictionary<string, object> dic = new Dictionary<string, object>();
 
             dic["Items"] = new ArrayList();
 
-            while (reader.Read())
+            for (int i = 0; i < table.Rows.Count; i++)
             {
-                try
-                {
-                    string dictionary = string.Empty;
-                    string version = string.Empty;
-                    string data = string.Empty;
+                string dictionary = table.GetString(i, "Dictionary");
+                string version = table.GetString(i, "Version");
+                string data = table.GetString(i, "Data");
 
-                    if (!string.IsNullOrEmpty(reader["Dictionary"].ToString())) dictionary = (string)reader["Dictionary"];
-                    if (!string.IsNullOrEmpty(reader["Version"].ToString())) version = (string)reader["Version"];
-                    if (!string.IsNullOrEmpty(reader["Data"].ToString())) data = (string)reader["Data"];
-
-                    add_to_response(dictionary, version, data, ref dic);
-                }
-                catch (Exception ex) { string strEx = ex.ToString(); }
+                add_to_response(dictionary, version, data, ref dic);
             }
-
-            if (!reader.IsClosed) reader.Close();
 
             return dic;
         }
@@ -717,24 +610,24 @@ namespace RaaiVan.Modules.Jobs
 
         protected static Dictionary<string, object> get_phrase_local(string phrase)
         {
-            string spName = "[dbo]." + "[EP_GetPhrase]";
+            string spName = "EP_GetPhrase";
 
             try
             {
-                IDataReader reader = ProviderUtil.execute_reader(spName, phrase);
-                return _parse_phrases(ref reader);
+                DBResultSet results = DBConnector.read(null, spName, phrase);
+
+                return _parse_phrases(results);
             }
             catch (Exception ex) { return new Dictionary<string, object>(); }
         }
 
         protected static bool save_phrase_local(string phrase, string dictionary, string version, string data)
         {
-            string spName = "[dbo]." + "[EP_AddPhrase]";
+            string spName = "EP_AddPhrase";
 
             try
             {
-                return ProviderUtil.succeed(ProviderUtil.execute_reader(spName,
-                    phrase, dictionary, version, data));
+                return DBConnector.succeed(null, spName, phrase, dictionary, version, data);
             }
             catch (Exception ex) { return false; }
         }

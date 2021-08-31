@@ -1290,10 +1290,12 @@
             "AtLeastOneMembershipAreaMustBeSet": "عضویت در حداقل یک گروه الزامی است",
             "AuthenticationCodeDidNotMatch": "کد احراز هویت معتبر نمی باشد",
             "AVerificationCodeHasBeenSentToYourNWithValueM": "یک کد تایید به [n] شما، '[m]'، ارسال گردید",
+            "CannotConnectToTheDatabaseServer": "امکان اتصال به سرور پایگاه داده وجود ندارد",
             "CannotChangeTheAdditionalIDOFThisNodeType": "امکان تغییر کد این کلاس وجود ندارد",
             "CannotDetermineDirector": "خطا در تعیین مسئول اقدام",
             "CannotFindAdmins": "هیچ مسئولی یافت نشد",
             "CannotMoveCategoriesToSubLevels": "امکان انتقال دسته ها به سطوح پایین وجود ندارد",
+            "CannotOpenTheDatabase": "امکان اتصال به دیتابیس وجود ندارد",
             "CannotSelectMoreThanNItems": "امکان انتخاب بیش از «[n]» آیتم وجود ندارد",
             "CannotTransferToChilds": "امکان انتقال به شاخه های فرزند وجود ندارد",
             "CaptchaIsNotValid": "کد امنیتی صحیح نمی باشد",
@@ -1301,6 +1303,7 @@
             "CurrentlyThisStateContainsNItems": "هم اکنون [n] آیتم در این وضعیت قرار دارند",
             "CurrentlyThisWorkFlowContainsNItems": "هم اکنون [n] آیتم در این جریان کاری قرار دارند",
             "CurrentPasswordIsWrong": "رمز کنونی معتبر نمی باشد",
+            "DatabaseLoginFailed": "خطا در احراز هویت پایگاه داده",
             "DataStorageFailed": "خطا در ذخیره سازی",
             "DateIsNotValid": "تاریخ معتبر نمی باشد",
             "EmailAlreadyExists": "آدرس پست الکترونیکی هم اکنون در سامانه وجود دارد",
@@ -2395,7 +2398,8 @@
                 "None": "بعدا تعیین می شود",
                 "RefState": "مانند وضعیتی در گذشته",
                 "SendToOwner": "ثبت کننده",
-                "SpecificNode": "نقشی معین"
+                "SpecificNode": "نقشی معین",
+                "SpecificUser": "کاربری معین"
             },
             "MSG": {
                 "CheckingUserExistanceInActiveDirectoryFailed": "خطا در بررسی وجود کاربر در اکتیو دایرکتوری",

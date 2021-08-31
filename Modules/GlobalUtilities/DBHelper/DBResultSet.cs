@@ -11,6 +11,20 @@ namespace RaaiVan.Modules.GlobalUtilities
     {
         private List<RVDataTable> Tables = new List<RVDataTable>();
 
+        private string _ConnectionErrorMessage = null;
+
+        public string ConnectionErrorMessage
+        {
+            get { return _ConnectionErrorMessage; }
+        }
+
+        public DBResultSet() { }
+
+        public DBResultSet(string connectionErrorMessage)
+        {
+            _ConnectionErrorMessage = connectionErrorMessage;
+        }
+
         public int TablesCount { get { return Tables.Count; } }
 
         public void add_table(RVDataTable tbl)

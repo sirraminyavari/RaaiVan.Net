@@ -1290,10 +1290,12 @@
             "AtLeastOneMembershipAreaMustBeSet": "being the member of at least one group is required",
             "AuthenticationCodeDidNotMatch": "the authentication code did not match",
             "AVerificationCodeHasBeenSentToYourNWithValueM": "a verification code has been sent to your [n], '[m]'",
+            "CannotConnectToTheDatabaseServer": "cannot connect to the database server",
             "CannotChangeTheAdditionalIDOFThisNodeType": "this template's code is not editable",
             "CannotDetermineDirector": "cannot determine the director",
             "CannotFindAdmins": "cannot find any admins",
             "CannotMoveCategoriesToSubLevels": "cannot move categories to sub-levels",
+            "CannotOpenTheDatabase": "cannot open the database",
             "CannotSelectMoreThanNItems": "you cannot select more than [n] items",
             "CannotTransferToChilds": "transfer to children is not allowed",
             "CaptchaIsNotValid": "captcha is not valid",
@@ -1301,6 +1303,7 @@
             "CurrentlyThisStateContainsNItems": "this state currently contains [n] items",
             "CurrentlyThisWorkFlowContainsNItems": "this workflow currently contains [n] items",
             "CurrentPasswordIsWrong": "current password is not valid",
+            "DatabaseLoginFailed": "database login failed",
             "DataStorageFailed": "data storage failed",
             "DateIsNotValid": "date is not valid",
             "EmailAlreadyExists": "this email already exists",
@@ -2394,7 +2397,8 @@
                 "None": "will be decided later",
                 "RefState": "similar to a previous state",
                 "SendToOwner": "owner",
-                "SpecificNode": "specific role"
+                "SpecificNode": "specific role",
+                "SpecificUser": "specific user"
             },
             "MSG": {
                 "CheckingUserExistanceInActiveDirectoryFailed": "checking user existence in active directory failed",
