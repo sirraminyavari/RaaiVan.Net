@@ -14,7 +14,7 @@ namespace RaaiVan.Modules.GlobalUtilities
         private static string HOST = "localhost";
         private static string DBNAME = "ekm_app";
         private static string USERNAME = "postgres";
-        private static string PASSWORD = "hrdovjshjpvjo22";
+        private static string PASSWORD = "hrdovjshjpvjo";
 
         private static bool COMPOSITE_MAPPINGS_DONE = false;
 

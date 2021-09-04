@@ -316,7 +316,7 @@ autosuggest.prototype = {
         this.__Trimed = this.__Trimed || {};
         var trimed = this.__Trimed[text] ||
             (this.__Trimed[text] = GlobalUtilities.trim2pix(text, $(this.field).width() - 10, { Postfix: "..." }));
-        cell.innerHTML = text;
+        GlobalUtilities.set_text(cell, text);
         if (text != trimed) GlobalUtilities.append_tooltip(cell, text);
     },
 
