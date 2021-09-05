@@ -133,7 +133,7 @@ namespace RaaiVan.Modules.WorkFlow
 
         public static bool set_state_poll(Guid applicationId, Guid workflowId, Guid stateId, Guid? pollId, Guid currentUserId)
         {
-            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetStateDirector"),
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SetStatePoll"),
                 applicationId, workflowId, stateId, pollId, currentUserId, DateTime.Now);
         }
 
