@@ -67,8 +67,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                 int index = procedureName.IndexOf("_");
 
-                if (!procedureName.ToLower().Contains("save") && !procedureName.ToLower().Contains("error") &&
-                    !procedureName.ToLower().Contains("log") && index > 0)
+                if (index > 0 && !(new List<string>() { "save", "error", "log" }).All(x => procedureName.ToLower().Contains(x)))
                 {
                     string moduleIdentifier = procedureName.Substring(0, procedureName.IndexOf("_"));
 
