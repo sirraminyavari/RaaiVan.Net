@@ -175,7 +175,7 @@ namespace RaaiVan.Web.API
                 paramsContainer.return_response(PublicConsts.NullTenantResponse);
                 return;
             }
-
+            
             string command = PublicMethods.parse_string(context.Request.Params["command"], false);
             if (!string.IsNullOrEmpty(command)) command = command.ToLower();
             
