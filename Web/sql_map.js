@@ -1,11 +1,14 @@
 ﻿var map = {
     path: "\\SupportFiles\\DB Scripts\\",
     sub: [
-        "02 - Views",
-        "03 - Indexes",
-        "04 - Full Text Indexes",
+		"02 - Cumulative Schema Update",
+		"03 - Clear",
+		"03 - Clear",
+        "04 - Views",
+        "05 - Indexes",
+        "06 - Full Text Indexes",
         {
-            path: "05 - Functions & Stored Procedures",
+            path: "07 - Functions & Stored Procedures",
             sub: [
                 "01 - UserDefined Types",
                 "02 - Global Functions",
