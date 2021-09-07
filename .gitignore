@@ -61,7 +61,7 @@ StyleCopReport.xml
 
 # web.config & License file
 # Web.config
-raaivan.license
+# raaivan.license
 [Aa]pp_[Dd]ata/
 [Gg]lobal_[Dd]ocuments/
 node_modules/
