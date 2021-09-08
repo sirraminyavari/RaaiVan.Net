@@ -341,10 +341,17 @@ namespace RaaiVan.Web.API
                     }
                 case "sql_scripts":
                     {
+                        string resFileName = "Script (v28.5.2.1+ to " + PublicMethods.SystemVersion + ") - " + 
+                            PublicMethods.get_local_date(DateTime.Now).Replace("/", ".") + ".sql";
+
                         string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), 
                             decode: false, defaultValue: "sql_map.js");
-                        paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(PublicMethods.generate_script_file(fileName)),
-                            fileName: "scripts.sql", contentType: "application/sql", isAttachment: true);
+
+                        string fileContent = "USE [EKM_App]" + "\r\n" + "GO" + "\r\n\r\n" + 
+                            PublicMethods.generate_script_file(fileName);
+
+                        paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(fileContent),
+                            fileName: resFileName, contentType: "application/sql", isAttachment: true);
                         return true;
                     }
                 case "mssql2postgresql":
