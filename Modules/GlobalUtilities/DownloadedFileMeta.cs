@@ -67,10 +67,11 @@ namespace RaaiVan.Modules.GlobalUtilities
             table.Rows[rowIndex++][index] = (now.Hour < 10 ? "0" : "") + now.Hour + ":" + now.Minute;
         }
 
-        public string toString() {
+        public string toString()
+        {
             DateTime now = DateTime.Now;
-
-            string strTime = PublicMethods.get_local_date(now, false, true) + " " + 
+            
+            string strTime = PublicMethods.get_local_date(now, detail: false, reverse: true) + " " +
                 (now.Hour < 10 ? "0" : "") + now.Hour + ":" + now.Minute;
 
             List<string> lst = new List<string>();

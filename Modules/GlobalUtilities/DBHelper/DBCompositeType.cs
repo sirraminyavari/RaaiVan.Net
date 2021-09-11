@@ -26,6 +26,11 @@ namespace RaaiVan.Modules.GlobalUtilities
             Values = new List<T>();
         }
 
+        public int count
+        {
+            get { return Values == null ? 0 : Values.Count; }
+        }
+
         public DBCompositeType<T> add(T value)
         {
             Values.Add(value);

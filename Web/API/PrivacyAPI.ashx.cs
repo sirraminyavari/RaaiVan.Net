@@ -255,7 +255,7 @@ namespace RaaiVan.Web.API
                     return FGController.is_poll(paramsContainer.Tenant.Id, objectIds).Count == objectIds.Count &&
                         AuthorizationManager.has_right(AccessRoleName.ManagePolls, paramsContainer.CurrentUserID);
                 case PrivacyObjectType.Report:
-                    return !objectIds.Any(u => !ReportUtilities.ReportIDs.Any(x => x.Value == u)) &&
+                    return !objectIds.Any(u => !ReportUtilities.ReportIDs.Any(x => x.ID == u)) &&
                         PublicMethods.is_system_admin(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID.Value);
                 case PrivacyObjectType.FormElement:
                     return FGController.is_form_element(paramsContainer.Tenant.Id, objectIds).Count == objectIds.Count &&

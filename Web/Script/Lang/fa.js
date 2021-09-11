@@ -1867,6 +1867,11 @@
                         "Other": "سایر"
                     }
                 },
+                "ActiveUsersReport": {
+                    "_Title": "کاربران فعال",
+                    "UserName": "نام کاربری",
+                    "FullName": "نام و نام خانوادگی"
+                },
                 "MostVisitedItemsReport": {
                     "_Title": "پربازدیدترین صفحات",
                     "ItemName": "نام",

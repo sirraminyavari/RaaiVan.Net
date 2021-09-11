@@ -201,7 +201,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                 ",\"NodeType\":\"" + Base64.encode(NodeType) + "\"" +
                 ",\"DateOfEffect\":\"" + (!DateOfEffect.HasValue ? string.Empty : DateOfEffect.Value.ToString()) + "\"" +
                 ",\"DateOfEffect_Jalali\":\"" + (!DateOfEffect.HasValue ? string.Empty : 
-                    PublicMethods.get_local_date(DateOfEffect.Value, true, true)) + "\"" +
+                    PublicMethods.get_local_date(DateOfEffect.Value, detail: true, reverse: true)) + "\"" +
                 ",\"ToBeDone\":" + ToBeDone.ToString() +
                 ",\"NotSeen\":" + NotSeen.ToString() +
                 ",\"Done\":" + Done.ToString() +

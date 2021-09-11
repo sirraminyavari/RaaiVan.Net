@@ -1867,6 +1867,11 @@
                         "Other": "other"
                     }
                 },
+                "ActiveUsersReport": {
+                    "_Title": "active users",
+                    "UserName": "username",
+                    "FullName": "full name"
+                },
                 "MostVisitedItemsReport": {
                     "_Title": "most visited pages",
                     "ItemName": "name",

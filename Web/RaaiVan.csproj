@@ -1226,6 +1226,7 @@
     <Content Include="Script\Reports\ReportOptions\USR_ResumeLanguagesReport.js" />
     <Content Include="Script\Reports\ReportOptions\USR_ResumeReportParameters.js" />
     <Content Include="Script\Reports\ReportOptions\USR_ResumeJobExperienceReport.js" />
+    <Content Include="Script\Reports\ReportOptions\USR_ActiveUsersReport.js" />
     <Content Include="Script\RVAdmin\AdminPanelInitializer.js" />
     <Content Include="Script\RVAdmin\DataImportManager.js" />
     <Content Include="Script\RVEditor\RVEditor.js" />

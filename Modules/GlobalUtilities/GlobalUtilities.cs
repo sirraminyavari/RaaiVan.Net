@@ -888,35 +888,10 @@ namespace RaaiVan.Modules.GlobalUtilities
             return (long)((DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalMilliseconds + 0.5);
         }
 
-        public static string get_local_date(DateTime? Date, bool detail = false, bool reverse = false)
+        public static string get_local_date(DateTime? date, bool detail = false, bool reverse = false)
         {
-            if (!Date.HasValue) return string.Empty;
-
-            string strTime = !detail ? string.Empty :
-                (Date.Value.Hour < 10 ? "0" : string.Empty) + Date.Value.Hour.ToString() + ":" +
-                (Date.Value.Minute < 10 ? "0" : string.Empty) + Date.Value.Minute.ToString();
-
-            if (!uses_jalali_calendar(get_current_language()))
-            {
-                string dt = (Date.Value.Month < 10 ? "0" : string.Empty) + Date.Value.Month.ToString() + "/" +
-                    (Date.Value.Day < 10 ? "0" : string.Empty) + Date.Value.Day.ToString() + "/" + Date.Value.Year.ToString();
-                return dt + (detail ? " " + strTime : string.Empty);
-            }
-
-            PersianCalendar PCalendar = new PersianCalendar();
-            
-            int _day = PCalendar.GetDayOfMonth(Date.Value);
-            int _month = PCalendar.GetMonth(Date.Value);
-            int _year = PCalendar.GetYear(Date.Value);
-
-            string Day = (_day < 10 ? "0" : string.Empty) + _day.ToString();
-            string Month = (_month < 10 ? "0" : string.Empty) + _month.ToString();
-            string Year = _year.ToString();
-            string PDate = reverse ? Day + "/" + Month + "/" + Year : Year + "/" + Month + "/" + Day;
-
-            if (detail) PDate = strTime + " " + PDate;
-
-            return PDate;
+            return !date.HasValue ? string.Empty :
+                GenericDate.fromDateTime(date.Value, get_current_language()).toString(detail: detail, reverse: reverse, delimiter: '/');
         }
 
         public static DateTime? persian_to_gregorian_date(int year, int month, int day, int? hour, int? minute, int? second)

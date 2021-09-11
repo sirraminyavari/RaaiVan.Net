@@ -148,6 +148,21 @@
                 }
             },
 
+            ActiveUsersReport: {
+                _IconURL: "",
+
+                Get: function (params) {
+                    params = params || {};
+                    params.Parameters = {
+                        DateFrom: params.DateFrom || "",
+                        DateTo: params.DateTo || "",
+                        ParamsOrder: "DateFrom:Datetime|DateTo:Datetime"
+                    };
+
+                    ReportsAPI.GetReport(params);
+                }
+            },
+
             MostVisitedItemsReport: {
                 _IconURL: "",
 
@@ -713,11 +728,15 @@
         params.Parameters.ModuleIdentifier = params.ModuleIdentifier;
         params.Parameters.ReportName = params.ReportName;
         params.Parameters.Excel = params.Excel;
-        params.Parameters.RTL = RV_RTL;
-        params.Parameters.Lang = RV_Lang;
+        //params.Parameters.RTL = RV_RTL;
+        //params.Parameters.Lang = RV_Lang;
         params.Parameters.PageNumber = params.PageNumber;
         params.Parameters.PageSize = params.PageSize;
         params.Parameters.PS = params.Password;
+        params.Parameters.ChartMode = params.ChartMode;
+        params.Parameters.ChartDateFrom = params.ChartDateFrom;
+        params.Parameters.ChartDateTo = params.ChartDateTo;
+        params.Parameters.ChartPeriod = params.ChartPeriod;
 
         var url = ReportsAPI.ResponseURL + "/GetReport?timeStamp=" + new Date().getTime();
         var queryString = "";

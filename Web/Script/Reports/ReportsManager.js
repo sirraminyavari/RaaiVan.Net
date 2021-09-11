@@ -15,7 +15,7 @@
             TabsManager: null,
             Reports: params.Reports
         };
-
+        
         this.Options = {
             Modules: params.Modules
         };
@@ -204,6 +204,7 @@
             var reportName = params.ReportName || "";
             var showAtStart = params.ShowAtStart === true;
             var initialParams = GlobalUtilities.extend({ Modules: that.Options.Modules }, (params.InitialParams || {}));
+            var hasChart = !!(that.get_report_config(moduleIdentifier, reportName) || {}).HasChart;
             
             GlobalUtilities.load_files(["Reports/ReportOptions/" + moduleIdentifier + "_" + reportName + ".js"], {
                 OnLoad: function () {
@@ -263,23 +264,33 @@
                                         },
                                         {
                                             Type: "div", Class: "small-4 medium-4 large-4 RevDirection RevTextAlign",
+                                            Style: "display:flex; flex-flow:row; align-items:center; justify-content:center;",
                                             Childs: [
                                                 {
-                                                    Type: "div", Style: "display:inline-block;",
-                                                    Childs: [
-                                                        {
-                                                            Type: "img", Style: "max-width:3rem; max-height:3rem; cursor:pointer;",
-                                                            Tooltip: RVDic.ExportToExcel,
-                                                            Attributes: [{ Name: "src", Value: GlobalUtilities.icon("extensions/xlsx.png") }],
-                                                            Properties: [{ Name: "onclick", Value: function () { newPage.ShowReport(true); } }]
-                                                        }
-                                                    ]
+                                                    Type: "div", Style: "flex:0 0 auto; display:flex; align-items:center; justify-content:center;",
+                                                    Childs: [{
+                                                        Type: "i", Class: "fa fa-file-excel-o fa-2x rv-icon-button",
+                                                        Tooltip: RVDic.ExportToExcel,
+                                                        Attributes: [{ Name: "src", Value: GlobalUtilities.icon("extensions/xlsx.png") }],
+                                                        Properties: [{ Name: "onclick", Value: function () { newPage.ShowReport(true); } }]
+                                                    }]
                                                 },
+                                                (!hasChart ? null : {
+                                                    Type: "div",
+                                                    Style: "flex:0 0 auto; display:flex; align-items:center; justify-content:center;" +
+                                                        "padding-" + RV_RevFloat + ":1rem;",
+                                                    Childs: [{
+                                                        Type: "i", Class: "fa fa-bar-chart fa-2x rv-icon-button",
+                                                        Tooltip: RVDic.Chart,
+                                                        Properties: [{ Name: "onclick", Value: function () { newPage.ShowReport(null, null, true); } }]
+                                                    }]
+                                                }),
                                                 {
                                                     Type: "div", Name: "countArea",
-                                                    Style: "display:inline-block; color:green; font-weight:bold;" +
-                                                        "margin-top:1rem; margin-" + RV_RevFloat + ":3rem;"
-                                                }
+                                                    Style: "flex:0 0 auto; display:flex; align-items:center; justify-content:center;" +
+                                                        "color:green; font-weight:bold; margin-" + RV_RevFloat + ":3rem;"
+                                                },
+                                                { Type: "div", Style: "flex:1 1 auto;" }
                                             ]
                                         },
                                     ]
@@ -321,7 +332,7 @@
 
                     var _oldOptions = null;
 
-                    var _show = function (excel, pageNumber, password) {
+                    var _show = function (excel, pageNumber, chartMode, password) {
                         var _options = _oldOptions = (pageNumber ? _oldOptions : (rop.get_data ? rop.get_data() : {}));
                         if (_options === false) return;
                         _options = _options || {};
@@ -331,8 +342,14 @@
                         
                         var requestParams = {
                             ModuleIdentifier: moduleIdentifier, ReportName: reportName,
-                            Excel: excel, Password: Base64.encode(password), ParseResults: true,
+                            Excel: excel, Password: Base64.encode(password),
+                            ChartMode: chartMode, ChartPeriod: "Month",
+                            ChartDateFrom: rop.chart_date_from ? rop.chart_date_from() : null,
+                            ChartDateTo: rop.chart_date_to ? rop.chart_date_to() : null,
+                            ParseResults: true,
                             ResponseHandler: function (result) {
+                                console.log(result);
+
                                 if (result.ErrorText) {
                                     alert(RVDic.MSG[result.ErrorText] || result.ErrorText);
                                     if (!excel) {
@@ -484,15 +501,15 @@
                         ReportsAPI.Reports[moduleIdentifier][reportName].Get(requestParams);
                     }; //end of 'var _show = function...'
 
-                    var _do = function (excel, pageNumber, hasConfidentiality, done) {
+                    var _do = function (excel, pageNumber, chartMode, hasConfidentiality, done) {
                         var rp = that.get_report_config(moduleIdentifier, reportName);
 
-                        if (!excel || !hasConfidentiality) _show(excel, pageNumber);
+                        if (!excel || !hasConfidentiality) _show(excel, pageNumber, chartMode);
                         else {
                             new NameDialog({
                                 Title: RVDic.MSG.PasswordNeededToExportFile, InnerTitle: RVDic.Code, ModificationDetection: false,
                                 OnActionCall: function (name, callback) {
-                                    if (name) _show(excel, pageNumber, name);
+                                    if (name) _show(excel, pageNumber, chartMode, name);
                                     callback(true);
                                 }
                             });
@@ -503,17 +520,17 @@
 
                     var processing = false;
 
-                    var _preshow = function (excel, pageNumber) {
+                    var _preshow = function (excel, pageNumber, chartMode) {
                         if (processing) return;
                         processing = true;
 
-                        if (!excel) return _do(excel, pageNumber, null, function () { processing = false; });
+                        if (!excel) return _do(excel, pageNumber, chartMode, null, function () { processing = false; });
 
                         PrivacyAPI.GetConfidentialityLevel({
                             ObjectID: id, ParseResults: true,
                             ResponseHandler: function (result) {
                                 var hasConfidentiality = (result || {}).LevelID && (result.LevelID > 1);
-                                _do(excel, pageNumber, hasConfidentiality, function () { processing = false; });
+                                _do(excel, pageNumber, chartMode, hasConfidentiality, function () { processing = false; });
                             }
                         });
                     };

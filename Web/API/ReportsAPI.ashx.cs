@@ -8,6 +8,7 @@ using RaaiVan.Modules.Reports;
 using RaaiVan.Modules.Users;
 using RaaiVan.Modules.Log;
 using RaaiVan.Modules.Privacy;
+using RaaiVan.Modules.GlobalUtilities.DBCompositeTypes;
 
 namespace RaaiVan.Web.API
 {
@@ -35,9 +36,26 @@ namespace RaaiVan.Web.API
                     ModuleIdentifier? moduleIdentifier = 
                         PublicMethods.parse_enum<ModuleIdentifier>(context.Request.Params["ModuleIdentifier"]);
 
-                    bool excel = string.IsNullOrEmpty(context.Request.Params["Excel"]) ? false : context.Request.Params["Excel"].ToLower() == "true";
-                    bool rtl = string.IsNullOrEmpty(context.Request.Params["RTL"]) ? false : context.Request.Params["RTL"].ToLower() == "true";
-                    bool isPersian = string.IsNullOrEmpty(context.Request.Params["Lang"]) ? false : context.Request.Params["Lang"].ToLower() == "fa";
+                    RVLang language = PublicMethods.get_current_language();
+
+                    //Chart Mode
+                    bool chartMode = PublicMethods.parse_bool(context.Request.Params["ChartMode"], defaultValue: false).Value;
+                    DateTime? chartDateFrom = PublicMethods.parse_date(context.Request.Params["ChartDateFrom"]);
+                    DateTime? chartDateTo = PublicMethods.parse_date(context.Request.Params["ChartDateTo"]); //don't add a day, it will be handled later
+                    string chartPeriod = PublicMethods.parse_string(context.Request.Params["ChartPeriod"], decode: false);
+                    
+                    DBCompositeType<BigIntTableType> periodList = !chartMode ? new DBCompositeType<BigIntTableType>() :
+                        get_period_list(chartDateFrom, chartDateTo, chartPeriod, language);
+
+                    if (chartMode && periodList.count == 0)
+                    {
+                        responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
+                        _return_response(ref responseText);
+                        return;
+                    }
+                    //end of ChartMode
+
+                    bool excel = !chartMode && PublicMethods.parse_bool(context.Request.Params["Excel"], defaultValue: false).Value;
 
                     List<string> paramsList = ListMaker.get_string_items(context.Request.Params["ParamsOrder"], '|');
 
@@ -46,6 +64,13 @@ namespace RaaiVan.Web.API
                         paramsContainer.ApplicationID,
                         paramsContainer.CurrentUserID
                     };
+
+                    if (chartMode)
+                    {
+                        parameters.Add(chartPeriod);
+                        parameters.Add(GenericDate.fromDateTime(DateTime.Now, language).Type.ToString());
+                        parameters.Add(periodList);
+                    }
 
                     for (int i = 0; i < paramsList.Count; ++i)
                     {
@@ -67,9 +92,9 @@ namespace RaaiVan.Web.API
 
                     if (!string.IsNullOrEmpty(reportName) && moduleIdentifier.HasValue)
                     {
-                        get_report(moduleIdentifier.Value, reportName, excel, rtl, isPersian, ref dictionary,
+                        get_report(moduleIdentifier.Value, reportName, excel, ref dictionary,
                             pageNumber, pageSize, ref responseText, parameters,
-                            PublicMethods.parse_string(context.Request.Params["PS"]));
+                            PublicMethods.parse_string(context.Request.Params["PS"]), chartMode);
                     }
 
                     _return_response(ref responseText);
@@ -99,15 +124,18 @@ namespace RaaiVan.Web.API
             return dictionary;
         }
 
-        protected void get_report(ModuleIdentifier moduleIdentifier, string reportName, bool excel, bool rtl,
-            bool isPersian, ref Dictionary<string, string> dic, int pageNumber, int pageSize, ref string responseText,
-            List<object> parameters, string password)
+        protected void get_report(ModuleIdentifier moduleIdentifier, string reportName, bool excel, 
+            ref Dictionary<string, string> dic, int pageNumber, int pageSize, ref string responseText,
+            List<object> parameters, string password, bool chartMode)
         {
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
 
             bool isSystemAdmin =
                 PublicMethods.is_system_admin(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID.Value);
+
+            RVLang language = PublicMethods.get_current_language();
+            bool rtl = PublicMethods.is_rtl_language(paramsContainer.ApplicationID, language);
 
             Guid? reportId = ReportUtilities.get_report_id(moduleIdentifier, reportName);
 
@@ -126,8 +154,10 @@ namespace RaaiVan.Web.API
             string actions = string.Empty;
             Dictionary<string, string> columnsDic = new Dictionary<string, string>();
 
+            string resolvedReportName = chartMode ? reportName + "_Chart" : reportName;
+
             RVDataTable tbl = ReportsController.get_report(paramsContainer.Tenant.Id,
-                moduleIdentifier, reportName, ref actions, ref columnsDic, parameters);
+                moduleIdentifier, resolvedReportName, ref actions, ref columnsDic, parameters);
 
             int firstRow = excel ? 0 : (pageSize * (pageNumber - 1));
             int lastRow = (excel ? tbl.Rows.Count : Math.Min(firstRow + pageSize, tbl.Rows.Count)) - 1;
@@ -286,6 +316,64 @@ namespace RaaiVan.Web.API
             }
 
             responseText += "],\"Actions\":" + (string.IsNullOrEmpty(actions) ? "{}" : actions) + "}";
+        }
+
+        protected long period_value(int year, int partOfYear, string period) {
+            if (string.IsNullOrEmpty(period)) period = string.Empty;
+
+            switch (period.ToLower())
+            {
+                case "year":
+                    return (long)year;
+                case "season":
+                    return long.Parse(year.ToString() + partOfYear.ToString());
+                case "month":
+                    return long.Parse(year.ToString() + (partOfYear < 10 ? "0" : "") + partOfYear.ToString());
+            }
+
+            return 0;
+        }
+
+        protected DBCompositeType<BigIntTableType> get_period_list(DateTime? dateFrom, DateTime? dateTo, string period, RVLang language)
+        {
+            DBCompositeType<BigIntTableType> param = new DBCompositeType<BigIntTableType>();
+
+            if (!dateFrom.HasValue || !dateTo.HasValue) return param;
+
+            GenericDate genFrom = GenericDate.fromDateTime(dateFrom.Value, language);
+            GenericDate genTo = GenericDate.fromDateTime(dateTo.Value, language);
+
+            if (string.IsNullOrEmpty(period)) period = string.Empty;
+
+            int fullPeriodSize = 0, periodFrom = 0, periodTo = 0;
+
+            switch (period.ToLower())
+            {
+                case "year":
+                    fullPeriodSize = periodFrom = periodTo = 1;
+                    break;
+                case "season":
+                    fullPeriodSize = 4;
+                    periodFrom = genFrom.Month % 3 == 0 ? genFrom.Month / 3 : (int)Math.Floor(genFrom.Month / 3.0) + 1;
+                    periodTo = genTo.Month % 3 == 0 ? genTo.Month / 3 : (int)Math.Floor(genTo.Month / 3.0) + 1;
+                    break;
+                case "month":
+                    fullPeriodSize = 12;
+                    periodFrom = genFrom.Month;
+                    periodTo = genTo.Month;
+                    break;
+            }
+
+            for (int y = genFrom.Year; y < genTo.Year; y++)
+            {
+                int pFrom = y == genFrom.Year ? periodFrom : 1;
+                int pTo = y == genTo.Year ? periodTo : fullPeriodSize;
+
+                for (int p = pFrom; p <= pTo; p++)
+                    param.add(new BigIntTableType(period_value(y, p, period)));
+            }
+
+            return param;
         }
 
         public bool IsReusable

@@ -977,7 +977,7 @@ namespace RaaiVan.Web.API
         {
             if (!input.ParamsContainer.ApplicationID.HasValue || !input.ParamsContainer.CurrentUserID.HasValue) return;
 
-            List<Guid> lst = ReportUtilities.ReportIDs.Select(u => u.Value).ToList();
+            List<Guid> lst = ReportUtilities.ReportIDs.Select(u => u.ID).ToList();
 
 
             //Drop Applications Performance Report
@@ -1001,16 +1001,18 @@ namespace RaaiVan.Web.API
             }
 
             List<Privacy> privacy = PrivacyController.get_settings(input.ParamsContainer.Tenant.Id,
-                ReportUtilities.ReportIDs.Select(u => u.Value).ToList());
+                ReportUtilities.ReportIDs.Select(u => u.ID).ToList());
 
             Dictionary<string, object> dic = new Dictionary<string, object>();
 
             lst.ForEach(reportId =>
             {
-                string name = ReportUtilities.ReportIDs.Where(x => x.Value == reportId).Select(a => a.Key).First().ToLower();
+                string name = ReportUtilities.ReportIDs.Where(x => x.ID == reportId).Select(a => a.Name).First().ToLower();
+                bool hasChart = ReportUtilities.ReportIDs.Where(x => x.ID == reportId).Select(a => a.HasChart).First();
 
                 Dictionary<string, object> rpt = new Dictionary<string, object>();
                 rpt["ID"] = reportId;
+                rpt["HasChart"] = hasChart;
                 if (privacy.Any(x => x.ObjectID == reportId))
                     rpt["Confidentiality"] = PublicMethods.fromJSON(privacy.Where(x => x.ObjectID == reportId)
                         .FirstOrDefault().Confidentiality.toJson());

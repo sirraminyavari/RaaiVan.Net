@@ -354,6 +354,7 @@
     <Compile Include="DBCall\Forms\FGParsers.cs" />
     <Compile Include="DBCall\RV\GlobalController.cs" />
     <Compile Include="FGImport.cs" />
+    <Compile Include="GenericDate.cs" />
     <Compile Include="GlobalUtilities.cs" />
     <Compile Include="DBHelper\MSSQL2PostgreSQL.cs" />
     <Compile Include="DBHelper\DBResultSet.cs" />
