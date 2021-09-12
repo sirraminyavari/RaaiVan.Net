@@ -19,7 +19,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
     public class DBCompositeType<T> : IDBCompositeType
     {
-        private List<T> Values;
+        public List<T> Values { get; }
 
         public DBCompositeType()
         {

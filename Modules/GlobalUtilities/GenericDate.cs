@@ -52,11 +52,25 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public GenericDate(CalendarType type, int year, int month, int day, int hour = 0, int minute = 0) {
             Type = type;
-            _Year = year < 0 ? 0 : year;
-            _Month = month < 0 ? 0 : month;
-            _Day = day < 0 ? 0 : day;
+            _Year = year < 1 ? 1 : year;
+            _Month = month < 1 ? 1 : month;
+            _Day = day < 1 ? 1 : day;
             _Hour = hour < 0 || hour > 23 ? 0 : hour;
             _Minute = minute < 0 || minute > 59 ? 0 : minute;
+        }
+
+        public GenericDate(RVLang language, int year, int month, int day, int hour = 0, int minute = 0) :
+            this(get_calendar_type(language), year, month, day, hour, minute)
+        { }
+
+        public DateTime getDateTime()
+        {
+            switch (Type) {
+                case CalendarType.Jalali:
+                    return new DateTime(Year, Month, Day, Hour, Minute, second: 0, new PersianCalendar());
+                default:
+                    return new DateTime(Year, Month, Day, Hour, Minute, second: 0);
+            }
         }
 
         private string datePartString(int value)
@@ -111,9 +125,25 @@ namespace RaaiVan.Modules.GlobalUtilities
             return toString(format);
         }
 
+        public static CalendarType get_calendar_type(RVLang language)
+        {
+            switch (language)
+            {
+                case RVLang.fa:
+                    return CalendarType.Jalali;
+                default:
+                    return CalendarType.Gregorian;
+            }
+        }
+
         public static GenericDate fromDateTime(DateTime date, RVLang language)
         {
-            return PublicMethods.uses_jalali_calendar(language) ? jalali(date) : gregorian(date);
+            switch (get_calendar_type(language)) {
+                case CalendarType.Jalali:
+                    return jalali(date);
+                default:
+                    return gregorian(date);
+            }
         }
 
         public static GenericDate gregorian(DateTime date)

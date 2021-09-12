@@ -53,6 +53,8 @@ namespace RaaiVan.Web.API
                         _return_response(ref responseText);
                         return;
                     }
+
+                    Dictionary<string, object> periodsDesctructured = destructure_period_list(language, chartPeriod, periodList);
                     //end of ChartMode
 
                     bool excel = !chartMode && PublicMethods.parse_bool(context.Request.Params["Excel"], defaultValue: false).Value;
@@ -94,7 +96,7 @@ namespace RaaiVan.Web.API
                     {
                         get_report(moduleIdentifier.Value, reportName, excel, ref dictionary,
                             pageNumber, pageSize, ref responseText, parameters,
-                            PublicMethods.parse_string(context.Request.Params["PS"]), chartMode);
+                            PublicMethods.parse_string(context.Request.Params["PS"]), chartMode, periodsDesctructured);
                     }
 
                     _return_response(ref responseText);
@@ -126,7 +128,7 @@ namespace RaaiVan.Web.API
 
         protected void get_report(ModuleIdentifier moduleIdentifier, string reportName, bool excel, 
             ref Dictionary<string, string> dic, int pageNumber, int pageSize, ref string responseText,
-            List<object> parameters, string password, bool chartMode)
+            List<object> parameters, string password, bool chartMode, Dictionary<string, object> chartPeriods)
         {
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
@@ -262,7 +264,8 @@ namespace RaaiVan.Web.API
 
             Dictionary<string, bool> isFloatDic = new Dictionary<string, bool>();
 
-            responseText = "{\"Columns\":[";
+            responseText = "{\"ChartPeriods\":" + (chartPeriods == null ? "{}" : PublicMethods.toJSON(chartPeriods)) +
+                ",\"Columns\":[";
 
             for (int i = 0, lnt = tbl.Columns.Count; i < lnt; ++i)
             {
@@ -289,8 +292,9 @@ namespace RaaiVan.Web.API
                 string colTitle = columnsDic.ContainsKey(tbl.Columns[i].ColumnName) ?
                     columnsDic[tbl.Columns[i].ColumnName] : tbl.Columns[i].ColumnName;
 
-                responseText += (i == 0 ? string.Empty : ",") + "{\"ID\":\"" + tbl.Columns[i].ColumnName +
-                    "\",\"Title\":\"" + Base64.encode(colTitle) + "\",\"Encoded\":true" +
+                responseText += (i == 0 ? string.Empty : ",") + "{\"ID\":\"" + tbl.Columns[i].ColumnName + "\"" + 
+                    ",\"Title\":\"" + Base64.encode(colTitle) + "\"" + 
+                    ",\"Encoded\":true" +
                     ",\"IsNumber\":" + isNumber.ToString().ToLower() + "}";
             }
 
@@ -364,7 +368,7 @@ namespace RaaiVan.Web.API
                     break;
             }
 
-            for (int y = genFrom.Year; y < genTo.Year; y++)
+            for (int y = genFrom.Year; y <= genTo.Year; y++)
             {
                 int pFrom = y == genFrom.Year ? periodFrom : 1;
                 int pTo = y == genTo.Year ? periodTo : fullPeriodSize;
@@ -374,6 +378,70 @@ namespace RaaiVan.Web.API
             }
 
             return param;
+        }
+
+        protected Dictionary<string, object> destructure_period_list(RVLang language, string period, DBCompositeType<BigIntTableType> list)
+        {
+            if (string.IsNullOrEmpty(period)) period = string.Empty;
+
+            if (list == null) list = new DBCompositeType<BigIntTableType>();
+
+            Dictionary<string, object> result = new Dictionary<string, object>();
+
+            list.Values.Where(itm => itm.Value.HasValue)
+                .Select(itm => itm.Value.Value.ToString()).Where(itm => itm.Length >= 4).ToList().ForEach(itm =>
+                {
+                    int year = int.Parse(itm.Substring(0, 4));
+                    int datePart = itm.Length <= 4 ? 0 : int.Parse(itm.Substring(4));
+                    
+                    DateTime? dateFrom = null;
+                    DateTime? dateTo = null;
+                    
+                    switch (period.ToLower())
+                    {
+                        case "year":
+                            dateFrom = new GenericDate(language, year, month: 1, day: 1).getDateTime();
+                            dateTo = new GenericDate(language, year + 1, month: 1, day: 1).getDateTime().AddDays(-1);
+                            break;
+                        case "season":
+                            if (datePart >= 1 && datePart <= 4)
+                            {
+                                //'to' must point to a day after the end of the season
+                                int yearTo = year + (datePart == 4 ? 1 : 0); //point to the next year if we are in the last season
+                                int monthTo = datePart == 4 ? 1 : (3 * datePart) + 1; //point to the first month of the next year if we are in the last season
+
+                                dateFrom = new GenericDate(language, year, month: (3 * datePart) - 2, day: 1).getDateTime();
+                                dateTo = new GenericDate(language, yearTo, month: monthTo, day: 1).getDateTime().AddDays(-1);
+                            }
+                            break;
+                        case "month":
+                            if (datePart >= 1 && datePart <= 12)
+                            {
+                                //'to' must point to a day after the end of the last day of the month
+                                int yearTo = year + (datePart == 12 ? 1 : 0); //point to the next year if we are in the last month
+                                int monthTo = datePart == 12 ? 1 : datePart + 1; //point to the first month of the next year if we are in the last month
+
+                                dateFrom = new GenericDate(language, year, month: datePart, day: 1).getDateTime();
+                                dateTo = new GenericDate(language, yearTo, month: monthTo, day: 1).getDateTime().AddDays(-1);
+                            }
+                            break;
+                    }
+
+                    if (dateFrom.HasValue && dateTo.HasValue)
+                        result[itm] = new Dictionary<string, object>()
+                        {
+                            { "From", new Dictionary<string, object>() {
+                                { "Value", dateFrom.Value.ToString(format: "yyyy-MM-dd") },
+                                { "Label", PublicMethods.get_local_date(dateFrom.Value) }
+                            } },
+                            { "To", new Dictionary<string, object>() {
+                                { "Value", dateTo.Value.ToString(format: "yyyy-MM-dd") },
+                                { "Label", PublicMethods.get_local_date(dateTo.Value) }
+                            } }
+                        };
+                });
+
+            return result;
         }
 
         public bool IsReusable

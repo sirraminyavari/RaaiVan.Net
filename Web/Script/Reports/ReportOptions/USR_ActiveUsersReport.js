@@ -89,12 +89,22 @@
             if (this.Objects.DateTo) this.Objects.DateTo.Clear();
         },
 
-        chart_date_from: function () {
-            return (this.Objects.DateFrom || { Get: function () { return {} } }).Get().Value;
+        chart_date_from: function (value, title) {
+            if (value && title) {
+                if (this.Objects.DateFrom)
+                    this.Objects.DateFrom.Set({ Value: value, Label: title });
+            }
+            else
+                return (this.Objects.DateFrom || { Get: function () { return {} } }).Get();
         },
 
-        chart_date_to: function () {
-            return (this.Objects.DateTo || { Get: function () { return {} } }).Get().Value;
+        chart_date_to: function (value, title) {
+            if (value && title) {
+                if (this.Objects.DateTo)
+                    this.Objects.DateTo.Set({ Value: value, Label: title });
+            }
+            else
+                return (this.Objects.DateTo || { Get: function () { return {} } }).Get();
         }
     }
 })();

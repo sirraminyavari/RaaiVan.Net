@@ -1157,11 +1157,6 @@ namespace RaaiVan.Modules.GlobalUtilities
             return lang == RVLang.fa || lang == RVLang.ar;
         }
 
-        public static bool uses_jalali_calendar(RVLang lang)
-        {
-            return lang == RVLang.fa;
-        }
-
         private static Dictionary<string, string> NUMBERS_DIC = new Dictionary<string, string>() {
             {"0", "۰" },{"1", "۱" },{"2", "۲" },{"3", "۳" },{"4", "۴" },
             {"5", "۵" },{"6", "۶" },{"7", "۷" },{"8", "۸" },{"9", "۹" }

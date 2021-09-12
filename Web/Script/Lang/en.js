@@ -69,6 +69,7 @@
         "AutoPositioning": "auto positioning",
         "Available": "available",
         "Average": "average",
+        "BasedOn": "based on",
         "BeAdmin": "be administrator",
         "BeDefault": "be default",
         "BelongsTo": "belongs to",
@@ -643,6 +644,7 @@
         "SaveAndSend": "save & send",
         "SaveN": "save [n]",
         "SaveSelectedParameters": "save selected parameters",
+        "Season": "season",
         "Security": "security",
         "ServersList": "servers list",
         "SetAsManager": "set as manager",
@@ -902,6 +904,7 @@
             "PleaseEnterYourUserName": "please enter your username",
             "PleaseLogin": "please login",
             "PleaseSelectAMap": "please select a map",
+            "PleaseSelectDateBoundaries": "please select date boundaries",
             "PleaseSelectEmploymentType": "please select employment type",
             "PleaseSelectForm": "please select a form",
             "PleaseSelectPhoneType": "please select the type of the phone number",
@@ -2419,6 +2422,28 @@
                 "FileAttachmentFailed": "file attachment failed",
                 "RejectionIsNotAllowed": "rejection is not allowed at this state",
                 "MaxAllowedRejectionsExceeded": "max allowed rejections exceeded"
+            }
+        },
+        "X": {
+            "Season": {
+                "1": "spring",
+                "2": "summer",
+                "3": "autumn",
+                "4": "winter"
+            },
+            "Month": {
+                "1": "January",
+                "2": "February",
+                "3": "March",
+                "4": "April",
+                "5": "May",
+                "6": "June",
+                "7": "July",
+                "8": "August",
+                "9": "September",
+                "10": "October",
+                "11": "November",
+                "12": "December"
             }
         }
     });
