@@ -51,17 +51,28 @@ namespace RaaiVan.Modules.FormGenerator
                 applicationId, formId, currentUserId, DateTime.Now);
         }
 
-        public static List<FormType> get_forms(Guid applicationId, string searchText = null, 
+        private static List<FormType> _get_forms(Guid applicationId, string formName = null, string searchText = null,
             int? count = null, int? lowerBoundary = null, bool? hasName = null, bool? archive = null)
         {
             return FGParsers.form_types(DBConnector.read(applicationId, GetFullyQualifiedName("GetForms"),
-                applicationId, ProviderUtil.get_search_text(searchText), count, lowerBoundary, hasName, archive));
+                applicationId, formName, ProviderUtil.get_search_text(searchText), count, lowerBoundary, hasName, archive));
         }
-        
+
+        public static List<FormType> get_forms(Guid applicationId, string searchText = null, 
+            int? count = null, int? lowerBoundary = null, bool? hasName = null, bool? archive = null)
+        {
+            return _get_forms(applicationId, formName: null, searchText, count, lowerBoundary, hasName, archive);
+        }
+
+        public static FormType get_form(Guid applicationId, string formName)
+        {
+            return _get_forms(applicationId, formName: formName).FirstOrDefault();
+        }
+
         public static List<FormType> get_forms(Guid applicationId, List<Guid> formIds)
         {
-            return FGParsers.form_types(DBConnector.read(applicationId, GetFullyQualifiedName("GetFormsByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(formIds), ','));
+            return FGParsers.form_types(DBConnector.read(applicationId, GetFullyQualifiedName("GetFormsByIDs"), 
+                applicationId, GuidTableType.getCompositeType(formIds)));
         }
 
         public static FormType get_form(Guid applicationId, Guid formId)
@@ -335,9 +346,6 @@ namespace RaaiVan.Modules.FormGenerator
                 .ForEach(x => guidItemsParam.add(new GuidPairTableType(u.ElementID.Value, x.ID.Value))));
             //end of Guid Items Param
 
-            DBCompositeType<GuidTableType> elementsToClearParam = new DBCompositeType<GuidTableType>()
-                .add(elementsToClear.Select(e => new GuidTableType(e)).ToList());
-
             //Files Param
             DBCompositeType<DocFileInfoTableType> filesParam = new DBCompositeType<DocFileInfoTableType>();
 
@@ -357,7 +365,8 @@ namespace RaaiVan.Modules.FormGenerator
             //end of Files Param
 
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SaveFormInstanceElements"),
-                applicationId, elementsParam, guidItemsParam, elementsToClearParam, filesParam, currentUserId, DateTime.Now);
+                applicationId, elementsParam, guidItemsParam, GuidTableType.getCompositeType(elementsToClear), 
+                filesParam, currentUserId, DateTime.Now);
         }
 
         public static bool save_form_instance_elements(Guid applicationId,
@@ -499,11 +508,6 @@ namespace RaaiVan.Modules.FormGenerator
             int? lowerBoundary, int? count, Guid? sortByElementId, bool? descending)
         {
             //prepare
-            if (elementIds == null) elementIds = new List<Guid>();
-            if (instanceIds == null) instanceIds = new List<Guid>();
-            if (ownerIds == null) ownerIds = new List<Guid>();
-            if (filters == null) filters = new List<FormFilter>();
-
             List<FormElement> elements = get_form_elements(applicationId, formId);
 
             if (elementIds != null && elementIds.Count > 0)
@@ -515,34 +519,10 @@ namespace RaaiVan.Modules.FormGenerator
             }
             //end of prepare
 
-            DBCompositeType<GuidTableType> elementIdsParam = new DBCompositeType<GuidTableType>()
-                .add(elementIds.Select(e => new GuidTableType(e)).ToList());
-
-            DBCompositeType<GuidTableType> instanceIdsParam = new DBCompositeType<GuidTableType>()
-                .add(instanceIds.Select(e => new GuidTableType(e)).ToList());
-
-            DBCompositeType<GuidTableType> ownerIdsParam = new DBCompositeType<GuidTableType>()
-                .add(ownerIds.Select(e => new GuidTableType(e)).ToList());
-
-            DBCompositeType<FormFilterTableType> filtersParam = new DBCompositeType<FormFilterTableType>()
-                .add(filters.Select(f => new FormFilterTableType(
-                    elementId: f.ElementID,
-                    ownerId: f.OwnerID,
-                    text: f.Text,
-                    textItems: ProviderUtil.list_to_string<string>(f.TextItems),
-                    or: f.Or,
-                    exact: f.Exact,
-                    dateFrom: f.DateFrom,
-                    dateTo: f.DateTo,
-                    floatFrom: f.FloatFrom,
-                    floatTo: f.FloatTo,
-                    bit: f.Bit,
-                    guid: f.Guid,
-                    guidItems: ProviderUtil.list_to_string<Guid>(f.GuidItems),
-                    compulsory: f.Compulsory)).ToList());
-
             DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetFormRecords"),
-                applicationId, formId, elementIdsParam, instanceIdsParam, ownerIdsParam, filtersParam,
+                applicationId, formId, GuidTableType.getCompositeType(elementIds),
+                GuidTableType.getCompositeType(instanceIds), GuidTableType.getCompositeType(ownerIds), 
+                FormFilterTableType.getCompositeType(filters),
                 lowerBoundary, count, sortByElementId, descending);
 
             return FGParsers.form_records(results, elements);

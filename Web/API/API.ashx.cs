@@ -347,8 +347,8 @@ namespace RaaiVan.Web.API
                         string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), 
                             decode: false, defaultValue: "sql_map.js");
 
-                        string fileContent = "USE [EKM_App]" + "\r\n" + "GO" + "\r\n\r\n" + 
-                            PublicMethods.generate_script_file(fileName);
+                        string fileContent = "USE [EKM_App]" + "\r\n" + "GO" + "\r\n\r\n" +
+                            new GenerateScriptFile(fileName).get();
 
                         paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(fileContent),
                             fileName: resFileName, contentType: "application/sql", isAttachment: true);
@@ -358,7 +358,7 @@ namespace RaaiVan.Web.API
                     {
                         string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"),
                             decode: false, defaultValue: "sql_map_convert.js");
-                        string scriptContent = MSSQL2PostgreSQL.convert_mssql_to_postgresql(PublicMethods.generate_script_file(fileName));
+                        string scriptContent = MSSQL2PostgreSQL.convert_mssql_to_postgresql(new GenerateScriptFile(fileName).get());
                         paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(scriptContent),
                             fileName: "mssql2postgresql_scripts.sql", contentType: "application/sql", isAttachment: true);
                         return true;
@@ -367,7 +367,7 @@ namespace RaaiVan.Web.API
                     {
                         string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"),
                             decode: false, defaultValue: "sql_map_postgre.js");
-                        paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(PublicMethods.generate_script_file(fileName)),
+                        paramsContainer.file_response(System.Text.Encoding.UTF8.GetBytes(new GenerateScriptFile(fileName).get()),
                             fileName: "postgresql_scripts.sql", contentType: "application/sql", isAttachment: true);
                         return true;
                     }

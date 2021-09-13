@@ -567,28 +567,9 @@ namespace RaaiVan.Modules.CoreNetwork
             bool checkAccess = false, Guid? groupByFormElementId = null)
         {
             //prepare
-            if (filters == null) filters = new List<FormFilter>();
-
             string strAddId = null;
             if (nodeType.HasValue) strAddId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
             //end of prepare
-
-            DBCompositeType<FormFilterTableType> formFilters = new DBCompositeType<FormFilterTableType>()
-                .add(filters.Select(f => new FormFilterTableType(
-                    elementId: f.ElementID,
-                    ownerId: f.OwnerID,
-                    text: f.Text,
-                    textItems: ProviderUtil.list_to_string<string>(f.TextItems),
-                    or: f.Or,
-                    exact: f.Exact,
-                    dateFrom: f.DateFrom,
-                    dateTo: f.DateTo,
-                    floatFrom: f.FloatFrom,
-                    floatTo: f.FloatTo,
-                    bit: f.Bit,
-                    guid: f.Guid,
-                    guidItems: ProviderUtil.list_to_string<Guid>(f.GuidItems),
-                    compulsory: f.Compulsory)).ToList());
 
             DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodes"),
                 applicationId,
@@ -609,7 +590,7 @@ namespace RaaiVan.Modules.CoreNetwork
                 upperCreationDateLimit,
                 count,
                 lowerBoundary,
-                formFilters,
+                FormFilterTableType.getCompositeType(filters),
                 matchAllFilters,
                 fetchCounts,
                 checkAccess,
@@ -1483,29 +1464,11 @@ namespace RaaiVan.Modules.CoreNetwork
         {
             if (nodeTypeIds == null) nodeTypeIds = new List<Guid>();
 
-            if (filters == null) filters = new List<FormFilter>();
-
-            DBCompositeType<FormFilterTableType> formFilters = new DBCompositeType<FormFilterTableType>()
-                .add(filters.Select(f => new FormFilterTableType(
-                    elementId: f.ElementID,
-                    ownerId: f.OwnerID,
-                    text: f.Text,
-                    textItems: ProviderUtil.list_to_string<string>(f.TextItems),
-                    or: f.Or,
-                    exact: f.Exact,
-                    dateFrom: f.DateFrom,
-                    dateTo: f.DateTo,
-                    floatFrom: f.FloatFrom,
-                    floatTo: f.FloatTo,
-                    bit: f.Bit,
-                    guid: f.Guid,
-                    guidItems: ProviderUtil.list_to_string<Guid>(f.GuidItems),
-                    compulsory: f.Compulsory)).ToList());
-
             DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetFavoriteNodes"),
                 applicationId, userId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',', useNodeTypeHierarchy,
                 nodeId, additionalId, ProviderUtil.get_search_text(searchText), isDocument, creatorUserId,
-                relatedToNodeId, formFilters, matchAllFilters, lowerDateLimit, upperDateLimit, lowerBoundary, count);
+                relatedToNodeId, FormFilterTableType.getCompositeType(filters), matchAllFilters, 
+                lowerDateLimit, upperDateLimit, lowerBoundary, count);
 
             return CNParsers.nodes(results, full: false, totalCount: ref totalCount);
         }

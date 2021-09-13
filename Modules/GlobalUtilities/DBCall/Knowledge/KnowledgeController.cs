@@ -355,18 +355,15 @@ namespace RaaiVan.Modules.Knowledge
         {
             if (userId == Guid.Empty) userId = currentUserId;
             if (answers == null) answers = new List<KeyValuePair<Guid, double>>();
-            if (adminUserIds == null) adminUserIds = new List<Guid>();
 
             DBCompositeType<GuidFloatTableType> answersParam = new DBCompositeType<GuidFloatTableType>()
                 .add(answers.Select(a => new GuidFloatTableType(a.Key, a.Value)).ToList());
 
-            DBCompositeType<GuidTableType> adminsParam = new DBCompositeType<GuidTableType>()
-                .add(adminUserIds.Select(id => new GuidTableType(id)).ToList());
-
             string strTextOptions = textOptions == null || textOptions.Count == 0 ? null : string.Join(" ~ ", textOptions);
 
             DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("SaveEvaluationForm"),
-                applicationId, nodeId, userId, currentUserId, answersParam, score, DateTime.Now, adminsParam, strTextOptions, description);
+                applicationId, nodeId, userId, currentUserId, answersParam, score, DateTime.Now,
+                GuidTableType.getCompositeType(adminUserIds), strTextOptions, description);
 
             bool succeed = !(searchabilityActivated = false); //--> succeed: true, accepted: false, searchabilityActivated: false
             bool accepted = false;

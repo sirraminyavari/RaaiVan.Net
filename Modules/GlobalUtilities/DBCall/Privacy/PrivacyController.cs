@@ -103,9 +103,6 @@ namespace RaaiVan.Modules.Privacy
 
             PublicMethods.split_list<Guid>(objectIds, 200, ids =>
             {
-                DBCompositeType<GuidTableType> idsParam = new DBCompositeType<GuidTableType>()
-                    .add(objectIds.Select(id => new GuidTableType(id)).ToList());
-
                 DBCompositeType<StringPairTableType> permissionsParam = new DBCompositeType<StringPairTableType>()
                     .add(permissions.Select(p =>
                     {
@@ -118,7 +115,7 @@ namespace RaaiVan.Modules.Privacy
                 string strObjectType = objectType == PrivacyObjectType.None ? null : objectType.ToString();
 
                 PRVCParsers.access_checked_items(DBConnector.read(applicationId, GetFullyQualifiedName("CheckAccess"),
-                    applicationId, userId, strObjectType, idsParam, permissionsParam, DateTime.Now))
+                    applicationId, userId, strObjectType, GuidTableType.getCompositeType(objectIds), permissionsParam, DateTime.Now))
                     .ToList().ForEach(x => ret.Add(x.Key, x.Value));
             });
 

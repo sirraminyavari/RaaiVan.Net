@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NpgsqlTypes;
 using Newtonsoft.Json;
+using RaaiVan.Modules.FormGenerator;
 
 namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
 {
@@ -101,6 +102,28 @@ namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
         public FormFilterTableType[] get_array(List<FormFilterTableType> list)
         {
             return list.ToArray();
+        }
+
+        public static DBCompositeType<FormFilterTableType> getCompositeType(List<FormFilter> lst)
+        {
+            if (lst == null) lst = new List<FormFilter>();
+
+            return new DBCompositeType<FormFilterTableType>()
+                .add(lst.Select(f => new FormFilterTableType(
+                    elementId: f.ElementID,
+                    ownerId: f.OwnerID,
+                    text: f.Text,
+                    textItems: ProviderUtil.list_to_string<string>(f.TextItems),
+                    or: f.Or,
+                    exact: f.Exact,
+                    dateFrom: f.DateFrom,
+                    dateTo: f.DateTo,
+                    floatFrom: f.FloatFrom,
+                    floatTo: f.FloatTo,
+                    bit: f.Bit,
+                    guid: f.Guid,
+                    guidItems: ProviderUtil.list_to_string<Guid>(f.GuidItems),
+                    compulsory: f.Compulsory)).ToList());
         }
     }
 }

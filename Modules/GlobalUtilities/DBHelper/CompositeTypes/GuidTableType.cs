@@ -33,5 +33,11 @@ namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
         {
             return list.ToArray();
         }
+
+        public static DBCompositeType<GuidTableType> getCompositeType(List<Guid> lst)
+        {
+            if (lst == null) lst = new List<Guid>();
+            return new DBCompositeType<GuidTableType>().add(lst.Distinct().Select(i => new GuidTableType(i)).ToList());
+        }
     }
 }

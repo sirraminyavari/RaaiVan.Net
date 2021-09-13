@@ -75,11 +75,7 @@ namespace RaaiVan.Modules.Messaging
             string messageText, bool isGroup, List<Guid> receiverUserIds, Guid? threadId, List<DocFileInfo> attachedFiles)
         {
             if (string.IsNullOrEmpty(title)) title = null;
-            if (receiverUserIds == null) receiverUserIds = new List<Guid>();
             if (attachedFiles == null) attachedFiles = new List<DocFileInfo>();
-
-            DBCompositeType<GuidTableType> receiversParam = new DBCompositeType<GuidTableType>()
-                .add(receiverUserIds.Select(id => new GuidTableType(id)).ToList());
 
             DBCompositeType<DocFileInfoTableType> filesParam = new DBCompositeType<DocFileInfoTableType>()
                 .add(attachedFiles.Select(f => new DocFileInfoTableType(
@@ -93,7 +89,7 @@ namespace RaaiVan.Modules.Messaging
 
             return DBConnector.get_long(applicationId, GetFullyQualifiedName("SendNewMessage"),
                 applicationId, userId, threadId, messageId, forwardedFrom, title, messageText,
-                isGroup, DateTime.Now, receiversParam, filesParam);
+                isGroup, DateTime.Now, GuidTableType.getCompositeType(receiverUserIds), filesParam);
         }
 
         public static bool send_message(Guid applicationId, 

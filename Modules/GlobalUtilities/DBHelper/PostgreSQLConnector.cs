@@ -129,7 +129,8 @@ namespace RaaiVan.Modules.GlobalUtilities
                 object[] row = new object[tbl.Columns.Count];
                 int cnt = reader.GetValues(row);
 
-                if (options != null && options.IsReport) {
+                //if tbl.Columns.Count > 1 then the result set is not report 'Actions'
+                if (options != null && options.IsReport && tbl.Columns.Count > 1) {
                     for (int i = 0; i < row.Length; i++)
                     {
                         if (row[i] != null && row[i].GetType() == typeof(string) && !string.IsNullOrEmpty((string)row[i]))

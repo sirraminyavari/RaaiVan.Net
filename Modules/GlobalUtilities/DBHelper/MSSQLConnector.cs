@@ -178,7 +178,8 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                     for (int i = 0; i < fieldCount; ++i)
                     {
-                        if (options != null && options.IsReport)
+                        //if fieldCount > 1 then the result set is not report 'Actions'
+                        if (options != null && options.IsReport && fieldCount > 1)
                         {
                             values[i] = reader[i].GetType() == typeof(string) && !string.IsNullOrEmpty((string)reader[i]) ?
                                 ((string)reader[i]).Substring(0, Math.Min(1000, ((string)reader[i]).Length)) : reader[i];

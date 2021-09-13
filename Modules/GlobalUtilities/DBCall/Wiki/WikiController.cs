@@ -72,34 +72,25 @@ namespace RaaiVan.Modules.Wiki
         public static bool add_paragraph(Guid applicationId, Paragraph info, bool? sendToAdmins, bool? hasAdmin, 
             List<Guid> adminUserIds, ref List<Dashboard> dashboards)
         {
-            if (adminUserIds == null) adminUserIds = new List<Guid>();
-
             if (string.IsNullOrEmpty(info.Title)) info.Title = null;
             if (string.IsNullOrEmpty(info.BodyText)) info.BodyText = string.Empty;
 
-            DBCompositeType<GuidTableType> adminsParam = new DBCompositeType<GuidTableType>()
-                .add(adminUserIds.Distinct().Select(id => new GuidTableType(id)).ToList());
-
             return DBConnector.get_dashboards(applicationId, ref dashboards, GetFullyQualifiedName("AddParagraph"),
                 applicationId, info.ParagraphID, info.TitleID, info.Title, info.BodyText, info.SequenceNumber,
-                info.CreatorUserID, DateTime.Now, info.IsRichText, sendToAdmins, hasAdmin, adminsParam) > 0;
+                info.CreatorUserID, DateTime.Now, info.IsRichText, sendToAdmins, hasAdmin, 
+                GuidTableType.getCompositeType(adminUserIds)) > 0;
         }
 
         public static bool modify_paragraph(Guid applicationId, Paragraph info, Guid? changeId2Accept, 
             bool? hasAdmin, List<Guid> adminUserIds, ref List<Dashboard> dashboards, 
             bool? citationNeeded = null, bool? apply = null, bool? accept = null)
         {
-            if (adminUserIds == null) adminUserIds = new List<Guid>();
-
             if (string.IsNullOrEmpty(info.Title)) info.Title = null;
             if (string.IsNullOrEmpty(info.BodyText)) info.BodyText = string.Empty;
 
-            DBCompositeType<GuidTableType> adminsParam = new DBCompositeType<GuidTableType>()
-                .add(adminUserIds.Distinct().Select(id => new GuidTableType(id)).ToList());
-
             return DBConnector.get_dashboards(applicationId, ref dashboards, GetFullyQualifiedName("ModifyParagraph"),
                 applicationId, info.ParagraphID, changeId2Accept, info.Title, info.BodyText, info.LastModifierUserID, 
-                DateTime.Now, citationNeeded, apply, accept, hasAdmin, adminsParam) > 0;
+                DateTime.Now, citationNeeded, apply, accept, hasAdmin, GuidTableType.getCompositeType(adminUserIds)) > 0;
         }
 
         public static bool remove_paragraph(Guid applicationId, Guid paragraphId, Guid lastModifierUserId)

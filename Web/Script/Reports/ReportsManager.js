@@ -363,7 +363,7 @@
                         var chartPeriod = !chartMode ? null : await that.select_bar_chart_period();
 
                         if (chartMode && !chartPeriod) return;
-                        
+
                         var requestParams = {
                             ModuleIdentifier: moduleIdentifier, ReportName: reportName,
                             Excel: excel, Password: Base64.encode(password),

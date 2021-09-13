@@ -12,7 +12,8 @@
             sub: [
                 "01 - UserDefined Types",
                 "02 - Global Functions",
-                "03 - Stored Procedures"
+                "03 - Stored Procedures",
+                { path: "04 - Reports", sub: "*" }
             ]
         }
     ]
