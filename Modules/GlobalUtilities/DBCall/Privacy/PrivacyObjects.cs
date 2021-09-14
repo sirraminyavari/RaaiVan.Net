@@ -125,7 +125,7 @@ namespace RaaiVan.Modules.Privacy
                 ",\"Allow\":" + (!Allow.HasValue ? "null" : Allow.Value.ToString().ToLower()) +
                 ",\"ExpirationDate\":" + (!ExpirationDate.HasValue ? "null" : "\"" + ExpirationDate.Value.ToString("yyyy-MM-dd") + "\"") +
                 ",\"ExpirationDate_Locale\":" + (!ExpirationDate.HasValue ? "null" : 
-                    "\"" + PublicMethods.get_local_date(ExpirationDate.Value) + "\"") +
+                    "\"" + GenericDate.get_local_date(ExpirationDate.Value) + "\"") +
                 ",\"PermissionType\":" + (PermissionType == PermissionType.None ? "null" : "\"" + PermissionType.ToString() + "\"") +
                 "}";
         }

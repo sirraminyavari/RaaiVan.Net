@@ -1298,7 +1298,7 @@ namespace RaaiVan.Web.API
                 if (limit != null) elem.Necessary = limit.Necessary;
 
                 if (elem.Type == FormElementTypes.Date && elem.DateValue.HasValue)
-                    elem.TextValue = PublicMethods.get_local_date(elem.DateValue.Value);
+                    elem.TextValue = GenericDate.get_local_date(elem.DateValue.Value);
 
                 if ((elem.Type == FormElementTypes.Node || elem.Type == FormElementTypes.User) &&
                     elem.ElementID.HasValue && guidItems.ContainsKey(elem.ElementID.Value))
@@ -1787,22 +1787,10 @@ namespace RaaiVan.Web.API
         {
             if (!paramsContainer.GBView) return;
 
-            double weightSum = 0, sum = 0, weightedSum = 0, avg = 0, weightedAvg = 0, min = 0, max = 0, var = 0, stDev = 0;
+            FormStatistics stats = !ownerId.HasValue && !instanceId.HasValue ? null :
+                FGController.get_form_statistics(paramsContainer.Tenant.Id, ownerId, instanceId);
 
-            if (ownerId.HasValue || instanceId.HasValue)
-                FGController.get_form_statistics(paramsContainer.Tenant.Id, ownerId, instanceId, ref weightSum,
-                    ref sum, ref weightedSum, ref avg, ref weightedAvg, ref min, ref max, ref var, ref stDev);
-
-            responseText = "{\"WeightSum\":" + weightSum.ToString() +
-                ",\"Sum\":" + sum.ToString() +
-                ",\"WeightedSum\":" + weightedSum.ToString() +
-                ",\"Avg\":" + avg.ToString() +
-                ",\"WeightedAvg\":" + weightedAvg.ToString() +
-                ",\"Min\":" + min.ToString() +
-                ",\"Max\":" + max.ToString() +
-                ",\"Var\":" + var.ToString() +
-                ",\"StDev\":" + stDev.ToString() +
-                "}";
+            responseText = stats == null ? "{}" : stats.toJson();
         }
 
         protected void get_polls(Guid? isCopyOfPollId,
@@ -2238,9 +2226,9 @@ namespace RaaiVan.Web.API
             responseText = "{\"Description\":\"" + Base64.encode(description) + "\"" +
                 (pl == null ? string.Empty : ",\"Poll\":" + pl.toJson()) +
                 ",\"BeginDate\":\"" + (!beginDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(beginDate.Value)) + "\"" +
+                    GenericDate.get_local_date(beginDate.Value)) + "\"" +
                 ",\"FinishDate\":\"" + (!finishDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(finishDate.Value)) + "\"" +
+                    GenericDate.get_local_date(finishDate.Value)) + "\"" +
                 ",\"NotStarted\":" + (beginDate.HasValue && DateTime.Now < beginDate.Value).ToString().ToLower() +
                 ",\"Finished\":" + (finishDate.HasValue && DateTime.Now > finishDate.Value).ToString().ToLower() +
                 ",\"InstanceID\":\"" + (!instanceId.HasValue ? string.Empty : instanceId.ToString()) + "\"" +
@@ -2250,21 +2238,6 @@ namespace RaaiVan.Web.API
                 ",\"AllFilledFormsCount\":\"" +
                     (!allFilledFormsCount.HasValue ? 0 : allFilledFormsCount.Value).ToString() + "\"" +
                 "}";
-        }
-
-        protected string _get_poll_abstract_json(PollAbstract abs)
-        {
-            return "{\"DistinctValuesCount\":" + (!abs.TotalCount.HasValue ? 0 : abs.TotalCount.Value).ToString() +
-                ",\"ElementID\":\"" + (!abs.ElementID.HasValue ? string.Empty : abs.ElementID.ToString()) + "\"" +
-                (!abs.Min.HasValue ? string.Empty : ",\"Min\":" + abs.Min.Value.ToString()) +
-                (!abs.Max.HasValue ? string.Empty : ",\"Max\":" + abs.Max.Value.ToString()) +
-                (!abs.Avg.HasValue ? string.Empty : ",\"Avg\":" + abs.Avg.Value.ToString()) +
-                (!abs.Var.HasValue ? string.Empty : ",\"Var\":" + abs.Var.Value.ToString()) +
-                (!abs.StDev.HasValue ? string.Empty : ",\"StDev\":" + abs.StDev.Value.ToString()) +
-                ",\"Values\":[" + string.Join(",", abs.Values.Where(u => u.hasValue()).Select(
-                    x => "{\"Value\":" + x.toJSONString() +
-                    ",\"Count\":" + (!x.Count.HasValue ? 0 : x.Count).ToString() + "}")) +
-                "]}";
         }
 
         protected void get_poll_abstract(Guid? pollId, List<FormElement> elements, ref string responseText)
@@ -2318,14 +2291,14 @@ namespace RaaiVan.Web.API
                 x.Type == FormElementTypes.Numeric)).Select(v => v.Key).ToList(), 5, null));
 
             string pollStatistics = string.Empty;
-            get_form_statistics(pollId, null, ref pollStatistics);
+            get_form_statistics(pollId, instanceId: null, ref pollStatistics);
             if (!string.IsNullOrEmpty(pollStatistics)) pollStatistics = ",\"Statistics\":" + pollStatistics;
 
             responseText = "{\"Poll\":" + poll.toJson() + ",\"Items\":[" + string.Join(",", elements.Select(
                 u => "{\"Count\":" + (counts.ContainsKey(u.GetRefElementID().Value) ? counts[u.GetRefElementID().Value] : 0).ToString() +
                 ",\"Element\":" + u.toJson(paramsContainer.Tenant.Id) +
                 (!elementsAbstract.Any(x => x.ElementID == u.GetRefElementID()) ? string.Empty : ",\"Abstract\":" +
-                    _get_poll_abstract_json(elementsAbstract.Where(x => x.ElementID == u.GetRefElementID()).First())) +
+                    elementsAbstract.Where(x => x.ElementID == u.GetRefElementID()).First().toJson()) +
                 "}")) + "]" + pollStatistics + "}";
         }
 
@@ -2498,7 +2471,7 @@ namespace RaaiVan.Web.API
                         break;
                     case FormElementTypes.Date:
                         bodyText = !val.DateValue.HasValue ? bodyText :
-                            PublicMethods.convert_numbers_to_local(PublicMethods.get_local_date(val.DateValue.Value));
+                            PublicMethods.convert_numbers_to_local(GenericDate.get_local_date(val.DateValue.Value));
                         break;
                     case FormElementTypes.Numeric:
                         bodyText = !val.FloatValue.HasValue ? bodyText :
@@ -2603,7 +2576,7 @@ namespace RaaiVan.Web.API
                         ownerNode.ConfidentialityLevel.Title;
                 metaData["PublicationDate"] = !ownerNode.PublicationDate.HasValue ? string.Empty :
                     PublicMethods.convert_numbers_to_local(
-                        PublicMethods.get_local_date(ownerNode.PublicationDate.Value, reverse: true));
+                        GenericDate.get_local_date(ownerNode.PublicationDate.Value, reverse: true));
                 metaData["RegistrationArea"] = ownerNode.AdminAreaName;
                 metaData["RegistrationAreaType"] = ownerNode.AdminAreaType;
             }

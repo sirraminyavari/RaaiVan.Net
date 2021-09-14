@@ -351,7 +351,7 @@ namespace RaaiVan.Modules.FormGenerator
                     ret = TextValue;
                     break;
                 case FormElementTypes.Date:
-                    ret = PublicMethods.get_local_date(DateValue);
+                    ret = GenericDate.get_local_date(DateValue);
                     break;
                 case FormElementTypes.Numeric:
                     ret = FloatValue.ToString();
@@ -395,9 +395,9 @@ namespace RaaiVan.Modules.FormGenerator
                 (string.IsNullOrEmpty(InitialValue) ? string.Empty : ",\"InitialValue\":\"" + Base64.encode(InitialValue) + "\"") + 
                 ",\"TextValue\":\"" + Base64.encode(TextValue) + "\"" +
                 ",\"DateValue\":" + (!DateValue.HasValue ? "null" : "\"" + (persianDate ?
-                    PublicMethods.get_local_date(DateValue.Value) : DateValue.ToString()) + "\"") +
+                    GenericDate.get_local_date(DateValue.Value) : DateValue.ToString()) + "\"") +
                 ",\"DateValue_Jalali\":" + (!DateValue.HasValue ? "null" : "\"" +
-                    PublicMethods.get_local_date(DateValue.Value) + "\"") +
+                    GenericDate.get_local_date(DateValue.Value) + "\"") +
                 ",\"FloatValue\":" + (!FloatValue.HasValue ? "null" : FloatValue.Value.ToString()) +
                 ",\"BitValue\":" + (!BitValue.HasValue ? "null" : BitValue.Value.ToString().ToLower()) +
                 ",\"GuidItems\":[" + string.Join(",", GuidItems.Select(u => u.toJson())) + "]" +
@@ -413,9 +413,9 @@ namespace RaaiVan.Modules.FormGenerator
                     "}"
                 ) +
                 ",\"CreationDate\":\"" + (CreationDate.HasValue ?
-                    PublicMethods.get_local_date(CreationDate.Value, true) : string.Empty) + "\"" +
+                    GenericDate.get_local_date(CreationDate.Value, true) : string.Empty) + "\"" +
                 ",\"LastModificationDate\":\"" + (LastModificationDate.HasValue ?
-                    PublicMethods.get_local_date(LastModificationDate.Value, true) : string.Empty) + "\"" +
+                    GenericDate.get_local_date(LastModificationDate.Value, true) : string.Empty) + "\"" +
                 (AttachedFiles == null || AttachedFiles.Count == 0 ? string.Empty :
                     ",\"Files\":" + DocumentUtilities.get_files_json(applicationId, AttachedFiles, true)
                 ) +
@@ -464,7 +464,7 @@ namespace RaaiVan.Modules.FormGenerator
                 ",\"IsTemporary\":" + (IsTemporary.HasValue && IsTemporary.Value).ToString().ToLower() +
                 ",\"CreationDate\":\"" + (CreationDate.HasValue ? CreationDate.Value.ToString() : string.Empty) + "\"" +
                 ",\"CreationDate_Jalali\":\"" + (!CreationDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(CreationDate.Value)) + "\"" +
+                    GenericDate.get_local_date(CreationDate.Value)) + "\"" +
                 "}";
         }
     }
@@ -521,10 +521,39 @@ namespace RaaiVan.Modules.FormGenerator
             return "{\"InstanceID\":\"" + (InstanceID.HasValue ? InstanceID.Value.ToString() : string.Empty) + "\"" +
                 ",\"OwnerID\":\"" + (OwnerID.HasValue ? OwnerID.Value.ToString() : string.Empty) + "\"" +
                 ",\"CreationDate\":\"" + (CreationDate.HasValue ? CreationDate.Value.ToString() : string.Empty) + "\"" +
-                ",\"CreationDate_Jalali\":\"" + (CreationDate.HasValue ? 
-                    PublicMethods.get_local_date(CreationDate.Value) : string.Empty) + "\"" +
+                ",\"CreationDate_Jalali\":\"" + (CreationDate.HasValue ?
+                    GenericDate.get_local_date(CreationDate.Value) : string.Empty) + "\"" +
                 "," + string.Join(",", Cells.Where(x => x.ElementID.HasValue)
                     .Select(u => "\"" + u.ElementID.ToString() + "\":\"" + Base64.encode(u.Value) + "\"")) + "}";
+        }
+    }
+
+    public class FormStatistics {
+        public double? WeightSum;
+        public double? Sum;
+        public double? WeightedSum;
+        public double? Average;
+        public double? WeightedAverage;
+        public double? Minimum;
+        public double? Maximum;
+        public double? Variance;
+        public double? StandardDeviation;
+
+        public string toJson()
+        {
+            Dictionary<string, object> dic = new Dictionary<string, object>();
+
+            if (WeightSum.HasValue) dic["WeightSum"] = WeightSum;
+            if (Sum.HasValue) dic["Sum"] = Sum;
+            if (WeightedSum.HasValue) dic["WeightedSum"] = WeightedSum;
+            if (Average.HasValue) dic["Avg"] = Average;
+            if (WeightedAverage.HasValue) dic["WeightedAvg"] = WeightedAverage;
+            if (Minimum.HasValue) dic["Min"] = Minimum;
+            if (Maximum.HasValue) dic["Max"] = Maximum;
+            if (Variance.HasValue) dic["Var"] = Variance;
+            if (StandardDeviation.HasValue) dic["StDev"] = StandardDeviation;
+
+            return PublicMethods.toJSON(dic);
         }
     }
 
@@ -541,6 +570,7 @@ namespace RaaiVan.Modules.FormGenerator
         public DateTime? FinishDate;
         public bool? ShowSummary;
         public bool? HideContributors;
+        public bool? Archived;
 
         public string toJson(bool? done = null)
         {
@@ -553,9 +583,9 @@ namespace RaaiVan.Modules.FormGenerator
                 ",\"Description\":\"" + Base64.encode(Description) + "\"" +
                 ",\"RefDescription\":\"" + Base64.encode(RefDescription) + "\"" +
                 ",\"BeginDate\":\"" + (!BeginDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(BeginDate.Value)) + "\"" +
+                    GenericDate.get_local_date(BeginDate.Value)) + "\"" +
                 ",\"FinishDate\":\"" + (!FinishDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(FinishDate.Value)) + "\"" +
+                    GenericDate.get_local_date(FinishDate.Value)) + "\"" +
                 ",\"ShowSummary\":" + (ShowSummary.HasValue && ShowSummary.Value).ToString().ToLower() +
                 (!done.HasValue ? string.Empty : ",\"Done\":" + done.Value.ToString().ToLower()) +
                 ",\"HideContributors\":" + (HideContributors.HasValue && HideContributors.Value).ToString().ToLower() +
@@ -597,14 +627,26 @@ namespace RaaiVan.Modules.FormGenerator
         public int? TotalCount;
         public Guid? ElementID;
         public List<PollAbstractValue> Values;
-        public double? Min;
-        public double? Max;
-        public double? Avg;
-        public double? Var;
-        public double? StDev;
+        public FormStatistics Stats;
 
         public PollAbstract() {
             Values = new List<PollAbstractValue>();
+            Stats = new FormStatistics();
+        }
+
+        public string toJson()
+        {
+            return "{\"DistinctValuesCount\":" + (!TotalCount.HasValue ? 0 : TotalCount.Value).ToString() +
+                ",\"ElementID\":\"" + (!ElementID.HasValue ? string.Empty : ElementID.ToString()) + "\"" +
+                (!Stats.Minimum.HasValue ? string.Empty : ",\"Min\":" + Stats.Minimum.Value.ToString()) +
+                (!Stats.Maximum.HasValue ? string.Empty : ",\"Max\":" + Stats.Maximum.Value.ToString()) +
+                (!Stats.Average.HasValue ? string.Empty : ",\"Avg\":" + Stats.Average.Value.ToString()) +
+                (!Stats.Variance.HasValue ? string.Empty : ",\"Var\":" + Stats.Variance.Value.ToString()) +
+                (!Stats.StandardDeviation.HasValue ? string.Empty : ",\"StDev\":" + Stats.StandardDeviation.Value.ToString()) +
+                ",\"Values\":[" + string.Join(",", Values.Where(u => u.hasValue()).Select(
+                    x => "{\"Value\":" + x.toJSONString() +
+                    ",\"Count\":" + (!x.Count.HasValue ? 0 : x.Count).ToString() + "}")) +
+                "]}";
         }
     }
 
@@ -633,7 +675,7 @@ namespace RaaiVan.Modules.FormGenerator
                 ",\"ActivatedID\":\"" + (!ActivatedID.HasValue ? string.Empty : ActivatedID.ToString()) + "\"" +
                 ",\"ActivatedName\":\"" + Base64.encode(ActivatedName) + "\"" +
                 ",\"ActivationDate\":\"" + (!ActivationDate.HasValue ? string.Empty : ActivationDate.Value.ToString("yyyy-MM-dd")) + "\"" +
-                ",\"ActivationDate_Jalali\":\"" + PublicMethods.get_local_date(ActivationDate) + "\"" +
+                ",\"ActivationDate_Jalali\":\"" + GenericDate.get_local_date(ActivationDate) + "\"" +
                 ",\"Activator\":" + Activator.toJson(applicationId, profileImageUrl: true) +
                 ",\"TemplateElementsCount\":" + (!TemplateElementsCount.HasValue ? 0 : TemplateElementsCount.Value).ToString() +
                 ",\"ElementsCount\":" + (!ElementsCount.HasValue ? 0 : ElementsCount.Value).ToString() +

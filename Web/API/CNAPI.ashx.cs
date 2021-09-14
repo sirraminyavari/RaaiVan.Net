@@ -2769,7 +2769,7 @@ namespace RaaiVan.Web.API
             responseText = !result ? "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}" :
                 "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" +
                 ",\"ExpirationDate\":\"" + (!expirationDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(expirationDate.Value)) + "\"" +
+                    GenericDate.get_local_date(expirationDate.Value)) + "\"" +
                 ",\"Expired\":" + (expirationDate.HasValue && expirationDate.Value < DateTime.Now).ToString().ToLower() +
                 "}";
 
@@ -3528,7 +3528,7 @@ namespace RaaiVan.Web.API
                 !service.IsKnowledge.HasValue || !service.IsKnowledge.Value || !perAreaAdminLevel ? string.Empty :
                 ",\"ExpirationDate\":{\"Editable\":" + (hasModifyPermission || perAreaAdminLevel).ToString().ToLower() +
                 ",\"Value\":\"" + (!node.ExpirationDate.HasValue ? string.Empty :
-                PublicMethods.get_local_date(node.ExpirationDate.Value)) + "\"" +
+                GenericDate.get_local_date(node.ExpirationDate.Value)) + "\"" +
                 ",\"Expired\":" + (node.ExpirationDate.HasValue && node.ExpirationDate < DateTime.Now).ToString().ToLower() +
                 "}";
             string strSearchable = ",\"Searchable\":{\"Editable\":" + (hasModifyPermission || perAreaAdminLevel).ToString().ToLower() +
@@ -3779,9 +3779,9 @@ namespace RaaiVan.Web.API
                 ",\"HasWikiContent\":" + (node.HasWikiContent.HasValue && node.HasWikiContent.Value).ToString().ToLower() +
                 ",\"HasFormContent\":" + (node.HasFormContent.HasValue && node.HasFormContent.Value).ToString().ToLower() +
                 ",\"CreationDate\":\"" + (node.CreationDate.HasValue ?
-                    PublicMethods.get_local_date(node.CreationDate.Value, true) : string.Empty) + "\"" +
+                    GenericDate.get_local_date(node.CreationDate.Value, true) : string.Empty) + "\"" +
                 ",\"PublicationDate\":\"" + (node.PublicationDate.HasValue ?
-                    PublicMethods.get_local_date(node.PublicationDate.Value) : string.Empty) + "\"" +
+                    GenericDate.get_local_date(node.PublicationDate.Value) : string.Empty) + "\"" +
                 ",\"Score\":" + (node.Score.HasValue ? node.Score.Value.ToString() : "0") +
                 ",\"Status\":\"" + (node.Status != Status.NotSet ? node.Status.ToString() : string.Empty) + "\"" +
                 ",\"LikeStatus\":" + (node.LikeStatus.HasValue ? node.LikeStatus : false).ToString().ToLower() +
@@ -4746,7 +4746,7 @@ namespace RaaiVan.Web.API
                             x => "{\"NodeID\":\"" + x.NodeID.Value.ToString() + "\"" +
                                 ",\"Name\":\"" + Base64.encode(x.Name) + "\"" +
                                 ",\"CreationDate\":\"" + (!x.CreationDate.HasValue ? string.Empty :
-                                    PublicMethods.get_local_date(x.CreationDate.Value)) + "\"" +
+                                    GenericDate.get_local_date(x.CreationDate.Value)) + "\"" +
                                 "}")) + "]" +
                     "}").ToList()) +
                 "]" +
@@ -6064,7 +6064,7 @@ namespace RaaiVan.Web.API
                     ",\"Name\":\"" + Base64.encode(u.RelatedName) + "\"" +
                     ",\"NodeType\":\"" + Base64.encode(u.RelatedType) + "\"" +
                     ",\"CreationDate\":\"" + (!u.RelatedCreationDate.HasValue ? string.Empty :
-                        PublicMethods.get_local_date(u.RelatedCreationDate.Value)) + "\"" +
+                        GenericDate.get_local_date(u.RelatedCreationDate.Value)) + "\"" +
                     ",\"ImageURL\":\"" + DocumentUtilities.get_icon_url(paramsContainer.Tenant.Id,
                         u.RelatedID.Value, DefaultIconTypes.Node, u.RelatedTypeID) + "\"" +
                     "}" +
@@ -7838,16 +7838,16 @@ namespace RaaiVan.Web.API
             dic.Add("AdditionalID", node.AdditionalID);
             dic.Add("Creator", node.Creator.FullName);
             dic.Add("CreatorUserName", node.Creator.UserName);
-            dic.Add("CreationDate", (node.CreationDate.HasValue ? 
-                PublicMethods.get_local_date(node.CreationDate.Value, true) : string.Empty));
+            dic.Add("CreationDate", (node.CreationDate.HasValue ?
+                GenericDate.get_local_date(node.CreationDate.Value, true) : string.Empty));
             dic.Add("CurrentUser", currentUser == null ? string.Empty : currentUser.FullName);
             dic.Add("CurrentUserName", currentUser == null ? string.Empty : currentUser.UserName);
-            dic.Add("Now", PublicMethods.get_local_date(DateTime.Now, true));
+            dic.Add("Now", GenericDate.get_local_date(DateTime.Now, true));
 
             if (full)
             {
                 dic.Add("PublicationDate", !node.PublicationDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(node.PublicationDate, false));
+                    GenericDate.get_local_date(node.PublicationDate, false));
 
                 //Contirbutors
                 List<NodeCreator> contributors = CNController.get_node_creators(applicationId, node.NodeID.Value, full: true);
@@ -7897,7 +7897,7 @@ namespace RaaiVan.Web.API
                     {
                         dic.Add("ConfirmedBy", dashUser.FullName);
                         dic.Add("ConfirmedByUserName", dashUser.UserName);
-                        dic.Add("ConfirmDate", PublicMethods.get_local_date(dashboard.ActionDate.Value));
+                        dic.Add("ConfirmDate", GenericDate.get_local_date(dashboard.ActionDate.Value));
                     }
                 }
                 //end of ConfirmedBy
@@ -8025,7 +8025,7 @@ namespace RaaiVan.Web.API
 
                 List<string> nameParts = new List<string>() { nt.Name };
                 if (!string.IsNullOrEmpty(fullName)) nameParts.Add(fullName);
-                nameParts.Add(PublicMethods.get_local_date(DateTime.Now, true));
+                nameParts.Add(GenericDate.get_local_date(DateTime.Now, true));
 
                 nodeObject.Name = name = string.Join(" - ", nameParts);
             }

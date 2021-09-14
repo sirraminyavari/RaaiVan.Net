@@ -1035,7 +1035,7 @@ namespace RaaiVan.Web.API
 
             DateTime now = DateTime.Now;
             string gDate = now.Month.ToString() + "/" + now.Day.ToString() + "/" + now.Year.ToString();
-            string pDate = PublicMethods.get_local_date(now);
+            string pDate = GenericDate.get_local_date(now);
 
             dic.Add("Password", newUser.Password);
             dic.Add("UserName", newUser.UserName);
@@ -1123,7 +1123,7 @@ namespace RaaiVan.Web.API
 
             DateTime now = DateTime.Now;
             string gDate = now.Month.ToString() + "/" + now.Day.ToString() + "/" + now.Year.ToString();
-            string pDate = PublicMethods.get_local_date(now);
+            string pDate = GenericDate.get_local_date(now);
             
             dic.Add("SenderUserName", currentUser.UserName);
             dic.Add("SenderFirstName", currentUser.FirstName);
@@ -1171,7 +1171,7 @@ namespace RaaiVan.Web.API
 
             DateTime now = DateTime.Now;
             string gDate = now.Month.ToString() + "/" + now.Day.ToString() + "/" + now.Year.ToString();
-            string pDate = PublicMethods.get_local_date(now);
+            string pDate = GenericDate.get_local_date(now);
 
             Dictionary<string, string> dic = new Dictionary<string, string>();
 
@@ -1267,7 +1267,7 @@ namespace RaaiVan.Web.API
                     ",\"Email\":\"" + Base64.encode(i.Email) + "\"" +
                     ",\"ReceiverImageURL\":\"" + (!i.ReceiverUser.UserID.HasValue ? string.Empty :
                         DocumentUtilities.get_personal_image_address(applicationId, i.ReceiverUser.UserID.Value)) + "\"" +
-                    ",\"SendDate\":\"" + PublicMethods.get_local_date(i.SendDate.Value, true) + "\"" +
+                    ",\"SendDate\":\"" + GenericDate.get_local_date(i.SendDate.Value, true) + "\"" +
                     ",\"Activated\":" + (i.Activated.HasValue && i.Activated.Value).ToString().ToLower() +
                     "}";
                 isFirst = false;
@@ -1846,7 +1846,7 @@ namespace RaaiVan.Web.API
 
             responseText = !result ? "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}" :
                 "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\",\"Now\":\"" +
-                PublicMethods.get_local_date(DateTime.Now, true) + "\"}";
+                GenericDate.get_local_date(DateTime.Now, true) + "\"}";
         }
 
         private void get_friend_suggestions(int? count, long? lowerBoundary, List<Guid> nodeTypeIds, ref string responseText)
@@ -1976,7 +1976,7 @@ namespace RaaiVan.Web.API
                     ",\"ImageURL\":\"" + DocumentUtilities.get_personal_image_address(paramsContainer.Tenant.Id,
                         _friend.User.UserID.Value) + "\"" +
                     ",\"MutualFriendsCount\":" + (_friend.MutualFriendsCount.HasValue ? _friend.MutualFriendsCount : 0).ToString() +
-                    ",\"RequestDate\":\"" + PublicMethods.get_local_date(_friend.RequestDate) + "\"" +
+                    ",\"RequestDate\":\"" + GenericDate.get_local_date(_friend.RequestDate) + "\"" +
                     "}";
             }
 
@@ -2133,7 +2133,7 @@ namespace RaaiVan.Web.API
                 if (item.ContainsKey("Date"))
                 {
                     DateTime dt = (DateTime)item["Date"];
-                    item["Date"] = PublicMethods.get_local_date(dt);
+                    item["Date"] = GenericDate.get_local_date(dt);
                     item["Date_Gregorian"] = dt.ToString();
                 }
 
@@ -3058,9 +3058,9 @@ namespace RaaiVan.Web.API
                     "\"UserID\":" + "\"" + je.UserID + "\"," +
                     "\"Title\":" + "\"" + Base64.encode(je.Title) + "\"," +
                     "\"Employer\":" + "\"" + Base64.encode(je.Employer) + "\"," +
-                    "\"JStartDate\":" + "\"" + (je.StartDate.HasValue ? PublicMethods.get_local_date(je.StartDate.Value, false) : string.Empty) + "\"," +
+                    "\"JStartDate\":" + "\"" + (je.StartDate.HasValue ? GenericDate.get_local_date(je.StartDate.Value, false) : string.Empty) + "\"," +
                     "\"GStartDate\":" + "\"" + (je.StartDate.HasValue ? je.StartDate.Value.ToString() : string.Empty) + "\"," +
-                    "\"JEndDate\":" + "\"" + (je.EndDate.HasValue ? PublicMethods.get_local_date(je.EndDate.Value, false) : string.Empty) + "\"," +
+                    "\"JEndDate\":" + "\"" + (je.EndDate.HasValue ? GenericDate.get_local_date(je.EndDate.Value, false) : string.Empty) + "\"," +
                     "\"GEndDate\":" + "\"" + (je.EndDate.HasValue ? je.EndDate.Value.ToString() : string.Empty) + "\"" +
                 "}";
             }
@@ -3089,9 +3089,9 @@ namespace RaaiVan.Web.API
                     "\"School\":" + "\"" + Base64.encode(ee.School) + "\"," +
                     "\"StudyField\":" + "\"" + Base64.encode(ee.StudyField) + "\"," +
                     "\"Level\": \"" + ee.Level + "\"," +
-                    "\"JStartDate\": \"" + (ee.StartDate.HasValue ? PublicMethods.get_local_date(ee.StartDate.Value, false) : "") + "\"," +
+                    "\"JStartDate\": \"" + (ee.StartDate.HasValue ? GenericDate.get_local_date(ee.StartDate.Value, false) : "") + "\"," +
                     "\"GStartDate\":" + "\"" + (ee.StartDate.HasValue ? ee.StartDate.Value.ToString() : "") + "\"," +
-                    "\"JEndDate\": \"" + (ee.EndDate.HasValue ? PublicMethods.get_local_date(ee.EndDate.Value, false) : string.Empty) + "\"," +
+                    "\"JEndDate\": \"" + (ee.EndDate.HasValue ? GenericDate.get_local_date(ee.EndDate.Value, false) : string.Empty) + "\"," +
                     "\"GEndDate\":" + "\"" + (ee.EndDate.HasValue ? ee.EndDate.Value.ToString() : string.Empty) + "\"," +
                     "\"GraduateDegree\":" + "\"" + ee.GraduateDegree + "\"," +
                     "\"IsSchool\":" + ee.IsSchool.ToString().ToLower() +
@@ -3113,7 +3113,7 @@ namespace RaaiVan.Web.API
                     "\"Title\":" + "\"" + Base64.encode(hnr.Title) + "\"," +
                     "\"Issuer\":" + "\"" + Base64.encode(hnr.Issuer) + "\"," +
                     "\"Occupation\":" + "\"" + Base64.encode(hnr.Occupation) + "\"," +
-                    "\"JIssueDate\":" + "\"" + (hnr.IssueDate.HasValue ? PublicMethods.get_local_date(hnr.IssueDate.Value, false) : "") + "\"," +
+                    "\"JIssueDate\":" + "\"" + (hnr.IssueDate.HasValue ? GenericDate.get_local_date(hnr.IssueDate.Value, false) : "") + "\"," +
                     "\"GIssueDate\":" + "\"" + (hnr.IssueDate.HasValue ? hnr.IssueDate.Value.ToString() : "") + "\"," +
                     "\"Description\":" + "\"" + Base64.encode(hnr.Description) + "\"" +
                 "}";

@@ -374,7 +374,7 @@ namespace RaaiVan.Web.API
                     if (item.ContainsKey("Date"))
                     {
                         DateTime dt = (DateTime)item["Date"];
-                        item["Date"] = PublicMethods.get_local_date(dt);
+                        item["Date"] = GenericDate.get_local_date(dt);
                         item["Date_Gregorian"] = dt.ToString();
                     }
 

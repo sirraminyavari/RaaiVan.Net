@@ -377,16 +377,16 @@ namespace RaaiVan.Web.API
                         dash.Removable.HasValue && dash.Removable.Value).ToString().ToLower() +
                     ",\"SenderUserID\":\"" + (dash.SenderUserID.HasValue ? dash.SenderUserID.ToString() : string.Empty) + "\"" +
                     ",\"SendDate\":\"" + (dash.SendDate.HasValue ?
-                        PublicMethods.get_local_date(dash.SendDate.Value, true) : string.Empty) + "\"" +
+                        GenericDate.get_local_date(dash.SendDate.Value, true) : string.Empty) + "\"" +
                     ",\"ExpirationDate\":\"" + (dash.ExpirationDate.HasValue ?
-                        PublicMethods.get_local_date(dash.ExpirationDate.Value, true) : string.Empty) + "\"" +
+                        GenericDate.get_local_date(dash.ExpirationDate.Value, true) : string.Empty) + "\"" +
                     ",\"Seen\":" + ((dash.Done.HasValue && dash.Done.Value) ||
                         (dash.Seen.HasValue && dash.Seen.Value)).ToString().ToLower() +
                     ",\"ViewDate\":\"" + (dash.ViewDate.HasValue ?
-                        PublicMethods.get_local_date(dash.ViewDate.Value, true) : string.Empty) + "\"" +
+                        GenericDate.get_local_date(dash.ViewDate.Value, true) : string.Empty) + "\"" +
                     ",\"Done\":" + (dash.Done.HasValue ? dash.Done : false).ToString().ToLower() +
                     ",\"ActionDate\":\"" + (dash.ActionDate.HasValue ?
-                        PublicMethods.get_local_date(dash.ActionDate.Value, true) : string.Empty) + "\"" +
+                        GenericDate.get_local_date(dash.ActionDate.Value, true) : string.Empty) + "\"" +
                     "}";
         }
 

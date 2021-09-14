@@ -296,6 +296,7 @@
         "GroupRegistration": "ثبت گروهی",
         "Groups": "گروه ها",
         "GroupsThatYouAreMemberIn": "گروه هایی که شما در آنها عضو هستید",
+        "GroupType": "نوع گروه",
         "Help": "راهنما",
         "Hidden": "پنهان",
         "HideDetails": "پنهان کردن جزییات",
@@ -1872,8 +1873,12 @@
                 },
                 "ActiveUsersReport": {
                     "_Title": "کاربران فعال",
+                    "_Description": "کاربرانی که در بازه زمانی مشخص حداقل یک بار به سامانه وارد شده اند",
                     "UserName": "نام کاربری",
-                    "FullName": "نام و نام خانوادگی"
+                    "FullName": "نام و نام خانوادگی",
+                    "BarChart": {
+                        "TotalCount": "تعداد"
+                    }
                 },
                 "MostVisitedItemsReport": {
                     "_Title": "پربازدیدترین صفحات",

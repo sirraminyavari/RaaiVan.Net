@@ -146,18 +146,8 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static bool add_emails_to_queue(Guid applicationId, List<EmailQueueItem> items)
         {
-            if (items == null) items = new List<EmailQueueItem>();
-
-            DBCompositeType<EmailQueueItemTableType> itemsParam = new DBCompositeType<EmailQueueItemTableType>()
-                .add(items.Select(itm => new EmailQueueItemTableType(
-                    id: itm.ID,
-                    senderUserId: itm.SenderUserID,
-                    action: itm.Action.ToString(),
-                    email: itm.Email,
-                    title: itm.Title,
-                    emailBody: itm.EmailBody)).ToList());
-
-            return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddEmailsToQueue"), applicationId, itemsParam);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddEmailsToQueue"), 
+                applicationId, EmailQueueItemTableType.getCompositeType(items));
         }
 
         public static List<EmailQueueItem> get_email_queue_items(Guid applicationId, int? count = 100)
@@ -168,25 +158,17 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static bool archive_email_queue_items(Guid applicationId, List<long> itemIds)
         {
-            if (itemIds.Count == 0) return true;
-
-            DBCompositeType<BigIntTableType> idsParam = new DBCompositeType<BigIntTableType>()
-                .add(itemIds.Select(id => new BigIntTableType(id)).ToList());
-
+            if (itemIds == null || itemIds.Count == 0) return true;
+            
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("ArchiveEmailQueueItems"), 
-                applicationId, idsParam, DateTime.Now);
+                applicationId, BigIntTableType.getCompositeType(itemIds), DateTime.Now);
         }
 
         public static List<KeyValuePair<string, Guid>> get_guids(Guid applicationId,
             List<string> ids, string type, bool? exist, bool? createIfNotExist)
         {
-            if (ids == null) ids = new List<string>();
-
-            DBCompositeType<StringTableType> idsParam = new DBCompositeType<StringTableType>()
-                .add(ids.Select(id => new StringTableType(id)).ToList());
-
             return RVParsers.guids(DBConnector.read(applicationId, GetFullyQualifiedName("GetGuids"),
-                applicationId, idsParam, type, exist, createIfNotExist));
+                applicationId, StringTableType.getCompositeType(ids), type, exist, createIfNotExist));
         }
 
         public static List<DeletedState> get_deleted_states(Guid applicationId, int? count, long? lowerBoundary)
@@ -198,16 +180,9 @@ namespace RaaiVan.Modules.GlobalUtilities
         public static bool save_tagged_items(Guid applicationId, List<TaggedItem> items, bool? removeOldTags, Guid currentUserId)
         {
             if (items == null || items.Count == 0 || currentUserId == Guid.Empty) return false;
-
-            DBCompositeType<TaggedItemTableType> itemsParam = new DBCompositeType<TaggedItemTableType>()
-                .add(items.Select(itm => new TaggedItemTableType(
-                    contextId: itm.ContextID,
-                    taggedId: itm.TaggedID,
-                    contextType: itm.ContextType.ToString(),
-                    taggedType: itm.TaggedType.ToString())).ToList());
-
+            
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SaveTaggedItems"),
-                applicationId, itemsParam, removeOldTags, currentUserId);
+                applicationId, TaggedItemTableType.getCompositeType(items), removeOldTags, currentUserId);
         }
 
         protected static void _save_tagged_items(object info)
@@ -233,13 +208,11 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static List<TaggedItem> get_tagged_items(Guid applicationId, Guid contextId, List<TaggedType> taggedTypes)
         {
-            if (taggedTypes == null) taggedTypes = new List<TaggedType>();
-
-            DBCompositeType<StringTableType> taggedParams = new DBCompositeType<StringTableType>()
-                .add(taggedTypes.Where(t => t != TaggedType.None).Select(t => new StringTableType(t.ToString())).ToList());
+            List<string> strTagged = taggedTypes == null ? new List<string>() :
+                taggedTypes.Where(t => t != TaggedType.None).Select(t => t.ToString()).ToList();
 
             return RVParsers.tagged_items(DBConnector.read(applicationId, GetFullyQualifiedName("GetTaggedItems"),
-                applicationId, contextId, taggedParams));
+                applicationId, contextId, StringTableType.getCompositeType(strTagged)));
         }
 
         public static List<TaggedItem> get_tagged_items(Guid applicationId, Guid contextId, TaggedType taggedType)

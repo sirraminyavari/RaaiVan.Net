@@ -66,5 +66,20 @@ namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
         {
             return list.ToArray();
         }
+
+        public static DBCompositeType<DocFileInfoTableType> getCompositeType(List<DocFileInfo> lst)
+        {
+            if (lst == null) lst = new List<DocFileInfo>();
+
+            return new DBCompositeType<DocFileInfoTableType>()
+                .add(lst.Select(a => new DocFileInfoTableType(
+                    fileId: a.FileID,
+                    fileName: a.FileName,
+                    extension: a.Extension,
+                    mime: a.MIME(),
+                    size: a.Size,
+                    ownerId: a.OwnerID,
+                    ownerType: a.OwnerType.ToString())).ToList());
+        }
     }
 }

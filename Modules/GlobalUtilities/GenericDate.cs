@@ -22,7 +22,6 @@ namespace RaaiVan.Modules.GlobalUtilities
         private int? _Hour;
         private int? _Minute;
 
-
         public CalendarType Type { get; }
 
         public int Year
@@ -160,6 +159,12 @@ namespace RaaiVan.Modules.GlobalUtilities
             int year = PCalendar.GetYear(date);
 
             return new GenericDate(CalendarType.Jalali, year, month, day, date.Hour, date.Minute);
+        }
+
+        public static string get_local_date(DateTime? date, bool detail = false, bool reverse = false)
+        {
+            return !date.HasValue ? string.Empty : 
+                fromDateTime(date.Value, PublicMethods.get_current_language()).toString(detail: detail, reverse: reverse, delimiter: '/');
         }
     }
 }

@@ -461,7 +461,7 @@ namespace RaaiVan.Web.API
             string nodeName = "'" + node.Name + "'";
             string additionalId = "'" + node.AdditionalID + "'";
             string creator = "'" + node.Creator.FirstName + " " + node.Creator.LastName + " - " + node.Creator.UserName + "'";
-            string creationDate = "'" + (node.CreationDate.HasValue ? PublicMethods.get_local_date(node.CreationDate.Value, true) : "___") + "'";
+            string creationDate = "'" + (node.CreationDate.HasValue ? GenericDate.get_local_date(node.CreationDate.Value, true) : "___") + "'";
 
             if (string.IsNullOrEmpty(comment)) comment = string.Empty;
 
@@ -471,7 +471,7 @@ namespace RaaiVan.Web.API
             dic.Add("Creator", creator);
             dic.Add("CreationDate", creationDate);
             dic.Add("CurrentUser", _user == null ? string.Empty : _user.FirstName + " " + _user.LastName + " - " + _user.UserName);
-            dic.Add("Now", PublicMethods.get_local_date(DateTime.Now, true));
+            dic.Add("Now", GenericDate.get_local_date(DateTime.Now, true));
 
             return dic;
         }
@@ -1915,7 +1915,7 @@ namespace RaaiVan.Web.API
             responseText = "{\"InstanceID\":\"" + instance.InstanceID.Value.ToString() +
                 "\",\"Filled\":" + (instance.Filled.HasValue ? instance.Filled.Value : false).ToString().ToLower() +
                 ",\"FillingDate\":\"" + (instance.FillingDate.HasValue ?
-                    PublicMethods.get_local_date(instance.FillingDate.Value, true) : string.Empty) +
+                    GenericDate.get_local_date(instance.FillingDate.Value, true) : string.Empty) +
                 "\",\"AttachmentID\":\"" + (!instance.AttachmentID.HasValue ? string.Empty : instance.AttachmentID.Value.ToString()) +
                 "\",\"Necessary\":" + (!dataNeed.Necessary.HasValue ? "false" : dataNeed.Necessary.Value.ToString().ToLower()) +
                 ",\"NodeID\":\"" + owner.NodeID.Value.ToString() + "\",\"NodeName\":\"" + nodeName +
@@ -1924,7 +1924,7 @@ namespace RaaiVan.Web.API
                 "\",\"InstanceID\":\"" + (form.InstanceID.HasValue ? form.InstanceID.ToString() : string.Empty) +
                 "\",\"Title\":\"" + formTitle +
                 "\",\"Filled\":" + (form.Filled.HasValue ? form.Filled.Value : false).ToString().ToLower() +
-                ",\"FillingDate\":\"" + (form.FillingDate.HasValue ? PublicMethods.get_local_date(form.FillingDate.Value, true) : string.Empty) +
+                ",\"FillingDate\":\"" + (form.FillingDate.HasValue ? GenericDate.get_local_date(form.FillingDate.Value, true) : string.Empty) +
                 "\"},\"PreAttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, preAttachedFiles) +
                 ",\"Attachments\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, attachments) + "}";
         }
@@ -2679,7 +2679,7 @@ namespace RaaiVan.Web.API
                     "\",\"Title\":\"" + title + "\",\"FormID\":\"" + (frm.FormID.HasValue ? frm.FormID.Value.ToString() : string.Empty) +
                     "\",\"Filled\":" + (frm.Filled.HasValue ? frm.Filled.Value : false).ToString().ToLower() +
                     ",\"FillingDate\":\"" + (frm.FillingDate.HasValue ?
-                        PublicMethods.get_local_date(frm.FillingDate.Value, true) : string.Empty) +
+                        GenericDate.get_local_date(frm.FillingDate.Value, true) : string.Empty) +
                         "\",\"Creator\":{\"UserID\":\"" + (frm.Creator.UserID.HasValue ? frm.Creator.UserID.Value.ToString() : string.Empty) +
                     "\",\"FullName\":\"" + creatorFullName +
                     "\",\"ProfileImageURL\":\"" + (frm.Creator.UserID.HasValue ?
@@ -2712,7 +2712,7 @@ namespace RaaiVan.Web.API
                 ",\"StateTitle\":\"" + stateTitle + "\"" +
                 ",\"Description\":\"" + description + "\"" +
                 ",\"SendDate\":\"" + (history.SendDate.HasValue ?
-                    PublicMethods.get_local_date(history.SendDate.Value, true) : string.Empty) + "\"" +
+                    GenericDate.get_local_date(history.SendDate.Value, true) : string.Empty) + "\"" +
                 ",\"PollID\":\"" + (history.PollID.HasValue ? history.PollID.ToString() : string.Empty) + "\"" +
                 ",\"PollName\":\"" + (history.PollID.HasValue ? Base64.encode(history.PollName) : string.Empty) + "\"" +
                 (!history.PollID.HasValue ? string.Empty : ",\"PollID\":\"" + history.PollID.ToString() + "\"") +
@@ -2832,7 +2832,7 @@ namespace RaaiVan.Web.API
                 "\",\"NodeName\":\"" + nodeName +
                 "\",\"Filled\":" + (instance.Filled.HasValue ? instance.Filled.Value : false).ToString().ToLower() +
                 ",\"FillingDate\":\"" + (instance.FillingDate.HasValue ?
-                    PublicMethods.get_local_date(instance.FillingDate.Value) : string.Empty) +
+                    GenericDate.get_local_date(instance.FillingDate.Value) : string.Empty) +
                     "\",\"PreAttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, instance.PreAttachedFiles) + "}";
         }
 

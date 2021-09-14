@@ -172,12 +172,12 @@ namespace RaaiVan.Modules.QA
                 ) +
                 (!Sender.UserID.HasValue ? string.Empty : ",\"Sender\":" + Sender.toJson(applicationId, true)) +
                 (!SendDate.HasValue ? string.Empty :
-                    ",\"SendDate\":\"" + PublicMethods.get_local_date(SendDate.Value, true) + "\"" +
+                    ",\"SendDate\":\"" + GenericDate.get_local_date(SendDate.Value, true) + "\"" +
                     ",\"SendDate_Gregorian\":\"" + SendDate.Value.ToString() + "\""
                 ) +
                 (Status == QuestionStatus.None ? string.Empty : ",\"Status\":\"" + Status + "\"") +
                 (!PublicationDate.HasValue ? string.Empty :
-                    ",\"PublicationDate\":\"" + PublicMethods.get_local_date(PublicationDate.Value, true) + "\"" +
+                    ",\"PublicationDate\":\"" + GenericDate.get_local_date(PublicationDate.Value, true) + "\"" +
                     ",\"PublicationDate_Gregorian\":\"" + PublicationDate.Value.ToString() + "\""
                 ) +
                 (!RelatedNodesCount.HasValue ? string.Empty :
@@ -247,7 +247,7 @@ namespace RaaiVan.Modules.QA
                 ",\"BodyText\":\"" + Base64.encode(AnswerBody) + "\"" +
                 (!Sender.UserID.HasValue ? string.Empty : ",\"Sender\":" + Sender.toJson(applicationId, true)) +
                 (!SendDate.HasValue ? string.Empty :
-                    ",\"SendDate\":\"" + PublicMethods.get_local_date(SendDate.Value, true) + "\"" +
+                    ",\"SendDate\":\"" + GenericDate.get_local_date(SendDate.Value, true) + "\"" +
                     ",\"SendDate_Gregorian\":\"" + SendDate.Value.ToString() + "\""
                 ) +
                 (!LikesCount.HasValue ? string.Empty :
@@ -293,7 +293,7 @@ namespace RaaiVan.Modules.QA
                     ",\"LikeStatus\":" + LikeStatus.Value.ToString().ToLower()
                 ) +
                 (!SendDate.HasValue ? string.Empty :
-                    ",\"SendDate\":\"" + PublicMethods.get_local_date(SendDate.Value, true) + "\"" +
+                    ",\"SendDate\":\"" + GenericDate.get_local_date(SendDate.Value, true) + "\"" +
                     ",\"SendDate_Gregorian\":\"" + SendDate.Value.ToString() + "\""
                 ) +
                 ",\"Editable\":" + (isAdmin || (Sender.UserID == currentUserId)).ToString().ToLower() +

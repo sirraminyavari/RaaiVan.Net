@@ -895,7 +895,7 @@ namespace RaaiVan.Web.API
                 ",\"Removable\":" + (removable.HasValue ? removable.Value : false).ToString().ToLower() +
                 ",\"Editable\":" + (editable.HasValue ? editable.Value : false).ToString().ToLower() +
                 ",\"LikeStatus\":" + (likeStatus.HasValue ? likeStatus.Value : false).ToString().ToLower() +
-                ",\"CreationDate\":\"" + PublicMethods.get_local_date(_dc.CreationDate.Value) + "\"" +
+                ",\"CreationDate\":\"" + GenericDate.get_local_date(_dc.CreationDate.Value) + "\"" +
                 ",\"Creator\":" + strCreator + "}";
         }
 

@@ -142,21 +142,8 @@ namespace RaaiVan.Modules.Documents
         public static bool add_files(Guid applicationId, 
             Guid ownerId, FileOwnerTypes ownerType, List<DocFileInfo> attachments, Guid currentUserId)
         {
-            if (attachments == null) attachments = new List<DocFileInfo>();
-
-            DBCompositeType<DocFileInfoTableType> filesParam = new DBCompositeType<DocFileInfoTableType>()
-                .add(attachments.Select(a => new DocFileInfoTableType(
-                    fileId: a.FileID,
-                    fileName: a.FileName,
-                    extension: a.Extension,
-                    mime: a.MIME(),
-                    size: a.Size,
-                    ownerId: a.OwnerID,
-                    ownerType: a.OwnerType.ToString()
-                    )).ToList());
-
-            return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddFiles"),
-                applicationId, ownerId, ownerType.ToString(), filesParam, currentUserId, DateTime.Now);
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("AddFiles"), applicationId, ownerId, 
+                ownerType.ToString(), DocFileInfoTableType.getCompositeType(attachments), currentUserId, DateTime.Now);
         }
 
         public static bool add_file(Guid applicationId, Guid ownerId, 

@@ -546,20 +546,12 @@ namespace RaaiVan.Modules.WorkFlow
         public static bool send_to_next_state(Guid applicationId,
             History info, bool reject, ref string errorMessage, ref List<Dashboard> dashboards)
         {
-            DBCompositeType<DocFileInfoTableType> filesParam = new DBCompositeType<DocFileInfoTableType>()
-                .add(info.AttachedFiles.Select(f => new DocFileInfoTableType(
-                    fileId: f.FileID,
-                    fileName: f.FileName,
-                    extension: f.Extension,
-                    mime: f.MIME(),
-                    size: f.Size,
-                    ownerId: f.OwnerID,
-                    ownerType: f.OwnerType.ToString())).ToList());
+            if (info == null) info = new History();
 
             return DBConnector.get_dashboards(applicationId, ref errorMessage, ref dashboards,
-                GetFullyQualifiedName("SendToNextState"),
-                applicationId, info.HistoryID, info.State.StateID, info.DirectorNode.NodeID,
-                info.DirectorUserID, info.Description, reject, info.Sender.UserID, DateTime.Now, filesParam) > 0;
+                GetFullyQualifiedName("SendToNextState"), applicationId, info.HistoryID, info.State.StateID, 
+                info.DirectorNode.NodeID, info.DirectorUserID, info.Description, reject, info.Sender.UserID, 
+                DateTime.Now, DocFileInfoTableType.getCompositeType(info.AttachedFiles)) > 0;
         }
         
         public static bool terminate_workFlow(Guid applicationId, 

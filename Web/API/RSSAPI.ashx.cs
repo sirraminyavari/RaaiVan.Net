@@ -193,7 +193,7 @@ namespace RaaiVan.Web.API
                         Name = u.Value.Title,
                         CreationDate = u.Value.PublicationDate.HasValue ? u.Value.PublicationDate : DateTime.Now,
                         Description = (!u.Value.PublicationDate.HasValue ? string.Empty :
-                            "<div style='text-align:center; margin-bottom:20px;'>" + PublicMethods.get_local_date(u.Value.PublicationDate.Value, true) + "</div>") +
+                            "<div style='text-align:center; margin-bottom:20px;'>" + GenericDate.get_local_date(u.Value.PublicationDate.Value, true) + "</div>") +
                             (string.IsNullOrEmpty(u.Value.Description) ? u.Value.Summary : u.Value.Description) +
                             (string.IsNullOrEmpty(u.Value.Link) ? string.Empty : "<div style='margin-top:12px;'><span style='margin:0px 4px 0px 4px;'>@[[Dic:Dic:" + Base64.encode("Source") + "]]:</span><a href='" + u.Value.Link + "'>" + u.Value.Link + "</a></div>")
                     }).ToList();
@@ -210,7 +210,7 @@ namespace RaaiVan.Web.API
                         Base64.encode(u.Description.Substring(0, Math.Min(u.Description.Length, 300)))) + "\"" +
                     ",\"Link\":\"" + Base64.encode(u.Link) + "\"" +
                     ",\"PublicationDate\":\"" + (u.PublicationDate.HasValue ?
-                        PublicMethods.get_local_date(u.PublicationDate.Value, true) : string.Empty) + "\"" +
+                        GenericDate.get_local_date(u.PublicationDate.Value, true) : string.Empty) + "\"" +
                     "}").ToList()) +
                 "]}";
         }

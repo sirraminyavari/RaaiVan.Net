@@ -49,7 +49,7 @@
             that.Objects.CreatorNodeTypeSelect = GlobalUtilities.append_autosuggest(elems["creatorNodeTypeSelect"], {
                 InputClass: "rv-input",
                 InputStyle: "width:50%; font-size:0.7rem;",
-                InnerTitle: RVDic.OwnerNodeTypeSelect + "...",
+                InnerTitle: RVDic.SelectN.replace("[n]", RVDic.GroupType) + "...",
                 AjaxDataSource: CNAPI.GetNodeTypesDataSource(),
                 ResponseParser: function (responseText) {
                     var nodeTypes = JSON.parse(responseText).NodeTypes || [];

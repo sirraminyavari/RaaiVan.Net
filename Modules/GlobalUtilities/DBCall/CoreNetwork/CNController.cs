@@ -475,14 +475,10 @@ namespace RaaiVan.Modules.CoreNetwork
             //prepare
             if (!nodeTypeId.HasValue && !nodeType.HasValue && string.IsNullOrEmpty(nodeTypeAdditionalId)) return new List<Guid>();
             if (nodeType.HasValue) nodeTypeAdditionalId = CNUtilities.get_node_type_additional_id(nodeType.Value).ToString();
-            if (nodeAdditionalIds == null) nodeAdditionalIds = new List<string>();
             //end of prepare
 
-            DBCompositeType<StringTableType> addIds = new DBCompositeType<StringTableType>()
-                .add(nodeAdditionalIds.Select(id => new StringTableType(id)).ToList());
-
             return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetNodeIDs"),
-                applicationId, addIds, nodeTypeId, nodeTypeAdditionalId);
+                applicationId, StringTableType.getCompositeType(nodeAdditionalIds), nodeTypeId, nodeTypeAdditionalId);
         }
 
         public static List<Guid> get_node_ids(Guid applicationId, List<string> nodeAdditionalIds, Guid nodeTypeId)

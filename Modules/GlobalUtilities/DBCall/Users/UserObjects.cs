@@ -390,7 +390,7 @@ namespace RaaiVan.Modules.Users
                 ",\"UserName\":\"" + Base64.encode(UserName) + "\"" +
                 ",\"FirstName\":\"" + Base64.encode(FirstName) + "\"" +
                 ",\"LastName\":\"" + Base64.encode(LastName) + "\"" +
-                (Birthday.HasValue ? ",\"Birthday\":\"" + PublicMethods.get_local_date(Birthday.Value) + "\"" : string.Empty) +
+                (Birthday.HasValue ? ",\"Birthday\":\"" + GenericDate.get_local_date(Birthday.Value) + "\"" : string.Empty) +
                 (EmploymentType == EmploymentType.NotSet ? string.Empty :
                     ",\"EmploymentType\":\"" + EmploymentType.ToString() + "\"") +
                 (!EnableNewsLetter.HasValue || !EnableNewsLetter.Value ? string.Empty :

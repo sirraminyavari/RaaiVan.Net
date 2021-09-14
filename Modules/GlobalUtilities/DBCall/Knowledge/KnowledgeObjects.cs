@@ -259,7 +259,7 @@ namespace RaaiVan.Modules.Knowledge
             return "{\"User\":" + Evaluator.toJson(applicationId, true) +
                 (!Score.HasValue ? string.Empty : ",\"Score\":" + Score.ToString()) +
                 (!EvaluationDate.HasValue ? string.Empty :
-                    ",\"EvaluationDate\":\"" + PublicMethods.get_local_date(EvaluationDate.Value, true) + "\"") +
+                    ",\"EvaluationDate\":\"" + GenericDate.get_local_date(EvaluationDate.Value, true) + "\"") +
                 ",\"Removable\":" + (Removable.HasValue && Removable.Value).ToString().ToLower() +
                 (!WFVersionID.HasValue ? string.Empty : ",\"WFVersionID\":" + WFVersionID.Value.ToString()) +
                 "}";
@@ -299,7 +299,7 @@ namespace RaaiVan.Modules.Knowledge
                 ",\"TextOptions\":[" + string.Join(",", TextOptions.Select(u => "\"" + Base64.encode(u) + "\"")) + "]" +
                 ",\"Description\":\"" + Base64.encode(Description) + "\"" +
                 ",\"ActionDate\":\"" + (!ActionDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(ActionDate.Value, true)) + "\"" +
+                    GenericDate.get_local_date(ActionDate.Value, true)) + "\"" +
                 ",\"Actor\":" + Actor.toJson(applicationId, true) +
                 ",\"Deputy\":" + (!Deputy.UserID.HasValue ? "null" : Deputy.toJson(applicationId, true)) +
                 (!ReplyToHistoryID.HasValue ? string.Empty :

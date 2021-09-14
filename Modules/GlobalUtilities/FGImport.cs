@@ -606,7 +606,7 @@ namespace RaaiVan.Modules.FormGenerator
                         if (dateValue.HasValue)
                         {
                             retElement.DateValue = dateValue;
-                            retElement.TextValue = PublicMethods.get_local_date(dateValue);
+                            retElement.TextValue = GenericDate.get_local_date(dateValue);
                             return retElement;
                         }
                         else

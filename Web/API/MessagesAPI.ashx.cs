@@ -197,7 +197,7 @@ namespace RaaiVan.Web.API
                     ",\"Seen\":" + (msg.Seen.HasValue && msg.Seen.Value).ToString().ToLower() +
                     ",\"Title\":\"" + Base64.encode(msg.Title) + "\"" +
                     ",\"MessageText\":\"" + Base64.encode(msg.MessageText) + "\"" +
-                    ",\"SendDate\":\"" + PublicMethods.get_local_date(msg.SendDate.Value, true) + "\"" +
+                    ",\"SendDate\":\"" + GenericDate.get_local_date(msg.SendDate.Value, true) + "\"" +
                     ",\"ForwardedFrom\":\"" + (msg.ForwardedFrom.HasValue ? msg.ForwardedFrom.Value.ToString() : "") + "\"" +
                     ",\"SenderUserID\":\"" + msg.SenderUserID.ToString() + "\"" +
                     ",\"SenderUserName\":\"" + Base64.encode(msg.SenderUserName) + "\"" +
@@ -257,7 +257,7 @@ namespace RaaiVan.Web.API
                         paramsContainer.Tenant.Id, msg.SenderUserID.Value) + "\"" +
                     ",\"Title\":\"" + Base64.encode(msg.Title) + "\"" +
                     ",\"MessageText\":\"" + Base64.encode(msg.MessageText) + "\"" +
-                    ",\"SendDate\":\"" + PublicMethods.get_local_date(msg.SendDate.Value, true) + "\"" +
+                    ",\"SendDate\":\"" + GenericDate.get_local_date(msg.SendDate.Value, true) + "\"" +
                     ",\"ForwardedFrom\":\"" + (msg.ForwardedFrom.HasValue ? msg.ForwardedFrom.Value.ToString() : "") + "\"" +
                     ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, attachments.Where(u => u.OwnerID == msg.MessageID).ToList(), true) +
                     ",\"Level\":" + msg.Level.ToString().ToLower() +
@@ -375,7 +375,7 @@ namespace RaaiVan.Web.API
                         ",\"Seen\":" + true.ToString().ToLower() +
                         ",\"Title\":\"" + string.Empty + "\"" +
                         ",\"MessageText\":\"" + Base64.encode(messageText) + "\"" +
-                        ",\"SendDate\":\"" + PublicMethods.get_local_date(DateTime.Now, true) + "\"" +
+                        ",\"SendDate\":\"" + GenericDate.get_local_date(DateTime.Now, true) + "\"" +
                         ",\"SenderUserID\":\"" + senderUser.UserID.ToString() + "\"" +
                         ",\"SenderUserName\":\"" + Base64.encode(senderUser.UserName) + "\"" +
                         ",\"SenderFirstName\":\"" + Base64.encode(senderUser.FirstName) + "\"" +

@@ -309,7 +309,7 @@ namespace RaaiVan.Web.API
                         Math.Round(double.Parse((tbl.Rows[i].ItemArray[j] == DBNull.Value ? 0 : tbl.Rows[i].ItemArray[j]).ToString()), 2);
 
                     string strVal = tbl.Rows[i].ItemArray[j].GetType() == typeof(DateTime) ?
-                        PublicMethods.get_local_date((DateTime)tbl.Rows[i].ItemArray[j], true) :
+                        GenericDate.get_local_date((DateTime)tbl.Rows[i].ItemArray[j], true) :
                         (isFloatDic[tbl.Columns[j].ColumnName] ?
                         Math.Round(double.Parse((tbl.Rows[i].ItemArray[j] == DBNull.Value ? 0 : tbl.Rows[i].ItemArray[j]).ToString()), 2) :
                         tbl.Rows[i].ItemArray[j]).ToString();
@@ -432,11 +432,11 @@ namespace RaaiVan.Web.API
                         {
                             { "From", new Dictionary<string, object>() {
                                 { "Value", dateFrom.Value.ToString(format: "yyyy-MM-dd") },
-                                { "Label", PublicMethods.get_local_date(dateFrom.Value) }
+                                { "Label", GenericDate.get_local_date(dateFrom.Value) }
                             } },
                             { "To", new Dictionary<string, object>() {
                                 { "Value", dateTo.Value.ToString(format: "yyyy-MM-dd") },
-                                { "Label", PublicMethods.get_local_date(dateTo.Value) }
+                                { "Label", GenericDate.get_local_date(dateTo.Value) }
                             } }
                         };
                 });

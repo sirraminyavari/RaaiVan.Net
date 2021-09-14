@@ -649,7 +649,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                 string dbName = MSSQLConnector.ConnectionString.Split(';').ToList().Select(u => u.Trim().ToLower()).Where(
                     v => v.IndexOf("database") == 0).FirstOrDefault().Split('=')[1].Trim();
 
-                string persianNow = get_local_date(DateTime.Now);
+                string persianNow = GenericDate.get_local_date(DateTime.Now);
 
                 string backupFileName = dbName + "-Full Database Backup-" + persianNow.Replace('/', '-') + ".bak";
 
@@ -812,12 +812,6 @@ namespace RaaiVan.Modules.GlobalUtilities
             return (long)((DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1)).TotalMilliseconds + 0.5);
         }
 
-        public static string get_local_date(DateTime? date, bool detail = false, bool reverse = false)
-        {
-            return !date.HasValue ? string.Empty :
-                GenericDate.fromDateTime(date.Value, get_current_language()).toString(detail: detail, reverse: reverse, delimiter: '/');
-        }
-
         public static DateTime? persian_to_gregorian_date(int year, int month, int day, int? hour, int? minute, int? second)
         {
             try
@@ -874,14 +868,6 @@ namespace RaaiVan.Modules.GlobalUtilities
             else return defaultValue;
         }
 
-        public static Guid? parse_guid(string input, Guid? alternatvieValue = null)
-        {
-            if (string.IsNullOrEmpty(input)) return alternatvieValue;
-            Guid retVal = Guid.Empty;
-            if (!Guid.TryParse(input, out retVal)) return alternatvieValue;
-            return retVal;
-        }
-
         public static DateTime? parse_date(string input, int days2Add = 0)
         {
             if(!string.IsNullOrEmpty(input)) input = input.Trim();
@@ -910,6 +896,27 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             if (input == null || string.IsNullOrEmpty(input.ToString())) return defaultValue;
             return decode ? Base64.decode(input.ToString()) : input.ToString();
+        }
+
+        public static Guid? parse_guid(string input, Guid? alternatvieValue = null)
+        {
+            if (string.IsNullOrEmpty(input)) return alternatvieValue;
+            Guid retVal = Guid.Empty;
+            if (!Guid.TryParse(input, out retVal)) return alternatvieValue;
+            return retVal;
+        }
+
+        public static Guid guid_xor(Guid first, Guid second) {
+            int BYTECOUNT = 16;
+
+            byte[] destByte = new byte[BYTECOUNT];
+            byte[] firstByte = first.ToByteArray();
+            byte[] secondByte = second.ToByteArray();
+
+            for (int i = 0; i < BYTECOUNT; i++)
+                destByte[i] = (byte)(firstByte[i] ^ secondByte[i]);
+
+            return new Guid(destByte);
         }
 
         private static T parse_enum<T>(string input, T defaultValue, ref bool error) where T : struct
@@ -1934,7 +1941,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                         {
                             if (!string.IsNullOrEmpty(newDataTable.Rows[r][c].ToString()))
                                 newDataTable.Rows[r][c] = isString ? _clean_invalid_xml_chars((string)tbl.Rows[r][c]) :
-                                    PublicMethods.get_local_date((DateTime)tbl.Rows[r][c]);
+                                    GenericDate.get_local_date((DateTime)tbl.Rows[r][c]);
                         }
                     }
 

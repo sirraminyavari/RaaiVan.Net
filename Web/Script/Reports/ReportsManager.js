@@ -53,14 +53,17 @@
 
                 var config = that.get_report_config(_moduleIdentifier, _reportName) || {};
 
+                var reportTitle = (((RVDic.RPT || {})[_moduleIdentifier] || {})[_reportName] || {})._Title || _reportName;
+                var reportDescription = (((RVDic.RPT || {})[_moduleIdentifier] || {})[_reportName] || {})._Description;
+
                 GlobalUtilities.create_nested_elements([{
                     Type: "div", Class: "small-12 medium-6 large-4", Style: "padding:0.3rem;",
                     Childs: [{
                         Type: "div",
                         Class: "small-12 medium-12 large-12 rv-border-radius-half rv-bg-color-white-softer SoftShadow SoftBorder",
                         Style: "cursor:pointer; padding:1rem; margin-bottom:0.2rem; min-height:4rem; text-align:center;" +
-                            "display:flex; align-items:center; justify-content:center; height:100%; border-color:rgb(220,220,220);" +
-                            "position:relative;",
+                            "display:flex; flex-flow:column; align-items:center; justify-content:center; height:100%;" +
+                            "border-color:rgb(220,220,220); position:relative;",
                         Properties: [{
                             Name: "onclick",
                             Value: function () { that.show_report({ ID: reportId, ModuleIdentifier: _moduleIdentifier, ReportName: _reportName }); }
@@ -70,12 +73,11 @@
                                 Type: "div", Style: "position:absolute; top:0.5rem;" + RV_RevFloat + ":0.5rem;",
                                 Childs: [{Type: "i", Class: "fa fa-bar-chart-o", Style: "color:rgb(80,80,80);"}]
                             }),
-                            {
-                                Type: "text",
-                                TextValue: ((RVDic.RPT && RVDic.RPT[_moduleIdentifier] &&
-                                    RVDic.RPT[_moduleIdentifier][_reportName] && RVDic.RPT[_moduleIdentifier][_reportName]._Title) ?
-                                    RVDic.RPT[_moduleIdentifier][_reportName]._Title : _reportName)
-                            }
+                            { Type: "div", Childs: [{ Type: "text", TextValue: reportTitle }] },
+                            (!reportDescription ? null : {
+                                Type: "div", Style: "margin-top:0.5rem; color:rgb(120,120,120); font-size:0.7rem;",
+                                Childs: [{ Type: "text", TextValue: reportDescription }]
+                            })
                         ]
                     }]
                 }], container);
@@ -330,7 +332,7 @@
                         if (!newPage.ShowReport) _interfaceLoaded = true;
                         else newPage.ShowReport();
                     });
-
+                    
                     var reportArea = elems["reportArea"];
                     var clearButton = elems["clearButton"];
                     var countArea = elems["countArea"];
@@ -383,6 +385,8 @@
                                     GlobalUtilities.unblock(newPage);
 
                                     that.show_bar_chart(rop, result, {
+                                        ModuleIdentifier: moduleIdentifier,
+                                        ReportName: reportName,
                                         Title: reportTitle,
                                         Period: chartPeriod,
                                         DateFrom: chartDateFrom,
@@ -969,22 +973,24 @@
                 }
             ], container);
 
+            var colNames = (data.Columns || []).filter(c => c.ID != "Period").map(c => c.ID);
             var rowPeriods = (data.Rows || []).map(r => Base64.decode(r.Period));
             var rowLabels = (data.Rows || []).map(r => that.get_bar_label(period, Base64.decode(r.Period)));
-            var rowData = (data.Rows || []).map(r => +Base64.decode(r.TotalCount));
             var rowColors = (data.Rows || []).map(r => GlobalUtilities.generate_color(Base64.decode(r.Period)));
-            
-            var chart = new Chart(elems["chart"].getContext("2d"), {
+
+            var datasets = colNames.map(col => ({
+                label: (((RVDic.RPT[options.ModuleIdentifier] || {})[options.ReportName] || {}).BarChart || {})[col] || col,
+                data: (data.Rows || []).map(r => GlobalUtilities.get_type(r[col]) == "number" ? r[col] : + Base64.decode(r[col])),
+                backgroundColor: colNames.length == 1 ? rowColors.map(c => c.Color) : GlobalUtilities.generate_color(col).Color,
+                borderColor: colNames.length == 1 ? rowColors.map(c => c.Dark) : GlobalUtilities.generate_color(col).Dark,
+                borderWidth: 1
+            }));
+
+            new Chart(elems["chart"].getContext("2d"), {
                 type: 'bar',
                 data: {
                     labels: rowLabels,
-                    datasets: [{
-                        label: RVDic.Count,
-                        data: rowData,
-                        backgroundColor: rowColors.map(c => c.Color),
-                        borderColor: rowColors.map(c => c.Dark),
-                        borderWidth: 1
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     scales: { y: { beginAtZero: true } },
@@ -994,9 +1000,7 @@
                         if (((bar || []).length != 1)) return;
 
                         var selectedIndex = bar[0].index;
-
                         var periodObj = data.ChartPeriods[rowPeriods[selectedIndex]];
-
 
                         if (!!periodObj && reportObject.chart_date_from) {
                             var fromVal = selectedIndex > 0 ? (periodObj.From || {}).Value : (options.DateFrom || {}).Value;

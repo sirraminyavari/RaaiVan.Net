@@ -882,7 +882,7 @@ namespace RaaiVan.Web.API
             dic["lastname"] = string.IsNullOrEmpty(usr.LastName) ? string.Empty : usr.LastName;
             dic["username"] = string.IsNullOrEmpty(usr.UserName) ? string.Empty : usr.UserName;
             dic["fullname"] = (dic["firstname"] + " " + dic["lastname"]).Trim();
-            dic["pdate"] = PublicMethods.get_local_date(DateTime.Now, true);
+            dic["pdate"] = GenericDate.get_local_date(DateTime.Now, true);
 
             return Expressions.replace(RaaiVanSettings.LoginMessage(ApplicationID), ref dic, Expressions.Patterns.AutoTag);
         }

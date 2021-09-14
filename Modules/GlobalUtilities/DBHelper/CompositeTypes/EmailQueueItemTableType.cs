@@ -60,5 +60,19 @@ namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
         {
             return list.ToArray();
         }
+
+        public static DBCompositeType<EmailQueueItemTableType> getCompositeType(List<EmailQueueItem> lst)
+        {
+            if (lst == null) lst = new List<EmailQueueItem>();
+
+            return new DBCompositeType<EmailQueueItemTableType>()
+                .add(lst.Select(itm => new EmailQueueItemTableType(
+                    id: itm.ID,
+                    senderUserId: itm.SenderUserID,
+                    action: itm.Action.ToString(),
+                    email: itm.Email,
+                    title: itm.Title,
+                    emailBody: itm.EmailBody)).ToList());
+        }
     }
 }

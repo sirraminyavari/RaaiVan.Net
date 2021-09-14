@@ -279,21 +279,22 @@ namespace RaaiVan.Modules.FormGenerator
             return retList;
         }
 
-        public static void form_statistics(DBResultSet results, ref double weightSum,
-            ref double sum, ref double weightedSum, ref double avg, ref double weightedAvg,
-            ref double min, ref double max, ref double var, ref double stDev)
+        public static FormStatistics form_statistics(DBResultSet results)
         {
             RVDataTable table = results.get_table();
 
-            weightSum = table.GetDouble(0, "WeightSum", defaultValue: 0).Value;
-            sum = table.GetDouble(0, "Sum", defaultValue: 0).Value;
-            weightedSum = table.GetDouble(0, "WeightedSum", defaultValue: 0).Value;
-            avg = table.GetDouble(0, "Avg", defaultValue: 0).Value;
-            weightedAvg = table.GetDouble(0, "WeightedAvg", defaultValue: 0).Value;
-            min = table.GetDouble(0, "Min", defaultValue: 0).Value;
-            max = table.GetDouble(0, "Max", defaultValue: 0).Value;
-            var = table.GetDouble(0, "Var", defaultValue: 0).Value;
-            stDev = table.GetDouble(0, "StDev", defaultValue: 0).Value;
+            return new FormStatistics()
+            {
+                WeightSum = table.GetDouble(0, "WeightSum", defaultValue: 0).Value,
+                Sum = table.GetDouble(0, "Sum", defaultValue: 0).Value,
+                WeightedSum = table.GetDouble(0, "WeightedSum", defaultValue: 0).Value,
+                Average = table.GetDouble(0, "Avg", defaultValue: 0).Value,
+                WeightedAverage = table.GetDouble(0, "WeightedAvg", defaultValue: 0).Value,
+                Minimum = table.GetDouble(0, "Min", defaultValue: 0).Value,
+                Maximum = table.GetDouble(0, "Max", defaultValue: 0).Value,
+                Variance = table.GetDouble(0, "Var", defaultValue: 0).Value,
+                StandardDeviation = table.GetDouble(0, "StDev", defaultValue: 0).Value
+            };
         }
 
         public static List<TemplateStatus> template_status(DBResultSet results)
@@ -349,7 +350,8 @@ namespace RaaiVan.Modules.FormGenerator
                     BeginDate = table.GetDate(i, "BeginDate"),
                     FinishDate = table.GetDate(i, "FinishDate"),
                     ShowSummary = table.GetBool(i, "ShowSummary"),
-                    HideContributors = table.GetBool(i, "HideContributors")
+                    HideContributors = table.GetBool(i, "HideContributors"),
+                    Archived = table.GetBool(i, "Archived")
                 });
             }
 
@@ -424,11 +426,11 @@ namespace RaaiVan.Modules.FormGenerator
 
                     if (!elementId.HasValue || !dic.ContainsKey(elementId.Value)) continue;
 
-                    dic[elementId.Value].Min = table.GetDouble(i, "Min");
-                    dic[elementId.Value].Max = table.GetDouble(i, "Max");
-                    dic[elementId.Value].Avg = table.GetDouble(i, "Avg");
-                    dic[elementId.Value].Var = table.GetDouble(i, "Var");
-                    dic[elementId.Value].StDev = table.GetDouble(i, "StDev");
+                    dic[elementId.Value].Stats.Minimum = table.GetDouble(i, "Min");
+                    dic[elementId.Value].Stats.Maximum = table.GetDouble(i, "Max");
+                    dic[elementId.Value].Stats.Average = table.GetDouble(i, "Avg");
+                    dic[elementId.Value].Stats.Variance = table.GetDouble(i, "Var");
+                    dic[elementId.Value].Stats.StandardDeviation = table.GetDouble(i, "StDev");
                 }
             }
 

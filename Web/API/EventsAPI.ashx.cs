@@ -160,8 +160,8 @@ namespace RaaiVan.Web.API
                 Info = "{\"Type\":\"" + Base64.encode(type) + "\"" +
                     ",\"Title\":\"" + Base64.encode(title) + "\"" +
                     ",\"Description\":\"" + Base64.encode(description) + "\"" +
-                    (beginDate.HasValue ? ",\"BeginDate\":\"" + Base64.encode(PublicMethods.get_local_date(beginDate, true)) + "\"" : string.Empty) +
-                    (finishDate.HasValue ? ",\"FinishDate\":\"" + Base64.encode(PublicMethods.get_local_date(finishDate, true)) + "\"" : string.Empty) +
+                    (beginDate.HasValue ? ",\"BeginDate\":\"" + Base64.encode(GenericDate.get_local_date(beginDate, true)) + "\"" : string.Empty) +
+                    (finishDate.HasValue ? ",\"FinishDate\":\"" + Base64.encode(GenericDate.get_local_date(finishDate, true)) + "\"" : string.Empty) +
                     "}",
                 ModuleIdentifier = ModuleIdentifier.EVT
             });
@@ -184,8 +184,8 @@ namespace RaaiVan.Web.API
                 ",\"Title\":\"" + Base64.encode(evt.Title) + "\"" +
                 ",\"Type\":\"" + Base64.encode(evt.EventType) + "\"" +
                 ",\"Description\":\"" + Base64.encode(evt.Description) + "\"" +
-                ",\"BeginDate\":\"" + PublicMethods.get_local_date(evt.BeginDate.Value) + "\"" +
-                ",\"FinishDate\":\"" + PublicMethods.get_local_date(evt.FinishDate.Value) + "\"" +
+                ",\"BeginDate\":\"" + GenericDate.get_local_date(evt.BeginDate.Value) + "\"" +
+                ",\"FinishDate\":\"" + GenericDate.get_local_date(evt.FinishDate.Value) + "\"" +
                 "}";
         }
 
@@ -238,14 +238,14 @@ namespace RaaiVan.Web.API
                     }
 
                     string strMessage = "رویدادی از نوع " + "\" " + type + " \" با عنوان " + "\" " + Calendar.Title + " \"" +
-                        " برای تاریخ " + "\" " + PublicMethods.get_local_date(Calendar.BeginDate.Value) + " \"" +
+                        " برای تاریخ " + "\" " + GenericDate.get_local_date(Calendar.BeginDate.Value) + " \"" +
                         " شامل موضوعات : " + strRenderedKnowledgeDomains + PostFix;
                     if (string.IsNullOrEmpty(strRenderedKnowledgeDomains))
                         strMessage = "رویدادی از نوع " + "\" " + type + " \" با عنوان " + "\" " + Calendar.Title + " \"" +
-                            " برای تاریخ " + "\" " + PublicMethods.get_local_date(Calendar.BeginDate.Value) + " \"" + PostFix;
+                            " برای تاریخ " + "\" " + GenericDate.get_local_date(Calendar.BeginDate.Value) + " \"" + PostFix;
                     else
                         strMessage = "رویدادی از نوع " + "\" " + type + " \" با عنوان " + "\" " + Calendar.Title + " \"" +
-                            " برای تاریخ " + "\" " + PublicMethods.get_local_date(Calendar.BeginDate.Value) + " \"" +
+                            " برای تاریخ " + "\" " + GenericDate.get_local_date(Calendar.BeginDate.Value) + " \"" +
                             " شامل موضوعات : " + strRenderedKnowledgeDomains + PostFix;
 
 
@@ -316,7 +316,7 @@ namespace RaaiVan.Web.API
                 {
                     string strType = _event.EventType;
                     string strMessage = strType + " " + "\" " + _event.Title + " \"" + " در تاریخ " + "\" " +
-                        PublicMethods.get_local_date(_event.BeginDate.Value) + " \"" + " لغو گردید";
+                        GenericDate.get_local_date(_event.BeginDate.Value) + " \"" + " لغو گردید";
                     string strTitle = "لغو " + strType;
                     MSGController.bulk_send_message(paramsContainer.Tenant.Id,
                         userId, relatedUserIds, strTitle, strMessage);

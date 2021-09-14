@@ -33,5 +33,11 @@ namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
         {
             return list.ToArray();
         }
+
+        public static DBCompositeType<StringTableType> getCompositeType(List<string> lst)
+        {
+            if (lst == null) lst = new List<string>();
+            return new DBCompositeType<StringTableType>().add(lst.Distinct().Select(i => new StringTableType(i)).ToList());
+        }
     }
 }

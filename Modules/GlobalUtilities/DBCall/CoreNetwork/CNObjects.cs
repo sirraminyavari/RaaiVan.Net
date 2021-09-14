@@ -140,7 +140,7 @@ namespace RaaiVan.Modules.CoreNetwork
 
             DateTime now = time.HasValue ? time.Value : DateTime.Now;
             PersianCalendar pcal = new PersianCalendar();
-
+            
             DateTime? lowerPersianDateLimit = PublicMethods.persian_to_gregorian_date(pcal.GetYear(now), 1, 1, 0, 0, 0);
             DateTime? upperPersianDateLimit = null;
             DateTime lowerGregorianDateLimit = new DateTime(now.Year, 1, 1, 0, 0, 0);
@@ -625,7 +625,7 @@ namespace RaaiVan.Modules.CoreNetwork
                 ",\"NodeType\":\"" + Base64.encode(NodeType) + "\"" +
                 (string.IsNullOrEmpty(AvatarName) ? string.Empty : ",\"AvatarName\":" + AvatarName) +
                 (simple ? string.Empty : 
-                    ",\"CreationDate\":\"" + (CreationDate.HasValue ? PublicMethods.get_local_date(CreationDate.Value) : string.Empty) + "\"" +
+                    ",\"CreationDate\":\"" + (CreationDate.HasValue ? GenericDate.get_local_date(CreationDate.Value) : string.Empty) + "\"" +
                     ",\"Status\":\"" + (Status == Status.NotSet ? string.Empty : Status.ToString()) + "\"" +
                     ",\"WFState\":\"" + Base64.encode(WFState) + "\"" +
                     ",\"HideCreators\":" + (HideCreators.HasValue && HideCreators.Value).ToString().ToLower() +

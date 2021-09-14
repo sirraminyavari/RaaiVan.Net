@@ -90,7 +90,7 @@ namespace RaaiVan.Modules.CoreNetwork
                 node.CreationDate = table.GetDate(i, "CreationDate");
                 node.AdminAreaID = table.GetGuid(i, "AdminAreaID");
                 node.DocumentTreeNodeID = table.GetGuid(i, "DocumentTreeNodeID");
-                node.Status = table.GetEnum<Status>(i, "DocumentTreeNodeID", Status.NotSet);
+                node.Status = table.GetEnum<Status>(i, "Status", Status.NotSet);
                 node.WFState = table.GetString(i, "WFState");
                 node.Searchable = table.GetBool(i, "Searchable");
                 node.HideCreators = table.GetBool(i, "HideCreators");

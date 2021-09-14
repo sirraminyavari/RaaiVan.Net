@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -109,6 +110,8 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static bool file_exists(string fileName)
         {
+            Stopwatch watch = PublicMethods.is_dev() ? Stopwatch.StartNew() : null;
+
             try
             {
                 using (AmazonS3Client client = get_client())
@@ -120,13 +123,16 @@ namespace RaaiVan.Modules.GlobalUtilities
                     request.Key = fileName;
 
                     GetObjectMetadataResponse response = client.GetObjectMetadata(request);
+
+                    watch?.Stop();
                     
                     return true;
                 }
             }
-
             catch (AmazonS3Exception ex)
             {
+                watch?.Stop();
+
                 if (ex.StatusCode == System.Net.HttpStatusCode.NotFound) return false;
                 return false;
             }

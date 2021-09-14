@@ -137,13 +137,13 @@ namespace RaaiVan.Modules.NotificationCenter
                 ",\"SubjectType\":\"" + SubjectType + "\"" +
                 ",\"Action\":\"" + Action + "\"" +
                 ",\"SendDate\":\"" + (!SendDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(SendDate.Value, true)) + "\"" +
+                    GenericDate.get_local_date(SendDate.Value, true)) + "\"" +
                 ",\"Description\":\"" + Base64.encode(Description) + "\"" +
                 ",\"Info\":\"" + Base64.encode(Info) + "\"" +
                 ",\"UserStatus\":\"" + (UserStatus.HasValue ? UserStatus.Value.ToString() : string.Empty) + "\"" +
                 ",\"Seen\":" + (!Seen.HasValue ? false : Seen).ToString().ToLower() +
                 ",\"ViewDate\":\"" + (!ViewDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(SendDate.Value)) + "\"" +
+                    GenericDate.get_local_date(SendDate.Value)) + "\"" +
                 ",\"Sender\":" + (Sender == null || !Sender.UserID.HasValue ? "{}" : Sender.toJson()) +
                 "}";
         }

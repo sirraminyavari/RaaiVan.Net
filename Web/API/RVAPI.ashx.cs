@@ -449,7 +449,7 @@ namespace RaaiVan.Web.API
             dic["lastname"] = string.IsNullOrEmpty(usr.LastName) ? string.Empty : usr.LastName;
             dic["username"] = string.IsNullOrEmpty(usr.UserName) ? string.Empty : usr.UserName;
             dic["fullname"] = (dic["firstname"] + " " + dic["lastname"]).Trim();
-            dic["pdate"] = PublicMethods.get_local_date(DateTime.Now, true);
+            dic["pdate"] = GenericDate.get_local_date(DateTime.Now, true);
 
             return Expressions.replace(RaaiVanSettings.LoginMessage(applicationId), ref dic, Expressions.Patterns.AutoTag);
         }
@@ -467,7 +467,7 @@ namespace RaaiVan.Web.API
             return logs.Count <= 0 ? "[]" :
                 "[" + string.Join(",", logs.Select(
                     u => "{\"Action\":\"" + u.Action.ToString() + "\"" +
-                    ",\"Date\":\"" + PublicMethods.get_local_date(u.Date.Value, true) + "\"" +
+                    ",\"Date\":\"" + GenericDate.get_local_date(u.Date.Value, true) + "\"" +
                     ",\"HostAddress\":\"" + u.HostAddress + "\"" +
                     ",\"HostName\":\"" + u.HostName + "\"" +
                     "}")) + 
@@ -990,7 +990,7 @@ namespace RaaiVan.Web.API
                     ",\"EndTime\":" + (!job.EndTime.HasValue ? "null" :
                         "{\"Hour\":" + job.EndTime.Value.Hour.ToString() + ",\"Minute\":" + job.EndTime.Value.Minute.ToString()) + "}" +
                     ",\"LastActivityDate\":\"" + (!job.LastActivityDate.HasValue ? string.Empty :
-                        PublicMethods.get_local_date(job.LastActivityDate.Value, true)) + "\"" +
+                        GenericDate.get_local_date(job.LastActivityDate.Value, true)) + "\"" +
                     ",\"LastActivityDuration\":" + (!job.LastActivityDuration.HasValue ? 0 : job.LastActivityDuration.Value).ToString() +
                     ",\"ErrorMessage\":\"" + Base64.encode(job.ErrorMessage) + "\"" +
                     "}";

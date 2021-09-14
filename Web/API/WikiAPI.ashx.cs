@@ -172,7 +172,7 @@ namespace RaaiVan.Web.API
                 "}" +
                 ",\"Title\":\"" + Base64.encode(_change.Title) + "\"" +
                 ",\"BodyText\":\"" + Base64.encode(_change.BodyText) + "\"" +
-                ",\"CreationDate\":\"" + PublicMethods.get_local_date(_change.SendDate.Value) + "\"" +
+                ",\"CreationDate\":\"" + GenericDate.get_local_date(_change.SendDate.Value) + "\"" +
                 ",\"IsExpert\":" + isAdmin.ToString().ToLower() +
                 ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, _change.AttachedFiles, true) +
                 "}";
@@ -193,7 +193,7 @@ namespace RaaiVan.Web.API
                 (isAdmin || (citationNeeded && paramsContainer.CurrentUserID.Value == paragraph.CreatorUserID));
             bool movable = removable;
             bool editMode = paragraph.Status == WikiStatuses.Pending.ToString() && isAdmin;
-            string lastModificationDate = PublicMethods.get_local_date(paragraph.LastModificationDate.HasValue ?
+            string lastModificationDate = GenericDate.get_local_date(paragraph.LastModificationDate.HasValue ?
                 paragraph.LastModificationDate.Value : paragraph.CreationDate.Value);
 
             return "{\"ParagraphID\":\"" + paragraph.ParagraphID.Value.ToString() + "\"" +
@@ -1487,10 +1487,10 @@ namespace RaaiVan.Web.API
                     node.ConfidentialityLevel.Title;
                 metaData["PublicationDate"] = !publicationDate.HasValue ? string.Empty :
                     PublicMethods.convert_numbers_to_local(
-                        PublicMethods.get_local_date(publicationDate.Value, reverse: true));
+                        GenericDate.get_local_date(publicationDate.Value, reverse: true));
                 metaData["LastModificationDate"] = !lastModificationDate.HasValue ? string.Empty :
                     PublicMethods.convert_numbers_to_local(
-                        PublicMethods.get_local_date(lastModificationDate.Value, reverse: true));
+                        GenericDate.get_local_date(lastModificationDate.Value, reverse: true));
                 metaData["RegistrationArea"] = node.AdminAreaName;
                 metaData["RegistrationAreaType"] = node.AdminAreaType;
             }

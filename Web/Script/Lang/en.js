@@ -296,6 +296,7 @@
         "GroupRegistration": "group",
         "Groups": "groups",
         "GroupsThatYouAreMemberIn": "groups that you are member in",
+        "GroupType": "group type",
         "Help": "help",
         "Hidden": "hidden",
         "HideDetails": "hide details",
@@ -1872,8 +1873,12 @@
                 },
                 "ActiveUsersReport": {
                     "_Title": "active users",
+                    "_Description": "users who have logged in at least once in a specific time period",
                     "UserName": "username",
-                    "FullName": "full name"
+                    "FullName": "full name",
+                    "BarChart": {
+                        "TotalCount": "count"
+                    }
                 },
                 "MostVisitedItemsReport": {
                     "_Title": "most visited pages",

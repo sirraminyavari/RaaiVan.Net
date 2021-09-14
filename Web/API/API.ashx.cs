@@ -341,8 +341,8 @@ namespace RaaiVan.Web.API
                     }
                 case "sql_scripts":
                     {
-                        string resFileName = "Script (v28.5.2.1+ to " + PublicMethods.SystemVersion + ") - " + 
-                            PublicMethods.get_local_date(DateTime.Now).Replace("/", ".") + ".sql";
+                        string resFileName = "Script (v28.5.2.1+ to " + PublicMethods.SystemVersion + ") - " +
+                            GenericDate.get_local_date(DateTime.Now).Replace("/", ".") + ".sql";
 
                         string fileName = PublicMethods.parse_string(paramsContainer.request_param("FileName"), 
                             decode: false, defaultValue: "sql_map.js");
@@ -611,10 +611,10 @@ namespace RaaiVan.Web.API
             int? lowerBoundary, int? count, ref string responseText)
         {
             if (!formId.HasValue) return;
-
+            
             List<FormRecord> records =
                 FGController.get_form_records(paramsContainer.Tenant.Id, formId.Value, filters, lowerBoundary, count);
-
+            
             responseText = "{\"Records\":[" +
                 ProviderUtil.list_to_string<string>(records.Select(
                     u => "{\"InstanceID\":\"" + u.InstanceID.ToString() + "\"" +
@@ -625,7 +625,6 @@ namespace RaaiVan.Web.API
                         "]}"
                     ).ToList()) + 
                 "]}";
-            
         }
         
         protected void save_form(Guid? formId, string formData, Guid currentUserId, ref string responseText)
@@ -997,7 +996,7 @@ namespace RaaiVan.Web.API
                     nd.Tags = i.Tags;
                 }
             });
-
+            
             responseText = "{" + 
                 (nodeIds.Count > 0 ? string.Empty : "\"TotalCount\":" + totalCount.ToString() + ",") + 
                 "\"Nodes\":[" + string.Join(",", nodes.Select(
@@ -1008,8 +1007,8 @@ namespace RaaiVan.Web.API
                         ",\"NodeType\":\"" + Base64.encode(n.NodeType) + "\"" +
                         ",\"Abstract\":\"" + Base64.encode(n.Description) + "\"" +
                         ",\"Keywords\":[" + string.Join(",", n.Tags.Select(t => "\"" + Base64.encode(t) + "\"")) + "]" +
-                        ",\"CreationDate\":\"" + (!n.CreationDate.HasValue ? string.Empty : 
-                            PublicMethods.get_local_date(n.CreationDate.Value)) + "\"" +
+                        ",\"CreationDate\":\"" + (!n.CreationDate.HasValue ? string.Empty :
+                            GenericDate.get_local_date(n.CreationDate.Value)) + "\"" +
                         ",\"CreationDate_Gregorian\":\"" + (!n.CreationDate.HasValue ? string.Empty :
                             n.CreationDate.Value.ToString()) + "\"" +
                         ",\"Status\":\"" + (n.Status == Status.NotSet ? string.Empty : n.Status.ToString()) + "\"" +

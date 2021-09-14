@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NpgsqlTypes;
 using Newtonsoft.Json;
+using RaaiVan.Modules.FormGenerator;
 
 namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
 {
@@ -117,6 +118,31 @@ namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
         public FormElementTableType[] get_array(List<FormElementTableType> list)
         {
             return list.ToArray();
+        }
+
+        public static DBCompositeType<FormElementTableType> getCompositeType(List<FormElement> lst)
+        {
+            if (lst == null) lst = new List<FormElement>();
+
+            return new DBCompositeType<FormElementTableType>()
+                .add(lst.Select(e => new FormElementTableType(
+                    elementId: e.ElementID,
+                    templateElementId: e.TemplateElementID,
+                    instanceId: e.FormInstanceID,
+                    refElementId: e.RefElementID,
+                    title: PublicMethods.verify_string(e.Title),
+                    name: e.Name,
+                    sequenceNumber: e.SequenceNumber,
+                    necessary: e.Necessary,
+                    uniqueValue: e.UniqueValue,
+                    type: !e.Type.HasValue ? null : e.Type.Value.ToString(),
+                    help: PublicMethods.verify_string(e.Help),
+                    info: e.Info,
+                    weight: e.Weight,
+                    textValue: PublicMethods.verify_string(e.TextValue),
+                    floatValue: e.FloatValue,
+                    bitValue: e.BitValue,
+                    dateValue: e.DateValue)).ToList());
         }
     }
 }

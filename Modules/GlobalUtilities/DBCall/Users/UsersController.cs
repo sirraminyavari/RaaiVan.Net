@@ -216,10 +216,8 @@ namespace RaaiVan.Modules.Users
 
         public static List<Guid> get_user_ids(Guid? applicationId, List<string> usernames)
         {
-            DBCompositeType<StringTableType> usernamesParam = new DBCompositeType<StringTableType>()
-                .add(usernames.Select(un => new StringTableType(un)).ToList());
-
-            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetUserIDs"), applicationId, usernamesParam);
+            return DBConnector.get_guid_list(applicationId, GetFullyQualifiedName("GetUserIDs"), 
+                applicationId, StringTableType.getCompositeType(usernames));
         }
 
         public static Guid? get_user_id(Guid? applicationId, string username)
@@ -340,11 +338,8 @@ namespace RaaiVan.Modules.Users
 
         public static List<string> get_not_existing_users(Guid applicationId, List<string> usernames)
         {
-            DBCompositeType<StringTableType> usernamesParam = new DBCompositeType<StringTableType>()
-                .add(usernames.Select(un => new StringTableType(un)).ToList());
-
             return DBConnector.get_string_list(applicationId, GetFullyQualifiedName("GetNotExistingUsers"), 
-                applicationId, usernamesParam);
+                applicationId, StringTableType.getCompositeType(usernames));
         }
 
         public static bool register_item_visit(Guid applicationId, 
@@ -422,13 +417,8 @@ namespace RaaiVan.Modules.Users
         public static List<EmailContactStatus> get_email_contacts_status(Guid applicationId, 
             Guid userId, List<string> emails, bool? saveEmails = null)
         {
-            if (emails == null) emails = new List<string>();
-
-            DBCompositeType<StringTableType> emailsParam = new DBCompositeType<StringTableType>()
-                .add(emails.Select(e => new StringTableType(e)).ToList());
-
             return USRParsers.email_contacts_status(DBConnector.read(applicationId, GetFullyQualifiedName("GetEmailContactsStatus"),
-                applicationId, userId, emailsParam, saveEmails, DateTime.Now));
+                applicationId, userId, StringTableType.getCompositeType(emails), saveEmails, DateTime.Now));
         }
 
         public static bool update_friend_suggestions(Guid applicationId, Guid? userId = null)
@@ -714,12 +704,8 @@ namespace RaaiVan.Modules.Users
 
         public static List<string> get_not_existing_emails(Guid? applicationId, List<string> emails)
         {
-            if (emails == null) emails = new List<string>();
-
-            DBCompositeType<StringTableType> emailsParam = new DBCompositeType<StringTableType>()
-                .add(emails.Select(e => new StringTableType(e)).ToList());
-
-            return DBConnector.get_string_list(applicationId, GetFullyQualifiedName("GetNotExistingEmails"), applicationId, emailsParam);
+            return DBConnector.get_string_list(applicationId, GetFullyQualifiedName("GetNotExistingEmails"), 
+                applicationId, StringTableType.getCompositeType(emails));
         }
 
         public static bool email_exists(Guid? applicationId, string email)
@@ -959,13 +945,11 @@ namespace RaaiVan.Modules.Users
         public static List<AccessRoleName> check_user_group_permissions(Guid applicationId, Guid userId, 
             List<AccessRoleName> permissions)
         {
-            if (permissions == null) permissions = new List<AccessRoleName>();
-
-            DBCompositeType<StringTableType> permissionsParam = new DBCompositeType<StringTableType>()
-                .add(permissions.Where(p => p != AccessRoleName.None).Select(p => new StringTableType(p.ToString())).ToList());
+            List<string> strPermissions = permissions == null ? new List<string>() :
+                permissions.Where(p => p != AccessRoleName.None).Select(p => p.ToString()).ToList();
 
             return USRParsers.permissions(DBConnector.read(applicationId, GetFullyQualifiedName("CheckUserGroupPermissions"),
-                applicationId, userId, permissionsParam));
+                applicationId, userId, StringTableType.getCompositeType(strPermissions)));
         }
 
         public static List<AccessRole> get_access_roles(Guid applicationId)

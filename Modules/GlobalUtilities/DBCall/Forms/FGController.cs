@@ -124,40 +124,16 @@ namespace RaaiVan.Modules.FormGenerator
         public static bool save_form_elements(Guid applicationId, Guid formId,
             string title, string name, string description, List<FormElement> elements, Guid currentUserId)
         {
-            if (elements == null) elements = new List<FormElement>();
-
             int seq = 1;
 
-            DBCompositeType<FormElementTableType> elementsParam = new DBCompositeType<FormElementTableType>()
-                .add(elements.Select(e =>
-                {
-                    e.SequenceNumber = seq++;
-
-                    string strType = null;
-                    if (e.Type.HasValue) strType = e.Type.Value.ToString();
-
-                    return new FormElementTableType(
-                        elementId: e.ElementID,
-                        templateElementId: e.TemplateElementID,
-                        instanceId: Guid.NewGuid(),
-                        refElementId: e.RefElementID,
-                        title: PublicMethods.verify_string(e.Title),
-                        name: e.Name,
-                        sequenceNumber: e.SequenceNumber,
-                        necessary: e.Necessary,
-                        uniqueValue: e.UniqueValue,
-                        type: strType,
-                        help: PublicMethods.verify_string(e.Help),
-                        info: e.Info,
-                        weight: e.Weight,
-                        textValue: PublicMethods.verify_string(e.TextValue),
-                        floatValue: e.FloatValue,
-                        bitValue: e.BitValue,
-                        dateValue: e.DateValue);
-                }).ToList());
-
-            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SaveFormElements"),
-                applicationId, formId, title, name, description, elementsParam, currentUserId, DateTime.Now);
+            if (elements != null) elements.ForEach(e =>
+            {
+                e.SequenceNumber = seq++;
+                e.FormInstanceID = Guid.NewGuid();
+            });
+            
+            return DBConnector.succeed(applicationId, GetFullyQualifiedName("SaveFormElements"), applicationId, formId, 
+                title, name, description, FormElementTableType.getCompositeType(elements), currentUserId, DateTime.Now);
         }
 
         public static List<FormElement> get_form_elements(Guid applicationId, 
@@ -200,20 +176,8 @@ namespace RaaiVan.Modules.FormGenerator
 
         public static bool create_form_instances(Guid applicationId, List<FormType> instances, Guid currentUserId)
         {
-            if (instances == null) instances = new List<FormType>();
-
-            DBCompositeType<FormInstanceTableType> instancesParam = new DBCompositeType<FormInstanceTableType>()
-                .add(instances.Select(i => new FormInstanceTableType(
-                    instanceId: i.InstanceID,
-                    formId: i.FormID,
-                    ownerId: i.OwnerID,
-                    directorId: i.DirectorID,
-                    admin: i.Admin,
-                    isTemporary: i.IsTemporary
-                    )).ToList());
-
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("CreateFormInstance"),
-                applicationId, instancesParam, currentUserId, DateTime.Now);
+                applicationId, FormInstanceTableType.getCompositeType(instances), currentUserId, DateTime.Now);
         }
 
         public static bool create_form_instance(Guid applicationId, FormType info)
@@ -312,29 +276,6 @@ namespace RaaiVan.Modules.FormGenerator
                 return false;
             }
 
-            DBCompositeType<FormElementTableType> elementsParam = new DBCompositeType<FormElementTableType>()
-                .add(elements.Select(e =>
-                {
-                    return new FormElementTableType(
-                        elementId: e.ElementID,
-                        templateElementId: e.TemplateElementID,
-                        instanceId: e.FormInstanceID,
-                        refElementId: e.RefElementID,
-                        title: PublicMethods.verify_string(e.Title),
-                        name: e.Name,
-                        sequenceNumber: e.SequenceNumber,
-                        necessary: e.Necessary,
-                        uniqueValue: e.UniqueValue,
-                        type: !e.Type.HasValue ? null : e.Type.Value.ToString(),
-                        help: PublicMethods.verify_string(e.Help),
-                        info: e.Info,
-                        weight: e.Weight,
-                        textValue: PublicMethods.verify_string(e.TextValue),
-                        floatValue: e.FloatValue,
-                        bitValue: e.BitValue,
-                        dateValue: e.DateValue);
-                }).ToList());
-
             //Guid Items Param
             List<FormElementTypes> validTypes =
                 new List<FormElementTypes>() { FormElementTypes.Node, FormElementTypes.User, FormElementTypes.MultiLevel };
@@ -346,27 +287,13 @@ namespace RaaiVan.Modules.FormGenerator
                 .ForEach(x => guidItemsParam.add(new GuidPairTableType(u.ElementID.Value, x.ID.Value))));
             //end of Guid Items Param
 
-            //Files Param
-            DBCompositeType<DocFileInfoTableType> filesParam = new DBCompositeType<DocFileInfoTableType>();
-
-            elements.Where(e => e.AttachedFiles != null).ToList().ForEach(e => {
-                e.AttachedFiles.ForEach(f =>
-                {
-                    filesParam.add(new DocFileInfoTableType(
-                        fileId: f.FileID,
-                        fileName: f.FileName,
-                        extension: f.Extension,
-                        mime: f.MIME(),
-                        size: f.Size,
-                        ownerId: f.OwnerID,
-                        ownerType: f.OwnerType.ToString()));
-                });
-            });
-            //end of Files Param
+            List<DocFileInfo> allFiles = new List<DocFileInfo>();
+            elements.Where(e => e.AttachedFiles != null).ToList().ForEach(e => allFiles.AddRange(e.AttachedFiles));
 
             return DBConnector.succeed(applicationId, GetFullyQualifiedName("SaveFormInstanceElements"),
-                applicationId, elementsParam, guidItemsParam, GuidTableType.getCompositeType(elementsToClear), 
-                filesParam, currentUserId, DateTime.Now);
+                applicationId, FormElementTableType.getCompositeType(elements), guidItemsParam, 
+                GuidTableType.getCompositeType(elementsToClear), 
+                DocFileInfoTableType.getCompositeType(allFiles), currentUserId, DateTime.Now);
         }
 
         public static bool save_form_instance_elements(Guid applicationId,
@@ -542,15 +469,12 @@ namespace RaaiVan.Modules.FormGenerator
                 new List<FormFilter>(), lowerBoundary, count, sortByElementId, descending);
         }
 
-        public static void get_form_statistics(Guid applicationId, Guid? ownerId, Guid? instanceId,
-            ref double weightSum, ref double sum, ref double weightedSum, ref double avg, ref double weightedAvg,
-            ref double min, ref double max, ref double var, ref double stDev)
+        public static FormStatistics get_form_statistics(Guid applicationId, Guid? ownerId, Guid? instanceId)
         {
             DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetFormStatistics"),
                 applicationId, ownerId, instanceId);
 
-            FGParsers.form_statistics(results, ref weightSum, ref sum, ref weightedSum, ref avg,
-                ref weightedAvg, ref min, ref max, ref var, ref stDev);
+            return FGParsers.form_statistics(results);
         }
 
         public static bool convert_form_to_table(Guid applicationId, Guid formId)
@@ -573,6 +497,14 @@ namespace RaaiVan.Modules.FormGenerator
                 applicationId, isCopyOfPollId, ownerId, archive, ProviderUtil.get_search_text(searchText), count, lowerBoundary);
 
             return FGParsers.polls(results, ref totalCount);
+        }
+
+        public static List<Poll> get_polls_by_form_id(Guid applicationId, Guid formId, bool? archive)
+        {
+            DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetPollsByFormID"),
+                applicationId, formId, archive);
+
+            return FGParsers.polls(results);
         }
 
         public static List<Poll> get_polls(Guid applicationId, List<Guid> pollIds)

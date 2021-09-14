@@ -50,5 +50,17 @@ namespace RaaiVan.Modules.GlobalUtilities.DBCompositeTypes
         {
             return list.ToArray();
         }
+
+        public static DBCompositeType<TaggedItemTableType> getCompositeType(List<TaggedItem> lst)
+        {
+            if (lst == null) lst = new List<TaggedItem>();
+
+            return new DBCompositeType<TaggedItemTableType>()
+                .add(lst.Select(itm => new TaggedItemTableType(
+                    contextId: itm.ContextID,
+                    taggedId: itm.TaggedID,
+                    contextType: itm.ContextType.ToString(),
+                    taggedType: itm.TaggedType.ToString())).ToList());
+        }
     }
 }

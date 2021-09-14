@@ -354,9 +354,12 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            responseText = "{\"PostID\":\"" + postId.ToString() + "\",\"Description\":\"" + Base64.encode(description) +
-                "\",\"LastModifierUserID\":\"" + paramsContainer.CurrentUserID.Value.ToString() + "\",\"LastModificationDate\":\"" +
-                PublicMethods.get_local_date(lastModificationDate) + "\",\"GregorianLastModificationDate\":\"" + lastModificationDate + "\"}";
+            responseText = "{\"PostID\":\"" + postId.ToString() + "\"" + 
+                ",\"Description\":\"" + Base64.encode(description) + "\"" + 
+                ",\"LastModifierUserID\":\"" + paramsContainer.CurrentUserID.Value.ToString() + "\"" + 
+                ",\"LastModificationDate\":\"" + GenericDate.get_local_date(lastModificationDate) + "\"" + 
+                ",\"GregorianLastModificationDate\":\"" + lastModificationDate + "\"" + 
+                "}";
 
             //Save Tagged Items
             if (result)
@@ -928,9 +931,12 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            responseText = "{\"CommentID\":\"" + commentId.ToString() + "\",\"Description\":\"" + Base64.encode(description) +
-                "\",\"LastModifierUserID\":\"" + paramsContainer.CurrentUserID.ToString() + "\",\"LastModificationDate\":\"" +
-                PublicMethods.get_local_date(lastModificationDate) + "\",\"GregorianLastModificationDate\":\"" + lastModificationDate + "\"}";
+            responseText = "{\"CommentID\":\"" + commentId.ToString() + "\"" + 
+                ",\"Description\":\"" + Base64.encode(description) + "\"" + 
+                ",\"LastModifierUserID\":\"" + paramsContainer.CurrentUserID.ToString() + "\"" + 
+                ",\"LastModificationDate\":\"" + GenericDate.get_local_date(lastModificationDate) + "\"" + 
+                ",\"GregorianLastModificationDate\":\"" + lastModificationDate + "\"" + 
+                "}";
 
             //Save Tagged Items
             if (result)

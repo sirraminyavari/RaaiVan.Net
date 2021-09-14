@@ -59,7 +59,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             DateTime now = DateTime.Now;
 
             table.Rows[rowIndex++][index] = "'تاریخ'";
-            table.Rows[rowIndex++][index] = PublicMethods.get_local_date(now);
+            table.Rows[rowIndex++][index] = GenericDate.get_local_date(now);
 
             rowIndex++;
 
@@ -71,7 +71,7 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             DateTime now = DateTime.Now;
             
-            string strTime = PublicMethods.get_local_date(now, detail: false, reverse: true) + " " +
+            string strTime = GenericDate.get_local_date(now, detail: false, reverse: true) + " " +
                 (now.Hour < 10 ? "0" : "") + now.Hour + ":" + now.Minute;
 
             List<string> lst = new List<string>();

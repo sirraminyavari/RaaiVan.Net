@@ -173,17 +173,17 @@ namespace RaaiVan.Modules.Sharing
                 ",\"SenderProfileImage\":\"" + senderProfileImage + "\"" +
                 ",\"OriginalSenderProfileImage\":\"" + originalSenderProfileImage + "\"" +
                 ",\"SendDate\":\"" + (!SendDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(SendDate.Value, true)) + "\"" +
+                    GenericDate.get_local_date(SendDate.Value, true)) + "\"" +
                 ",\"GregorianSendDate\":\"" + (!SendDate.HasValue ? string.Empty : SendDate.ToString()) + "\"" +
                 ",\"NDaysAgo\":" + (!SendDate.HasValue ? "null" : PublicMethods.n_days_ago(SendDate.Value).ToString()) +
                 ",\"OriginalSendDate\":\"" + (!OriginalSendDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(OriginalSendDate.Value, true)) + "\"" +
+                    GenericDate.get_local_date(OriginalSendDate.Value, true)) + "\"" +
                 ",\"GregorianOriginalSendDate\":\"" + (!OriginalSendDate.HasValue ? string.Empty :
                     OriginalSendDate.Value.ToString()) + "\"" +
                 ",\"OriginalNDaysAgo\":" + (!OriginalSendDate.HasValue ? "null" : 
                     PublicMethods.n_days_ago(OriginalSendDate.Value).ToString()) +
                 ",\"LastModificationDate\":\"" + (!LastModificationDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(LastModificationDate.Value)) + "\"" +
+                    GenericDate.get_local_date(LastModificationDate.Value)) + "\"" +
                 ",\"Privacy\":\"" + Base64.encode(Privacy) + "\"" +
                 ",\"CommentsCount\":" + (CommentsCount.HasValue ? CommentsCount : 0).ToString() +
                 ",\"LikesCount\":" + (LikesCount.HasValue ? LikesCount : 0).ToString() +
@@ -229,7 +229,7 @@ namespace RaaiVan.Modules.Sharing
                 ",\"PostID\":\"" + (!PostID.HasValue ? string.Empty : PostID.ToString()) + "\"" +
                 ",\"Description\":\"" + Base64.encode(Description) + "\"" +
                 ",\"Sender\":" + Sender.toJson(applicationId, true) +
-                ",\"SendDate\":\"" + (!SendDate.HasValue ? string.Empty : PublicMethods.get_local_date(SendDate, true)) + "\"" +
+                ",\"SendDate\":\"" + (!SendDate.HasValue ? string.Empty : GenericDate.get_local_date(SendDate, true)) + "\"" +
                 ",\"GregorianSendDate\":\"" + (!SendDate.HasValue ? string.Empty : SendDate.ToString()) + "\"" +
                 ",\"NDaysAgo\":" + (!SendDate.HasValue ? "null" : PublicMethods.n_days_ago(SendDate.Value).ToString()) +
                 ",\"LikesCount\":" + (LikesCount.HasValue ? LikesCount.Value : 0).ToString() +

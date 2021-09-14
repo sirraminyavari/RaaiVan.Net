@@ -1871,7 +1871,7 @@ namespace RaaiVan.Web.API
                 knowledgeId.Value, userId, "Evaluation", wfVersionId: wfVersionId).FirstOrDefault();
 
             responseText = "{\"EvaluationDate\":\"" + (!evaluationDate.HasValue ? string.Empty :
-                    PublicMethods.get_local_date(evaluationDate.Value)) + "\"" +
+                    GenericDate.get_local_date(evaluationDate.Value)) + "\"" +
                 ",\"TextOptions\":[" + (hist == null ? string.Empty : 
                     string.Join(",", hist.TextOptions.Select(u => "\"" + Base64.encode(u) + "\""))) + "]" +
                 ",\"Description\":\"" + (hist == null ? string.Empty : Base64.encode(hist.Description)) + "\"" +
@@ -2651,7 +2651,7 @@ namespace RaaiVan.Web.API
             return "{\"FeedBackID\":\"" + feedback.FeedBackID.ToString() + "\"" +
                 ",\"KnowledgeID\":\"" + feedback.KnowledgeID.ToString() + "\"" +
                 ",\"FeedBackType\":\"" + feedback.FeedBackType.ToString() + "\"" +
-                ",\"SendDate\":\"" + PublicMethods.get_local_date(feedback.SendDate.Value, true) + "\"" +
+                ",\"SendDate\":\"" + GenericDate.get_local_date(feedback.SendDate.Value, true) + "\"" +
                 ",\"GregorianSendDate\":\"" + feedback.SendDate.Value.ToString() + "\"" +
                 ",\"Value\":\"" + feedback.Value.Value.ToString() + "\"" +
                 ",\"Description\":\"" + Base64.encode(feedback.Description) + "\"" +
