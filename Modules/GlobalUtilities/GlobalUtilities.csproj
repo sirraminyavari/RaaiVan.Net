@@ -347,6 +347,7 @@
     <Compile Include="DBCall\Documents\DCTParsers.cs" />
     <Compile Include="DBCall\Documents\DocumentObjects.cs" />
     <Compile Include="DBCall\Documents\DocumentsController.cs" />
+    <Compile Include="DocFileInfo.cs" />
     <Compile Include="DocumentUtilities.cs" />
     <Compile Include="DownloadedFileMeta.cs" />
     <Compile Include="EmailQueue.cs" />
@@ -367,6 +368,7 @@
     <Compile Include="DBCall\Logs\LogObjects.cs" />
     <Compile Include="DBCall\Logs\LGParsers.cs" />
     <Compile Include="ICallWebService.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="RabbitMQAPI.cs" />
     <Compile Include="RedisAPI.cs" />
     <Compile Include="RSSObjects.cs" />
@@ -391,9 +393,6 @@
     <Compile Include="DBCall\Users\USRParsers.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="log4net.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>

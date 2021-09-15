@@ -3838,7 +3838,7 @@ namespace RaaiVan.Web.API
             else {
                 long totalCount = 0;
                 List<NodesCount> nodesCount = new List<NodesCount>();
-
+                
                 List<Node> nodes = CNController.get_nodes(applicationId: paramsContainer.Tenant.Id,
                     totalCount: ref totalCount, nodesCount: ref nodesCount,
                     nodeTypeIds: nodeTypeIds, useNodeTypeHierarchy: useNodeTypeHierarchy, relatedToNodeId: relatedToNodeId, 

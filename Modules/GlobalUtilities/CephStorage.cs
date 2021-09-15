@@ -125,13 +125,24 @@ namespace RaaiVan.Modules.GlobalUtilities
                     GetObjectMetadataResponse response = client.GetObjectMetadata(request);
 
                     watch?.Stop();
-                    
+                    if (watch != null) Logger.info(LoggerName.Ceph, new
+                    {
+                        method = "GetObjectMetaData",
+                        file_name = fileName,
+                        duration = watch.ElapsedMilliseconds
+                    });
+
                     return true;
                 }
             }
             catch (AmazonS3Exception ex)
             {
                 watch?.Stop();
+                if (watch != null) Logger.info(LoggerName.Ceph, new {
+                    method = "GetObjectMetaData",
+                    file_name = fileName,
+                    duration = watch.ElapsedMilliseconds
+                }, ex);
 
                 if (ex.StatusCode == System.Net.HttpStatusCode.NotFound) return false;
                 return false;
@@ -140,6 +151,8 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static byte[] get_file(string fileName)
         {
+            Stopwatch watch = PublicMethods.is_dev() ? Stopwatch.StartNew() : null;
+
             try
             {
                 using (AmazonS3Client client = get_client())
@@ -154,11 +167,31 @@ namespace RaaiVan.Modules.GlobalUtilities
                     using (MemoryStream stream = new MemoryStream())
                     {
                         response.ResponseStream.CopyTo(stream);
-                        return stream.ToArray();
+
+                        watch?.Stop();
+                        if (watch != null) Logger.info(LoggerName.Ceph, new {
+                            method = "GetObject",
+                            file_name = fileName,
+                            size = stream.Length,
+                            duration = watch.ElapsedMilliseconds
+                        });
+
+                        byte[] ret = stream.ToArray();
+
+                        return ret;
                     }
                 }
             }
-            catch { return new byte[0]; }
+            catch(Exception ex) {
+                watch?.Stop();
+                if (watch != null) Logger.info(LoggerName.Ceph, new {
+                    method = "GetObject",
+                    file_name = fileName,
+                    duration = watch.ElapsedMilliseconds
+                }, ex);
+
+                return new byte[0];
+            }
         }
 
         public static bool rename_file(string oldFileName, string newFileName, bool isPublic)
@@ -207,6 +240,8 @@ namespace RaaiVan.Modules.GlobalUtilities
 
         public static string get_download_url(string fileName, bool isPublic, int expiresInMinutes = 60 * 10)
         {
+            Stopwatch watch = PublicMethods.is_dev() ? Stopwatch.StartNew() : null;
+
             try
             {
                 if (string.IsNullOrEmpty(fileName)) return string.Empty;
@@ -226,10 +261,29 @@ namespace RaaiVan.Modules.GlobalUtilities
                     request.Expires = DateTime.UtcNow.AddMinutes(expiresInMinutes);
                     request.Protocol = RaaiVanSettings.CephStorage.URL.ToLower().StartsWith("https") ? Protocol.HTTPS : Protocol.HTTP;
 
-                    return client.GetPreSignedURL(request);
+                    string url = client.GetPreSignedURL(request);
+
+                    watch?.Stop();
+                    if (watch != null) Logger.info(LoggerName.Ceph, new {
+                        method = "GetPreSignedURL",
+                        file_name = fileName,
+                        url,
+                        duration = watch.ElapsedMilliseconds
+                    });
+
+                    return url;
                 }
             }
-            catch { return string.Empty; }
+            catch(Exception ex) {
+                watch?.Stop();
+                if (watch != null) Logger.info(LoggerName.Ceph, new {
+                    method = "GetPreSignedURL",
+                    file_name = fileName,
+                    duration = watch.ElapsedMilliseconds
+                }, ex);
+
+                return string.Empty;
+            }
         }
     }
 }

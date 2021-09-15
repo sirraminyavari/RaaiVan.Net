@@ -179,7 +179,7 @@ namespace RaaiVan.Modules.Knowledge
                     ID = table.GetLong(i, "ID"),
                     KnowledgeID = table.GetGuid(i, "KnowledgeID"),
                     Action = table.GetString(i, "Action"),
-                    TextOptions = table.GetString(i, "TextOptions")
+                    TextOptions = table.GetString(i, "TextOptions", defaultValue: "")
                         .Split('~').Select(u => u.Trim()).Where(u => !string.IsNullOrEmpty(u)).ToList(),
                     Description = table.GetString(i, "Description"),
                     Actor = new User()

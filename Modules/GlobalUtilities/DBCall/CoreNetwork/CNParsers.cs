@@ -12,33 +12,33 @@ namespace RaaiVan.Modules.CoreNetwork
     {
         public static List<NodeType> node_types(DBResultSet results, ref long totalCount)
         {
-            List<NodeType> nodeTypes = new List<NodeType>();
+            List<NodeType> retList = new List<NodeType>();
 
             RVDataTable table = results.get_table();
 
             for (int i = 0; i < table.Rows.Count; i++)
             {
-                NodeType nodeType = new NodeType();
+                NodeType nodeType = new NodeType()
+                {
+                    NodeTypeID = table.GetGuid(i, "NodeTypeID"),
+                    ParentID = table.GetGuid(i, "ParentID"),
+                    Name = table.GetString(i, "Name"),
+                    NodeTypeAdditionalID = table.GetString(i, "AdditionalID"),
+                    AdditionalID = table.GetInt(i, "AdditionalID"),
+                    AdditionalIDPattern = table.GetString(i, "AdditionalIDPattern"),
+                    Archive = table.GetBool(i, "Archive"),
+                    IsService = table.GetBool(i, "IsService")
+                };
 
-                nodeType.NodeTypeID = table.GetGuid(i, "NodeTypeID");
-                nodeType.ParentID = table.GetGuid(i, "ParentID");
-                nodeType.Name = table.GetString(i, "Name");
-                nodeType.NodeTypeAdditionalID = table.GetString(i, "AdditionalID");
-                nodeType.AdditionalID = table.GetInt(i, "AdditionalID");
-
-                nodeType.AdditionalIDPattern = table.GetString(i, "AdditionalIDPattern");
-                nodeType.HasDefaultPattern = string.IsNullOrEmpty(nodeType.NodeTypeAdditionalID);
+                nodeType.HasDefaultPattern = string.IsNullOrEmpty(nodeType.AdditionalIDPattern);
                 if (nodeType.HasDefaultPattern.Value) nodeType.AdditionalIDPattern = CNUtilities.DefaultAdditionalIDPattern;
 
-                nodeType.Archive = table.GetBool(i, "Archive");
-                nodeType.IsService = table.GetBool(i, "IsService");
-
-                nodeTypes.Add(nodeType);
+                retList.Add(nodeType);
             }
 
             totalCount = results.get_table(1).GetLong(row: 0, column: 0, defaultValue: 0).Value;
 
-            return nodeTypes;
+            return retList;
         }
 
         public static List<NodeType> node_types(DBResultSet results) {

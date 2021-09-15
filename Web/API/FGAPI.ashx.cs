@@ -2277,7 +2277,7 @@ namespace RaaiVan.Web.API
             elementsAbstract.AddRange(FGController.get_poll_abstract_text(paramsContainer.Tenant.Id, pollId.Value,
                 counts.Where(u => elements.Any(x => u.Key == x.GetRefElementID() &&
                 (x.Type == FormElementTypes.Select || x.Type == FormElementTypes.Checkbox))).Select(v => v.Key).ToList(), 100, null));
-
+            
             elementsAbstract.AddRange(FGController.get_poll_abstract_guid(paramsContainer.Tenant.Id, pollId.Value,
                 counts.Where(u => elements.Any(x => u.Key == x.GetRefElementID() &&
                 (x.Type == FormElementTypes.Node || x.Type == FormElementTypes.User))).Select(v => v.Key).ToList(), 5, null));
