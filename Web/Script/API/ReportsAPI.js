@@ -66,13 +66,13 @@
                 Get: function (params) {
                     params = params || {};
                     params.Parameters = {
-                        NodeTypeID: params.NodeTypeID || "", CreatorNodeTypeID: params.CreatorNodeTypeID || "",
-                        CreatorNodeIDs: params.CreatorNodeIDs || "", Delimiter: "|",
+                        NodeTypeIDs: params.NodeTypeIDs || "", CreatorNodeTypeID: params.CreatorNodeTypeID || "",
+                        CreatorNodeIDs: params.CreatorNodeIDs || "",
                         BeginDate: params.BeginDate || "", FinishDate: params.FinishDate || "",
-                        ParamsOrder: "NodeTypeID:Guid|CreatorNodeTypeID:Guid|CreatorNodeIDs:String|Delimiter:Char" +
+                        ParamsOrder: "NodeTypeIDs:Structure|CreatorNodeTypeID:Guid|CreatorNodeIDs:Structure" +
                             "|BeginDate:DateTime|FinishDate:DateTime"
                     };
-
+                    
                     ReportsAPI.GetReport(params);
                 }
             },
@@ -100,8 +100,8 @@
                     params = params || {};
                     params.Parameters = {
                         CreatorNodeTypeID: params.CreatorNodeTypeID || "", CreatorNodeIDs: params.CreatorNodeIDs || "",
-                        Delimiter: "|", BeginDate: params.BeginDate || "", FinishDate: params.FinishDate || "",
-                        ParamsOrder: "CreatorNodeTypeID:Guid|CreatorNodeIDs:String|Delimiter:Char" +
+                        BeginDate: params.BeginDate || "", FinishDate: params.FinishDate || "",
+                        ParamsOrder: "CreatorNodeTypeID:Guid|CreatorNodeIDs:Structure" +
                             "|BeginDate:DateTime|FinishDate:DateTime"
                     };
 

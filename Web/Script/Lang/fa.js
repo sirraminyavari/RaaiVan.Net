@@ -1794,6 +1794,7 @@
                 "KnowledgeSupplyIndicatorsReport": {
                     "_Title": "شاخص های عرضه دانش",
                     "GroupName": "نام گروه",
+                    "FullName": "نام و نام خانوادگی",
                     "MembersCount": "تعداد اعضا",
                     "ContentsCount": "تعداد دانش تولید شده",
                     "AverageCollaborationShare": "میانگین درصد مشارکت",
@@ -1801,7 +1802,11 @@
                     "AverageAcceptedScore": "میانگین امتیاز دانش های تایید شده",
                     "PublishedCount": "تعداد دانش منتشر شده",
                     "AnswersCount": "تعداد پاسخ های ارسال شده بر روی پرسش ها",
-                    "WikiChangesCount": "تعداد پاراگراف های ویرایش شده در دانشنامه ها"
+                    "WikiChangesCount": "تعداد پاراگراف های ویرایش شده در دانشنامه ها",
+                    "BarChart": {
+                        "RegisteredCount": "تعداد ثبت شده",
+                        "PublishedCount": "تعداد منتشر شده"
+                    }
                 },
                 "KnowledgeDemandIndicatorsReport": {
                     "_Title": "شاخص های تقاضای دانش",
@@ -1816,11 +1821,13 @@
                 },
                 "SocialContributionIndicatorsReport": {
                     "_Title": "شاخص های مشارکت",
+                    "_Description": "مشارکت کاربران در گفتگوها در شبکه اجتماعی",
                     "GroupName": "نام گروه",
+                    "FullName": "نام و نام خانوادگی",
                     "MembersCount": "تعداد اعضا",
-                    "ActiveUsersCount": "تعداد کاربران فعال",
-                    "PostsCount": "تعداد پست های ارسال شده در شبکه اجتماعی",
-                    "CommentsCount": "تعداد نظرات ارسال شده بر روی پست ها"
+                    "ActiveUsersCount": "تعداد اعضای فعال در سامانه",
+                    "PostsCount": "تعداد پست ها",
+                    "CommentsCount": "تعداد نظرات"
                 },
                 "ApplicationsPerformanceReport": {
                     "_Title": "عملکرد تیم ها در کلیک مایند",

@@ -978,13 +978,19 @@
             var rowLabels = (data.Rows || []).map(r => that.get_bar_label(period, Base64.decode(r.Period)));
             var rowColors = (data.Rows || []).map(r => GlobalUtilities.generate_color(Base64.decode(r.Period)));
 
-            var datasets = colNames.map(col => ({
-                label: (((RVDic.RPT[options.ModuleIdentifier] || {})[options.ReportName] || {}).BarChart || {})[col] || col,
-                data: (data.Rows || []).map(r => GlobalUtilities.get_type(r[col]) == "number" ? r[col] : + Base64.decode(r[col])),
-                backgroundColor: colNames.length == 1 ? rowColors.map(c => c.Color) : GlobalUtilities.generate_color(col).Color,
-                borderColor: colNames.length == 1 ? rowColors.map(c => c.Dark) : GlobalUtilities.generate_color(col).Dark,
-                borderWidth: 1
-            }));
+            var datasets = colNames.map(col => {
+                var dicEntry = (RVDic.RPT[options.ModuleIdentifier] || {})[options.ReportName] || {};
+                
+                return {
+                    label: (dicEntry.BarChart || {})[col] || dicEntry[col] || col,
+                    data: (data.Rows || []).map(r => GlobalUtilities.get_type(r[col]) == "number" ? r[col] : + Base64.decode(r[col])),
+                    backgroundColor: colNames.length == 1 ? rowColors.map(c => c.Color) :
+                        GlobalUtilities.generate_color(Base64.encode(col)).Color,
+                    borderColor: colNames.length == 1 ? rowColors.map(c => c.Dark) :
+                        GlobalUtilities.generate_color(Base64.encode(col)).Dark,
+                    borderWidth: 1
+                };
+            });
 
             new Chart(elems["chart"].getContext("2d"), {
                 type: 'bar',
@@ -993,11 +999,12 @@
                     datasets: datasets
                 },
                 options: {
+                    responsive: true,
                     scales: { y: { beginAtZero: true } },
-                    plugins: { legend: { display: false } },
-                    events: ['click'],
+                    plugins: { legend: { display: datasets.length > 1 } },
+                    //events: ['click'],
                     onClick: (e, bar) => {
-                        if (((bar || []).length != 1)) return;
+                        if (((bar || []).length < 1)) return;
 
                         var selectedIndex = bar[0].index;
                         var periodObj = data.ChartPeriods[rowPeriods[selectedIndex]];

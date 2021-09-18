@@ -1794,6 +1794,7 @@
                 "KnowledgeSupplyIndicatorsReport": {
                     "_Title": "knowledge supply indicators",
                     "GroupName": "group name",
+                    "FullName": "full name",
                     "MembersCount": "number of members",
                     "ContentsCount": "number of items",
                     "AverageCollaborationShare": "average contribution share",
@@ -1801,7 +1802,11 @@
                     "AverageAcceptedScore": "average score of accepted items",
                     "PublishedCount": "number of published items",
                     "AnswersCount": "number of the answers sent on the questions",
-                    "WikiChangesCount": "number of wiki paragraph editions"
+                    "WikiChangesCount": "number of wiki paragraph editions",
+                    "BarChart": {
+                        "RegisteredCount": "registered count",
+                        "PublishedCount": "published count"
+                    }
                 },
                 "KnowledgeDemandIndicatorsReport": {
                     "_Title": "knowledge demand indicators",
@@ -1816,11 +1821,13 @@
                 },
                 "SocialContributionIndicatorsReport": {
                     "_Title": "social contribution indicators",
+                    "_Description": "users' contribution in conversations in the social network",
                     "GroupName": "group name",
+                    "FullName": "full name",
                     "MembersCount": "number of members",
-                    "ActiveUsersCount": "number of active users",
-                    "PostsCount": "number of posts sent in social network",
-                    "CommentsCount": "number of comments sent on the posts"
+                    "ActiveUsersCount": "number of active users in the system",
+                    "PostsCount": "number of posts",
+                    "CommentsCount": "number of comments"
                 },
                 "ApplicationsPerformanceReport": {
                     "_Title": "CliqMind teams' performance report",

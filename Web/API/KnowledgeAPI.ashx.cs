@@ -2496,7 +2496,7 @@ namespace RaaiVan.Web.API
         {
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
-
+            
             if (!knowledgeId.HasValue || (
                 !PublicMethods.is_system_admin(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID.Value) &&
                 !CNController.is_service_admin(paramsContainer.Tenant.Id, knowledgeId.Value, paramsContainer.CurrentUserID.Value) &&

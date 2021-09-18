@@ -20,9 +20,9 @@ namespace RaaiVan.Modules.Reports
             _ReportIDs.Add(new RVReport("RV_OveralReport", Guid.Parse("1D2E331F-78AA-4778-84C2-11FA2BFC1BBF")));
             _ReportIDs.Add(new RVReport("RV_LogsReport", Guid.Parse("0285BD01-4B1F-465E-9830-127C3533E575")));
             _ReportIDs.Add(new RVReport("RV_ErrorLogsReport", Guid.Parse("876936F0-653F-4B73-803E-3179D102B38D")));
-            _ReportIDs.Add(new RVReport("RV_KnowledgeSupplyIndicatorsReport", Guid.Parse("6B4724E9-3DB1-4879-8E18-4BF7B51F9BAA")));
+            _ReportIDs.Add(new RVReport("RV_KnowledgeSupplyIndicatorsReport", Guid.Parse("6B4724E9-3DB1-4879-8E18-4BF7B51F9BAA"), hasChart: true));
             _ReportIDs.Add(new RVReport("RV_KnowledgeDemandIndicatorsReport", Guid.Parse("B4CB2F7E-B673-4023-9940-75D292E29CA7")));
-            _ReportIDs.Add(new RVReport("RV_SocialContributionIndicatorsReport", Guid.Parse("AE876616-C6F6-4B98-A034-80F16D56C75F")));
+            _ReportIDs.Add(new RVReport("RV_SocialContributionIndicatorsReport", Guid.Parse("AE876616-C6F6-4B98-A034-80F16D56C75F"), hasChart: true));
             _ReportIDs.Add(new RVReport("RV_ApplicationsPerformanceReport", Guid.Parse("B3F87E3C-F362-4C67-AC77-793522C47F81")));
             _ReportIDs.Add(new RVReport("USR_UsersListReport", Guid.Parse("BEF0F10D-75D3-44FD-B23F-B7F62C7E4DB7")));
             _ReportIDs.Add(new RVReport("USR_ActiveUsersReport", Guid.Parse("541174C8-E5A3-43C0-84D2-5CDCF89BAEDF"), hasChart: true));
