@@ -411,11 +411,16 @@ namespace RaaiVan.Web.API
 
                 if (!IsAlreadyAuthenticated)
                 {
+                    if (apps == null ||
+                        apps.Where(a => !InvitationApplicationID.HasValue || a.ApplicationID != InvitationApplicationID).Count() == 0)
+                        wizard = true;
+                    /*
                     if (apps == null || apps.Count == 0)
                         wizard = true;
                     else if (!apps.Any(ap => ap.CreatorUserID == User.UserID))
                         wizard = !PublicMethods.get_dic_value<bool>(User.Settings, "first_team_wizard", defaultValue: false);
                     //first_team_wizard: true => the user has passed the wizard at least one time
+                    */
                 }
 
                 if (wizard) Response["RedirectToOnboarding"] = true;

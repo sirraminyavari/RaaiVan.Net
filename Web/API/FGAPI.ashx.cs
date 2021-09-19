@@ -354,6 +354,43 @@ namespace RaaiVan.Web.API
                         PublicMethods.parse_int(context.Request.Params["LowerBoundary"]), ref responseText);
                     _return_response(ref responseText);
                     return;
+
+                case "GetAPOMaturityAssessmentStatus":
+                    responseText = APOMaturityAssessment.get_statistics(paramsContainer.ApplicationID, paramsContainer.CurrentUserID);
+                    _return_response(ref responseText);
+                    return;
+                case "NewAPOMaturityAssessment":
+                    responseText = APOMaturityAssessment.add(paramsContainer.ApplicationID, 
+                        PublicMethods.parse_int(context.Request.Params["Period"], defaultValue: 0).Value,
+                        paramsContainer.CurrentUserID);
+                    _return_response(ref responseText);
+                    return;
+                case "EditAPOMaturityAssessmentPeriod":
+                    responseText = APOMaturityAssessment.edit(paramsContainer.ApplicationID,
+                        PublicMethods.parse_guid(context.Request.Params["PollID"]),
+                        PublicMethods.parse_int(context.Request.Params["Period"], defaultValue: 0).Value,
+                        paramsContainer.CurrentUserID);
+                    _return_response(ref responseText);
+                    return;
+                case "RemoveAPOMaturityAssessment":
+                    responseText = APOMaturityAssessment.remove(paramsContainer.ApplicationID,
+                        PublicMethods.parse_guid(context.Request.Params["PollID"]),
+                        paramsContainer.CurrentUserID);
+                    _return_response(ref responseText);
+                    return;
+                case "GetAPOMaturityAssessmentForm":
+                    responseText = APOMaturityAssessment.get_form(paramsContainer.ApplicationID,
+                        PublicMethods.parse_guid(context.Request.Params["PollID"]),
+                        paramsContainer.CurrentUserID);
+                    _return_response(ref responseText);
+                    return;
+                case "SaveAPOMaturityAssessmentForm":
+                    responseText = APOMaturityAssessment.save_form(paramsContainer.ApplicationID,
+                        PublicMethods.parse_guid(context.Request.Params["PollID"]),
+                        FGUtilities.get_form_elements(context.Request.Params["Elements"]),
+                        paramsContainer.CurrentUserID);
+                    _return_response(ref responseText);
+                    return;
             }
 
             paramsContainer.return_response(PublicConsts.BadRequestResponse);
@@ -1798,6 +1835,8 @@ namespace RaaiVan.Web.API
         {
             //Privacy Check: OK
             if (!paramsContainer.GBEdit) return;
+
+            if (!archive.HasValue) archive = false;
 
             long totalCount = 0;
 
