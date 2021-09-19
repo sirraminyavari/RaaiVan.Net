@@ -83,9 +83,10 @@
                 Get: function (params) {
                     params = params || {};
                     params.Parameters = {
-                        CreatorNodeTypeID: params.CreatorNodeTypeID || "", CreatorNodeIDs: params.CreatorNodeIDs || "",
-                        Delimiter: "|", BeginDate: params.BeginDate || "", FinishDate: params.FinishDate || "",
-                        ParamsOrder: "CreatorNodeTypeID:Guid|CreatorNodeIDs:String|Delimiter:Char" +
+                        NodeTypeIDs: params.NodeTypeIDs || "", CreatorNodeTypeID: params.CreatorNodeTypeID || "",
+                        CreatorNodeIDs: params.CreatorNodeIDs || "",
+                        BeginDate: params.BeginDate || "", FinishDate: params.FinishDate || "",
+                        ParamsOrder: "NodeTypeIDs:Structure|CreatorNodeTypeID:Guid|CreatorNodeIDs:Structure" +
                             "|BeginDate:DateTime|FinishDate:DateTime"
                     };
 

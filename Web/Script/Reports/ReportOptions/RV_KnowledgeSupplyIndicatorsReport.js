@@ -27,11 +27,34 @@
             var that = this;
 
             var elems = GlobalUtilities.create_nested_elements([
-                { Type: "div", Class: "small-12 medium-8 large-6", Name: "contentTypes", Style: "margin-bottom:1rem;" },
-                { Type: "div", Class: "small-12 medium-12 large-12" },
-                { Type: "div", Class: "small-12 medium-8 large-6", Name: "creatorNodeTypeSelect" },
-                { Type: "div", Class: "small-12 medium-12 large-12" },
-                { Type: "div", Class: "small-12 medium-8 large-6", Name: "nodesList", Style: "margin:1rem 0rem;" },
+                {
+                    Type: "div", Class: "small-12 medium-10 large-8",
+                    Style: "margin-bottom:1rem; display:flex; flex-flow:row;",
+                    Childs: [
+                        {
+                            Type: "div", Style: "flex:0 0 auto; width:8rem;",
+                            Childs: [{ Type: "text", TextValue: RVDic.KnowledgeTypes + ":" }]
+                        },
+                        { Type: "div", Style: "flex:1 1 auto;", Name: "contentTypes" }
+                    ]
+                },
+                {
+                    Type: "div", Class: "small-12 medium-10 large-8",
+                    Style: "margin-bottom:1rem; display:flex; flex-flow:row;",
+                    Childs: [
+                        {
+                            Type: "div", Style: "flex:0 0 auto; width:8rem;",
+                            Childs: [{ Type: "text", TextValue: RVDic.Creator + ":" }]
+                        },
+                        {
+                            Type: "div", Style: "flex:1 1 auto;",
+                            Childs: [
+                                { Type: "div", Name: "creatorNodeTypeSelect" },
+                                { Type: "div", Name: "nodesList", Style: "margin:1rem 0rem;" },
+                            ]
+                        }
+                    ]
+                },
                 { Type: "div", Class: "small-12 medium-12 large-12" },
                 {
                     Type: "div", Style: "display:inline-block; margin-" + RV_RevFloat + ":1.5rem;",
@@ -97,11 +120,11 @@
                 }
             });
 
-            GlobalUtilities.append_calendar(elems["beginDate"], null, function (cal) {
+            GlobalUtilities.append_calendar(elems["beginDate"], { ClearButton: true }, function (cal) {
                 that.Objects.BeginDate = cal;
             });
 
-            GlobalUtilities.append_calendar(elems["finishDate"], null, function (cal) {
+            GlobalUtilities.append_calendar(elems["finishDate"], { ClearButton: true }, function (cal) {
                 that.Objects.FinishDate = cal;
             });
 

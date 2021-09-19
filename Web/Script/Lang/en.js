@@ -55,6 +55,7 @@
         "Answers": "answers",
         "AnswersCount": "answers count",
         "AnyChangeWillBeSaved": "any change will be saved",
+        "Applicant": "applicant",
         "ApplyThisEdition": "apply this version",
         "Archive": "archive",
         "AskedByN": "asked by [n]",
@@ -1794,8 +1795,8 @@
                 "KnowledgeSupplyIndicatorsReport": {
                     "_Title": "knowledge supply indicators",
                     "GroupName": "group name",
-                    "FullName": "full name",
                     "MembersCount": "number of members",
+                    "FullName": "full name",
                     "ContentsCount": "number of items",
                     "AverageCollaborationShare": "average contribution share",
                     "AcceptedCount": "number of accepted items",
@@ -1812,12 +1813,17 @@
                     "_Title": "knowledge demand indicators",
                     "GroupName": "group name",
                     "MembersCount": "number of members",
+                    "FullName": "full name",
                     "SearchesCount": "number of searches performed",
                     "QuestionsCount": "number of the new questions",
                     "ContentVisitsCount": "number of item page visits",
                     "DistinctContentVisitsCount": "number of distinct items visited",
                     "PostsCount": "number of posts sent on items' pages",
-                    "CommentsCount": "number of comments sent on the posts"
+                    "CommentsCount": "number of comments sent on the posts",
+                    "BarChart": {
+                        "VisitsCount": "visits count",
+                        "SearchesCount": "searches count"
+                    }
                 },
                 "SocialContributionIndicatorsReport": {
                     "_Title": "social contribution indicators",

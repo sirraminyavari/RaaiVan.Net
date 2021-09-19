@@ -81,5 +81,17 @@ namespace RaaiVan.Web.API
                 return "{\"Poll\":" + p.toJson() + ",\"Statistics\":" + (stats == null ? "{}" : stats.toJson()) + "}";
             })) + "]}";
         }
+
+        private static bool add() { return true; }
+
+        private static bool edit() { return true; }
+
+        private static bool remove() { return true; }
+
+        private static string get_archived_items() { return string.Empty; }
+
+
+
+
     }
 }

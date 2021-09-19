@@ -55,6 +55,7 @@
         "Answers": "پاسخ ها",
         "AnswersCount": "تعداد پاسخ ها",
         "AnyChangeWillBeSaved": "همه تغییرات ذخیره می گردند",
+        "Applicant": "متقاضی",
         "ApplyThisEdition": "این ویرایش را اعمال کن",
         "Archive": "آرشیو",
         "AskedByN": "پرسیده شده توسط [n]",
@@ -1794,8 +1795,8 @@
                 "KnowledgeSupplyIndicatorsReport": {
                     "_Title": "شاخص های عرضه دانش",
                     "GroupName": "نام گروه",
-                    "FullName": "نام و نام خانوادگی",
                     "MembersCount": "تعداد اعضا",
+                    "FullName": "نام و نام خانوادگی",
                     "ContentsCount": "تعداد دانش تولید شده",
                     "AverageCollaborationShare": "میانگین درصد مشارکت",
                     "AcceptedCount": "تعداد دانش تایید شده",
@@ -1812,12 +1813,17 @@
                     "_Title": "شاخص های تقاضای دانش",
                     "GroupName": "نام گروه",
                     "MembersCount": "تعداد اعضا",
+                    "FullName": "نام و نام خانوادگی",
                     "SearchesCount": "تعداد جستجوهای انجام شده",
                     "QuestionsCount": "تعداد پرسش های مطرح شده",
                     "ContentVisitsCount": "تعداد بازدید از صفحات دانش ها",
                     "DistinctContentVisitsCount": "تعداد دانش های مشاهده شده",
                     "PostsCount": "تعداد پست های ارسال شده در صفحات دانش ها",
-                    "CommentsCount": "تعداد نظرات ارسال شده بر روی پست ها"
+                    "CommentsCount": "تعداد نظرات ارسال شده بر روی پست ها",
+                    "BarChart": {
+                        "VisitsCount": "تعداد بازدیدها",
+                        "SearchesCount": "تعداد جستجوها"
+                    }
                 },
                 "SocialContributionIndicatorsReport": {
                     "_Title": "شاخص های مشارکت",
