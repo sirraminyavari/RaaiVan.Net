@@ -49,7 +49,7 @@ namespace RaaiVan.Modules.Documents
 
     public static class PDFUtil
     {
-        public static PdfReader open_pdf_file(Guid applicationId, byte[] fileBytes, string password, ref bool invalidPassword) {
+        public static PdfReader open_pdf_file(byte[] fileBytes, string password, ref bool invalidPassword) {
             invalidPassword = false;
 
             try
@@ -68,9 +68,9 @@ namespace RaaiVan.Modules.Documents
             }
         }
 
-        public static PdfReader open_pdf_file(Guid applicationId, DocFileInfo pdf, string password, ref bool invalidPassword)
+        public static PdfReader open_pdf_file(DocFileInfo pdf, string password, ref bool invalidPassword)
         {
-            return open_pdf_file(applicationId, pdf.toByteArray(applicationId), password, ref invalidPassword);
+            return open_pdf_file(pdf.toByteArray(), password, ref invalidPassword);
         }
 
         public static byte[] to_byte_array(PdfReader reader) {
@@ -89,26 +89,26 @@ namespace RaaiVan.Modules.Documents
             catch { return new byte[0]; }
         }
 
-        public static byte[] get_pdf_content(Guid applicationId, byte[] fileBytes, string password, ref bool invalidPassword) {
-            PdfReader reader = PDFUtil.open_pdf_file(applicationId, fileBytes, password, ref invalidPassword);
+        public static byte[] get_pdf_content(byte[] fileBytes, string password, ref bool invalidPassword) {
+            PdfReader reader = PDFUtil.open_pdf_file(fileBytes, password, ref invalidPassword);
 
             if (reader != null) return PDFUtil.to_byte_array(reader);
             else return new byte[0];
         }
 
-        public static int get_pages_count(Guid applicationId, DocFileInfo pdf, string password, ref bool invalidPassword)
+        public static int get_pages_count(DocFileInfo pdf, string password, ref bool invalidPassword)
         {
             try
             {
-                PdfReader reader = PDFUtil.open_pdf_file(applicationId, pdf, password, ref invalidPassword);
+                PdfReader reader = PDFUtil.open_pdf_file(pdf, password, ref invalidPassword);
 
                 return reader == null ? 0 : reader.NumberOfPages;
             }
             catch { return 0; }
         }
 
-        public static int get_converted_pages_count(Guid applicationId, DocFileInfo destFile) {
-            return destFile.files_count_in_folder(applicationId);
+        public static int get_converted_pages_count(DocFileInfo destFile) {
+            return destFile.files_count_in_folder();
         }
 
         public static Bitmap get_image_magick(Guid applicationId, string pdfPath, int pageNum, ImageFormat imageFormat)
@@ -151,7 +151,7 @@ namespace RaaiVan.Modules.Documents
             else if (isProcessing.HasValue && (!repair || isProcessing.Value)) return;
             else PDF2ImageProcessing.is_processing(pdf.FileID.Value, true);
 
-            if (destFile.file_exists_in_folder(applicationId) && !repair) {
+            if (destFile.file_exists_in_folder() && !repair) {
                 PDF2ImageProcessing.is_processing(pdf.FileID.Value, false);
                 return;
             }
@@ -189,7 +189,7 @@ namespace RaaiVan.Modules.Documents
 
                     bool invalidPassword = false;
                     
-                    using (PdfReader reader = PDFUtil.open_pdf_file(applicationId, pdf, password, ref invalidPassword))
+                    using (PdfReader reader = PDFUtil.open_pdf_file(pdf, password, ref invalidPassword))
                     {
                         byte[] pdfContent = PDFUtil.to_byte_array(reader);
                         pages.Read(pdfContent, settings);
@@ -205,14 +205,14 @@ namespace RaaiVan.Modules.Documents
                         destFile.FileName = pageNum.ToString();
                         destFile.Extension = imageFormat.ToString().ToLower();
 
-                        if (destFile.exists(applicationId)) continue;
+                        if (destFile.exists()) continue;
 
                         try
                         {
                             using (MemoryStream stream = new MemoryStream())
                             {
                                 p.ToBitmap(imageFormat).Save(stream, imageFormat);
-                                destFile.store(applicationId, stream.ToArray());
+                                destFile.store(stream.ToArray());
                             }
                         }
                         catch (Exception ex)

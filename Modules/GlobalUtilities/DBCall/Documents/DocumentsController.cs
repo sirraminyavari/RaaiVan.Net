@@ -161,7 +161,7 @@ namespace RaaiVan.Modules.Documents
             if (ownerType != FileOwnerTypes.None) strOwnerType = ownerType.ToString();
 
             return DCTParsers.files(DBConnector.read(applicationId, GetFullyQualifiedName("GetOwnerFiles"),
-                applicationId, ProviderUtil.list_to_string<Guid>(ownerIds), ',', strOwnerType));
+                applicationId, ProviderUtil.list_to_string<Guid>(ownerIds), ',', strOwnerType), applicationId);
         }
 
         public static List<DocFileInfo> get_owner_files(Guid applicationId, 
@@ -173,7 +173,7 @@ namespace RaaiVan.Modules.Documents
         public static List<DocFileInfo> get_files(Guid applicationId, List<Guid> fileIds)
         {
             return DCTParsers.files(DBConnector.read(applicationId, GetFullyQualifiedName("GetFilesByIDs"),
-                applicationId, ProviderUtil.list_to_string<Guid>(fileIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(fileIds), ','), applicationId);
         }
 
         public static DocFileInfo get_file(Guid applicationId, Guid fileId)
@@ -184,7 +184,7 @@ namespace RaaiVan.Modules.Documents
         public static List<DocFileInfo> get_file_owner_nodes(Guid applicationId, List<Guid> fileIds)
         {
             return DCTParsers.file_owner_nodes(DBConnector.read(applicationId, GetFullyQualifiedName("GetFileOwnerNodes"),
-                applicationId, ProviderUtil.list_to_string<Guid>(fileIds), ','));
+                applicationId, ProviderUtil.list_to_string<Guid>(fileIds), ','), applicationId);
         }
 
         public static DocFileInfo get_file_owner_node(Guid applicationId, Guid fileId)
@@ -240,7 +240,7 @@ namespace RaaiVan.Modules.Documents
             string allowedExtractions, char delimiter, int? count)
         {
             return DCTParsers.files(DBConnector.read(applicationId, GetFullyQualifiedName("GetNotExtractedFiles"),
-                applicationId, allowedExtractions, delimiter, count));
+                applicationId, allowedExtractions, delimiter, count), applicationId);
         }
 
         //save extracted file content in DB

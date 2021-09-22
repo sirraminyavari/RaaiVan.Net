@@ -37,7 +37,7 @@ namespace RaaiVan.Web.API
                         PublicMethods.parse_guid(context.Request.Params["OwnerID"]),
                         PublicMethods.parse_string(context.Request.Params["OwnerType"], false),
                         SharingUtilities.get_privacy_type(PublicMethods.parse_string(context.Request.Params["Privacy"], false)),
-                        DocumentUtilities.get_files_info(context.Request.Params["AttachedFile"]).FirstOrDefault(),
+                        DocumentUtilities.get_files_info(paramsContainer.ApplicationID, context.Request.Params["AttachedFile"]).FirstOrDefault(),
                         ref responseText);
                     _return_response(ref responseText);
                     return;
@@ -214,7 +214,7 @@ namespace RaaiVan.Web.API
 
                 postInfo.HasPicture = true;
 
-                attachedFile.move(paramsContainer.Tenant.Id, FolderNames.TemporaryFiles, FolderNames.Pictures, postInfo.PostID);
+                attachedFile.move(FolderNames.TemporaryFiles, FolderNames.Pictures, postInfo.PostID);
 
                 fileMoved = true;
             }
@@ -228,7 +228,7 @@ namespace RaaiVan.Web.API
                     Guid? oldId = attachedFile.FileID;
                     attachedFile.FileID = postInfo.PostID;
 
-                    attachedFile.move(paramsContainer.Tenant.Id, FolderNames.Pictures, FolderNames.TemporaryFiles, oldId);
+                    attachedFile.move(FolderNames.Pictures, FolderNames.TemporaryFiles, oldId);
                 }
 
                 responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";

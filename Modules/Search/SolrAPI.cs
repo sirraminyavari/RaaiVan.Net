@@ -58,7 +58,7 @@ namespace RaaiVan.Modules.Search
             return (!string.IsNullOrEmpty(ID) && ID.LastIndexOf("!") > 0) ? ID.Substring(ID.LastIndexOf("!") + 1) : ID;
         }
 
-        public SearchDoc toSearchDoc()
+        public SearchDoc toSearchDoc(Guid? applicationId)
         {
             Guid? id = PublicMethods.parse_guid(get_main_id());
             SearchDocType? tp = PublicMethods.parse_enum<SearchDocType>(SearchDocType);
@@ -66,6 +66,7 @@ namespace RaaiVan.Modules.Search
             if (!id.HasValue || !tp.HasValue) return null;
 
             return new SearchDoc(
+                applicationId: applicationId,
                 id: id.Value,
                 typeId: PublicMethods.parse_guid(TypeID),
                 content: Content,
@@ -81,7 +82,7 @@ namespace RaaiVan.Modules.Search
 
         public static SolrDoc fromSearchDoc(Guid applicationId, SearchDoc doc)
         {
-            if (doc == null) doc = new SearchDoc();
+            if (doc == null) doc = new SearchDoc(applicationId);
 
             return new SolrDoc()
             {
@@ -373,14 +374,14 @@ namespace RaaiVan.Modules.Search
                 });
             }
 
-            return results.Select(r => r.toSearchDoc()).Where(d => d != null).ToList();
+            return results.Select(r => r.toSearchDoc(applicationId)).Where(d => d != null).ToList();
         }
 
-        public static string extract_file_content(Guid applicationId, DocFileInfo file)
+        public static string extract_file_content(DocFileInfo file)
         {
             ISolrOperations<SolrDoc> solr = get_solr_operator();
 
-            using (Stream content = new MemoryStream(file.toByteArray(applicationId)))
+            using (Stream content = new MemoryStream(file.toByteArray()))
             {
                 ExtractResponse response = solr.Extract(new ExtractParameters(content,
                     PublicMethods.get_random_number().ToString(), PublicMethods.random_string(10))

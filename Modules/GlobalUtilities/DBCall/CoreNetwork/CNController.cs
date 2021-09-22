@@ -555,12 +555,12 @@ namespace RaaiVan.Modules.CoreNetwork
         private static List<Node> get_nodes(Guid applicationId,
             ref long totalCount, ref List<NodesCount> nodesCount, ref Dictionary<string, object> groupedResults,
             List<Guid> nodeTypeIds = null, NodeTypes? nodeType = null, bool? useNodeTypeHierarchy = null, 
-            Guid? relatedToNodeId = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null, 
+            List<Guid> relatedToIds = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null, 
             DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null,
             int? count = null, long? lowerBoundary = null, bool? searchable = null, bool? archive = null, 
-            bool? grabNoContentServices = null, List<FormFilter> filters = null, bool? matchAllFilters = null, 
-            bool? fetchCounts = null, Guid? currentUserId = null, Guid? creatorUserId = null,
-            bool checkAccess = false, Guid? groupByFormElementId = null)
+            bool? grabNoContentServices = null, bool? isFavorite = null, bool? isGroup = null, bool? isExpertiseDomain = null,
+            List<FormFilter> filters = null, bool? matchAllFilters = null, bool? fetchCounts = null, Guid? currentUserId = null, 
+            List<Guid> creatorUserIds = null, bool checkAccess = false, Guid? groupByFormElementId = null)
         {
             //prepare
             string strAddId = null;
@@ -570,15 +570,14 @@ namespace RaaiVan.Modules.CoreNetwork
             DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetNodes"),
                 applicationId,
                 currentUserId,
-                nodeTypeIds == null || nodeTypeIds.Count == 0 ? null : ProviderUtil.list_to_string<Guid>(nodeTypeIds),
-                ',',
+                GuidTableType.getCompositeType(nodeTypeIds),
                 string.IsNullOrEmpty(strAddId) ? null : strAddId,
                 useNodeTypeHierarchy,
-                relatedToNodeId,
+                GuidTableType.getCompositeType(relatedToIds),
                 string.IsNullOrEmpty(searchText) ? null : ProviderUtil.get_search_text(searchText),
                 isDocument,
                 isKnowledge,
-                creatorUserId,
+                GuidTableType.getCompositeType(creatorUserIds),
                 searchable,
                 archive,
                 grabNoContentServices,
@@ -586,12 +585,16 @@ namespace RaaiVan.Modules.CoreNetwork
                 upperCreationDateLimit,
                 count,
                 lowerBoundary,
+                isFavorite,
+                isGroup,
+                isExpertiseDomain,
                 FormFilterTableType.getCompositeType(filters),
                 matchAllFilters,
                 fetchCounts,
                 checkAccess,
                 RaaiVanSettings.DefaultPrivacy(applicationId),
-                groupByFormElementId);
+                groupByFormElementId,
+                DateTime.Now);
 
             if (groupByFormElementId.HasValue && groupByFormElementId != Guid.Empty)
             {
@@ -607,11 +610,12 @@ namespace RaaiVan.Modules.CoreNetwork
 
         public static List<Node> get_nodes(Guid applicationId,
             List<Guid> nodeTypeIds = null, NodeTypes? nodeType = null, bool? useNodeTypeHierarchy = null,
-            Guid? relatedToNodeId = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null,
+            List<Guid> relatedToIds = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null,
             DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null,
             int? count = null, long? lowerBoundary = null, bool? searchable = null, bool? archive = null,
-            bool? grabNoContentServices = null, List<FormFilter> filters = null, bool? matchAllFilters = null,
-            Guid? currentUserId = null, Guid? creatorUserId = null, bool checkAccess = false)
+            bool? grabNoContentServices = null, bool? isFavorite = null, bool? isGroup = null, bool? isExpertiseDomain = null,
+            List<FormFilter> filters = null, bool? matchAllFilters = null,
+            Guid? currentUserId = null, List<Guid> creatorUserIds = null, bool checkAccess = false)
         {
             long totalCount = 0;
             List<NodesCount> retNodesCount = new List<NodesCount>();
@@ -620,37 +624,39 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid? groupByFormElementId = null;
 
             return get_nodes(applicationId, ref totalCount, ref retNodesCount, ref groupedResults, nodeTypeIds,
-                nodeType, useNodeTypeHierarchy, relatedToNodeId, searchText, isDocument, isKnowledge,
+                nodeType, useNodeTypeHierarchy, relatedToIds, searchText, isDocument, isKnowledge,
                 lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, searchable, archive,
-                grabNoContentServices, filters, matchAllFilters, fetchCounts, currentUserId, creatorUserId,
-                checkAccess, groupByFormElementId);
+                grabNoContentServices, isFavorite, isGroup, isExpertiseDomain, filters, matchAllFilters, fetchCounts,
+                currentUserId, creatorUserIds, checkAccess, groupByFormElementId);
         }
 
         public static List<Node> get_nodes(Guid applicationId, ref long totalCount, ref List<NodesCount> nodesCount,
             List<Guid> nodeTypeIds = null, NodeTypes? nodeType = null, bool? useNodeTypeHierarchy = null,
-            Guid? relatedToNodeId = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null,
+            List<Guid> relatedToIds = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null,
             DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null,
             int? count = null, long? lowerBoundary = null, bool? searchable = null, bool? archive = null,
-            bool? grabNoContentServices = null, List<FormFilter> filters = null, bool? matchAllFilters = null,
-            bool? fetchCounts = null, Guid ? currentUserId = null, Guid? creatorUserId = null, bool checkAccess = false)
+            bool? grabNoContentServices = null, bool? isFavorite = null, bool? isGroup = null, bool? isExpertiseDomain = null, 
+            List<FormFilter> filters = null, bool? matchAllFilters = null,
+            bool? fetchCounts = null, Guid ? currentUserId = null, List<Guid> creatorUserIds = null, bool checkAccess = false)
         {
             Dictionary<string, object> groupedResults = new Dictionary<string, object>();
             Guid? groupByFormElementId = null;
 
             return get_nodes(applicationId, ref totalCount, ref nodesCount, ref groupedResults, nodeTypeIds,
-                nodeType, useNodeTypeHierarchy, relatedToNodeId, searchText, isDocument, isKnowledge,
+                nodeType, useNodeTypeHierarchy, relatedToIds, searchText, isDocument, isKnowledge,
                 lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, searchable, archive,
-                grabNoContentServices, filters, matchAllFilters, fetchCounts, currentUserId, creatorUserId,
-                checkAccess, groupByFormElementId);
+                grabNoContentServices, isFavorite, isGroup, isExpertiseDomain, filters, matchAllFilters, fetchCounts, 
+                currentUserId, creatorUserIds, checkAccess, groupByFormElementId);
         }
 
         public static List<Node> get_nodes(Guid applicationId, ref long totalCount,
             List<Guid> nodeTypeIds = null, NodeTypes? nodeType = null, bool? useNodeTypeHierarchy = null,
-            Guid? relatedToNodeId = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null,
+            List<Guid> relatedToIds = null, string searchText = null, bool? isDocument = null, bool? isKnowledge = null,
             DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null,
             int? count = null, long? lowerBoundary = null, bool? searchable = null, bool? archive = null,
-            bool? grabNoContentServices = null, List<FormFilter> filters = null, bool? matchAllFilters = null,
-            Guid? currentUserId = null, Guid? creatorUserId = null, bool checkAccess = false)
+            bool? grabNoContentServices = null, bool? isFavorite = null, bool? isGroup = null, bool? isExpertiseDomain = null, 
+            List<FormFilter> filters = null, bool? matchAllFilters = null,
+            Guid? currentUserId = null, List<Guid> creatorUserIds = null, bool checkAccess = false)
         {
             List<NodesCount> nodesCount = new List<NodesCount>();
             bool? fetchCounts = null;
@@ -658,17 +664,18 @@ namespace RaaiVan.Modules.CoreNetwork
             Guid? groupByFormElementId = null;
 
             return get_nodes(applicationId, ref totalCount, ref nodesCount, ref groupedResults, nodeTypeIds,
-                nodeType, useNodeTypeHierarchy, relatedToNodeId, searchText, isDocument, isKnowledge,
+                nodeType, useNodeTypeHierarchy, relatedToIds, searchText, isDocument, isKnowledge,
                 lowerCreationDateLimit, upperCreationDateLimit, count, lowerBoundary, searchable, archive,
-                grabNoContentServices, filters, matchAllFilters, fetchCounts, currentUserId, creatorUserId,
-                checkAccess, groupByFormElementId);
+                grabNoContentServices, isFavorite, isGroup, isExpertiseDomain, filters, matchAllFilters, fetchCounts, 
+                currentUserId, creatorUserIds, checkAccess, groupByFormElementId);
         }
 
         public static Dictionary<string, object> get_nodes_grouped(Guid applicationId, Guid nodeTypeId, 
-            Guid groupByFormElementId, Guid? relatedToNodeId = null, string searchText = null, bool? isDocument = null, 
+            Guid groupByFormElementId, List<Guid> relatedToIds = null, string searchText = null, bool? isDocument = null, 
             bool? isKnowledge = null, DateTime? lowerCreationDateLimit = null, DateTime? upperCreationDateLimit = null, 
-            bool? searchable = null, List<FormFilter> filters = null, bool? matchAllFilters = null,
-            Guid? currentUserId = null, Guid? creatorUserId = null, bool checkAccess = false)
+            bool? searchable = null, bool? isFavorite = null, bool? isGroup = null, bool? isExpertiseDomain = null,
+            List<FormFilter> filters = null, bool? matchAllFilters = null,
+            Guid? currentUserId = null, List<Guid> creatorUserIds = null, bool checkAccess = false)
         {
             long totalCount = 0;
             List<NodesCount> nodesCount = new List<NodesCount>();
@@ -676,10 +683,11 @@ namespace RaaiVan.Modules.CoreNetwork
 
             get_nodes(applicationId: applicationId, totalCount: ref totalCount, nodesCount: ref nodesCount, 
                 groupedResults: ref groupedResults, nodeTypeIds: new List<Guid>() { nodeTypeId },
-                relatedToNodeId: relatedToNodeId, searchText: searchText, isDocument: isDocument, isKnowledge: isKnowledge,
+                relatedToIds: relatedToIds, searchText: searchText, isDocument: isDocument, isKnowledge: isKnowledge,
                 lowerCreationDateLimit: lowerCreationDateLimit, upperCreationDateLimit: upperCreationDateLimit, 
-                searchable: searchable, filters: filters, matchAllFilters: matchAllFilters, currentUserId: currentUserId, 
-                creatorUserId: creatorUserId, checkAccess: checkAccess, groupByFormElementId: groupByFormElementId);
+                searchable: searchable, isFavorite: isFavorite, isGroup: isGroup, isExpertiseDomain: isExpertiseDomain, 
+                filters: filters, matchAllFilters: matchAllFilters, currentUserId: currentUserId, 
+                creatorUserIds: creatorUserIds, checkAccess: checkAccess, groupByFormElementId: groupByFormElementId);
 
             return groupedResults == null ? new Dictionary<string, object>() : groupedResults;
         }
@@ -1454,16 +1462,14 @@ namespace RaaiVan.Modules.CoreNetwork
         }
 
         public static List<Node> get_favorite_nodes(Guid applicationId, Guid userId, List<Guid> nodeTypeIds, 
-            bool? useNodeTypeHierarchy, Guid? nodeId, string additionalId, string searchText, bool? isDocument,
-            Guid? creatorUserId, Guid? relatedToNodeId, List<FormFilter> filters, bool? matchAllFilters,
-            DateTime? lowerDateLimit, DateTime? upperDateLimit, int? lowerBoundary, int? count, ref long totalCount)
+            Guid? nodeId, string additionalId, string searchText, bool? isDocument, DateTime? lowerDateLimit,
+            DateTime? upperDateLimit, int? lowerBoundary, int? count, ref long totalCount)
         {
             if (nodeTypeIds == null) nodeTypeIds = new List<Guid>();
 
             DBResultSet results = DBConnector.read(applicationId, GetFullyQualifiedName("GetFavoriteNodes"),
-                applicationId, userId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',', useNodeTypeHierarchy,
-                nodeId, additionalId, ProviderUtil.get_search_text(searchText), isDocument, creatorUserId,
-                relatedToNodeId, FormFilterTableType.getCompositeType(filters), matchAllFilters, 
+                applicationId, userId, ProviderUtil.list_to_string<Guid>(nodeTypeIds), ',', 
+                nodeId, additionalId, ProviderUtil.get_search_text(searchText), isDocument, 
                 lowerDateLimit, upperDateLimit, lowerBoundary, count);
 
             return CNParsers.nodes(results, full: false, totalCount: ref totalCount);

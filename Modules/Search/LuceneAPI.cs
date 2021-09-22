@@ -34,7 +34,9 @@ namespace RaaiVan.Modules.Search
         public static float BoostType = (float)BoostMin;
         public static float BoostNoContent = (float)BoostMax;
 
-        public Document toDocument(Guid applicationId)
+        public RVLuceneDocument(Guid? applicationId) : base(applicationId) { }
+
+        public Document toDocument()
         {
             try
             {
@@ -130,14 +132,14 @@ namespace RaaiVan.Modules.Search
             }
             catch (Exception ex)
             {
-                LogController.save_error_log(applicationId, null, "ConvertToLuceneDocument", ex, ModuleIdentifier.SRCH);
+                LogController.save_error_log(this.ApplicationID, null, "ConvertToLuceneDocument", ex, ModuleIdentifier.SRCH);
                 return null;
             }
         }
 
-        public static SearchDoc toSearchDoc(Document doc)
+        public static SearchDoc toSearchDoc(Guid? applicationId, Document doc)
         {
-            SearchDoc retSD = new SearchDoc();
+            SearchDoc retSD = new SearchDoc(applicationId);
 
             switch (doc.GetField("SearchDocType").StringValue)
             {
@@ -190,7 +192,7 @@ namespace RaaiVan.Modules.Search
 
         public static RVLuceneDocument fromSearchDoc(SearchDoc doc)
         {
-            return new RVLuceneDocument()
+            return new RVLuceneDocument(doc.ApplicationID)
             {
                 ID = doc.ID,
                 TypeID = doc.TypeID,
@@ -343,7 +345,7 @@ namespace RaaiVan.Modules.Search
             {
                 docs.Select(d => RVLuceneDocument.fromSearchDoc(d))
                     .Where(d => d != null && d.Type != SearchDocType.All.ToString())
-                    .Select(d => d.toDocument(applicationId))
+                    .Select(d => d.toDocument())
                     .Where(d => d != null)
                     .ToList().ForEach(d => writer.AddDocument(d));
             }
@@ -613,7 +615,7 @@ namespace RaaiVan.Modules.Search
                     if (string.IsNullOrEmpty(addIdFr) && string.IsNullOrEmpty(titleFr) && string.IsNullOrEmpty(highlightedText)) break;
 
                     Document doc = searcher.Doc(sd.Doc);
-                    SearchDoc item = RVLuceneDocument.toSearchDoc(doc);
+                    SearchDoc item = RVLuceneDocument.toSearchDoc(applicationId, doc);
                     item.Description = highlightedText;
                     listDocs.Add(item);
                 }

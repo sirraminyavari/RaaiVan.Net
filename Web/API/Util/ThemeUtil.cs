@@ -43,12 +43,12 @@ namespace RaaiVan.Web
             if (string.IsNullOrEmpty(name)) return null;
             else if (ThemeContent.ContainsKey(name)) return ThemeContent[name];
 
-            string thm = new DocFileInfo()
+            string thm = new DocFileInfo(applicationId)
             {
                 FileName = name,
                 Extension = "css",
                 FolderName = FolderNames.Themes
-            }.get_text_content(applicationId);
+            }.get_text_content();
 
             if (string.IsNullOrEmpty(thm)) return null;
 

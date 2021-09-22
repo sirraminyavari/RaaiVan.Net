@@ -222,7 +222,7 @@ namespace RaaiVan.Web.API
                         PublicMethods.parse_string(context.Request.Params["Title"]),
                         PublicMethods.parse_string(context.Request.Params["Abstract"]),
                         ListMaker.get_string_items(context.Request.Params["Keywords"], ',').Select(u => Base64.decode(u)).ToList(),
-                        FGUtilities.get_form_elements(context.Request.Params["FormDetails"]),
+                        FGUtilities.get_form_elements(paramsContainer.ApplicationID, context.Request.Params["FormDetails"]),
                         ref responseText);
                     return_response(responseText);
                     break;
@@ -230,7 +230,7 @@ namespace RaaiVan.Web.API
                     get_nodes(ListMaker.get_string_items(context.Request.Params["ID"], ','), 
                         ListMaker.get_string_items(context.Request.Params["TypeID"], ','),
                         PublicMethods.parse_string(context.Request.Params["RelatedToTypeID"], false),
-                        PublicMethods.parse_string(context.Request.Params["RelatedToID"], false),
+                        ListMaker.get_string_items(context.Request.Params["RelatedToID"], '|'),
                         PublicMethods.parse_string(context.Request.Params["SearchText"]),
                         PublicMethods.parse_date(context.Request.Params["CreationDateFrom"]),
                         PublicMethods.parse_date(context.Request.Params["CreationDateTo"], 1),
@@ -834,7 +834,7 @@ namespace RaaiVan.Web.API
             }
         }
 
-        protected void get_nodes(List<string> strNodeIds, List<string> typeIds, string relatedToTypeId, string relatedToId, 
+        protected void get_nodes(List<string> strNodeIds, List<string> typeIds, string relatedToTypeId, List<string> relatedToNodeIds, 
             string searchText, DateTime? creationDateFrom,  DateTime? creationDateTo, string formFilters, bool? matchAllFilters, 
             bool? formDetails, int? count, int? lowerBoundary, ref string responseText)
         {
@@ -891,12 +891,13 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            Guid? relatedToNodeTypeId = string.IsNullOrEmpty(relatedToTypeId) || string.IsNullOrEmpty(relatedToId) ? null :
-                CNController.get_node_type_id(paramsContainer.Tenant.Id, relatedToTypeId);
+            //Related to IDs
+            List<Guid> relatedToIds = relatedToNodeIds == null ? new List<Guid>() :
+                relatedToNodeIds.Select(v => PublicMethods.parse_guid(v)).Where(v => v.HasValue).Select(v => v.Value).ToList();
 
-            Guid? relatedToNodeId = !relatedToNodeTypeId.HasValue ? null :
-                (Guid?)CNController.get_node_id(paramsContainer.Tenant.Id, relatedToId, relatedToNodeTypeId.Value);
-            if (relatedToNodeId == Guid.Empty) relatedToNodeId = null;
+            if (relatedToIds.Count == 0 && !string.IsNullOrEmpty(relatedToTypeId) && relatedToNodeIds != null && relatedToNodeIds.Count > 0)
+                relatedToIds = CNController.get_node_ids(paramsContainer.Tenant.Id, relatedToNodeIds, relatedToTypeId);
+            //end of Related to IDs
 
             long totalCount = 0;
             List<FormFilter> filters = new List<FormFilter>();
@@ -909,10 +910,9 @@ namespace RaaiVan.Web.API
 
             List<Node> nodes = nodeIds.Count > 0 ? CNController.get_nodes(applicationId: paramsContainer.Tenant.Id, nodeIds: nodeIds) :
                 CNController.get_nodes(applicationId: paramsContainer.Tenant.Id, totalCount: ref totalCount, 
-                    nodeTypeIds: nodeTypeIds.Distinct().ToList(),
-                    relatedToNodeId: relatedToNodeId, searchText: searchText, lowerCreationDateLimit: creationDateFrom,
-                    upperCreationDateLimit: creationDateTo, filters: filters, matchAllFilters: matchAllFilters,
-                    count: count.Value, lowerBoundary: lowerBoundary, checkAccess: true);
+                    nodeTypeIds: nodeTypeIds.Distinct().ToList(), relatedToIds: relatedToIds, searchText: searchText, 
+                    lowerCreationDateLimit: creationDateFrom, upperCreationDateLimit: creationDateTo, filters: filters, 
+                    matchAllFilters: matchAllFilters, count: count.Value, lowerBoundary: lowerBoundary, checkAccess: true);
             
             List<Guid> downloadAccess = PrivacyController.check_access(paramsContainer.Tenant.Id, null, 
                 nodes.Select(u => u.NodeID.Value).ToList(), PrivacyObjectType.Node, PermissionType.Download);

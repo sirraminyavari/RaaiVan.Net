@@ -18,6 +18,7 @@ namespace RaaiVan.Modules.Search
 
     public class SearchDoc
     {
+        public Guid? ApplicationID;
         public Guid ID;
         public Guid? TypeID;
         public string Type;
@@ -42,12 +43,13 @@ namespace RaaiVan.Modules.Search
             }
         }
 
-        public SearchDoc()
+        public SearchDoc(Guid? applicationId)
         {
-            FileInfo = new DocFileInfo();
+            ApplicationID = applicationId;
+            FileInfo = new DocFileInfo(applicationId);
         }
 
-        public SearchDoc(Guid id, Guid? typeId, string content, string additionalId, bool deleted, string type,
+        public SearchDoc(Guid? applicationId, Guid id, Guid? typeId, string content, string additionalId, bool deleted, string type,
             SearchDocType docType, string title = null, string tags = null, string description = null, string fileContect = null)
         {
             ID = id;
@@ -62,7 +64,7 @@ namespace RaaiVan.Modules.Search
             FileContent = fileContect;
             SearchDocType = docType;
 
-            FileInfo = new DocFileInfo();
+            FileInfo = new DocFileInfo(applicationId);
         }
 
         public string toJson(Guid applicationId, bool exact)

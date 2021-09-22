@@ -55,8 +55,13 @@ namespace RaaiVan.Web.API
             if (isFreeFolder) {
                 FolderNames fn = freeFolders.Where(u => u.ToString().ToLower() == category.ToLower()).FirstOrDefault();
 
-                DocFileInfo pic =
-                    new DocFileInfo() { FileID = fileId, Extension = "jpg", FileName = fileId.ToString(), FolderName = fn };
+                DocFileInfo pic = new DocFileInfo(paramsContainer.ApplicationID)
+                {
+                    FileID = fileId,
+                    Extension = "jpg",
+                    FileName = fileId.ToString(),
+                    FolderName = fn
+                };
 
                 send_file(pic, false);
             }
@@ -71,7 +76,7 @@ namespace RaaiVan.Web.API
             {
                 string ext = PublicMethods.parse_string(context.Request.Params["Extension"]);
 
-                DocFileInfo temp = new DocFileInfo()
+                DocFileInfo temp = new DocFileInfo(paramsContainer.ApplicationID)
                 {
                     FileID = fileId,
                     Extension = ext,
@@ -158,7 +163,7 @@ namespace RaaiVan.Web.API
         protected void send_file(DocFileInfo file, bool logNeeded, bool addPDFCover = false, bool addPDFFooter = false, 
             Guid? coverId = null, string pdfPassword = null, string contentType = null, bool isAttachment = true)
         {
-            byte[] fileContent = file.toByteArray(paramsContainer.ApplicationID);
+            byte[] fileContent = file.toByteArray();
 
             if (fileContent.Length == 0) {
                 send_empty_response();
@@ -176,7 +181,7 @@ namespace RaaiVan.Web.API
                     HostName = PublicMethods.get_client_host_name(HttpContext.Current),
                     Action = Modules.Log.Action.Download,
                     SubjectID = file.FileID,
-                    Info = file.toJson(paramsContainer.Tenant.Id),
+                    Info = file.toJson(),
                     ModuleIdentifier = ModuleIdentifier.DCT
                 });
             }
@@ -191,7 +196,7 @@ namespace RaaiVan.Web.API
                 {
                     bool invalidPassword = false;
 
-                    fileContent = PDFUtil.get_pdf_content(paramsContainer.Tenant.Id, fileContent, pdfPassword, ref invalidPassword);
+                    fileContent = PDFUtil.get_pdf_content(fileContent, pdfPassword, ref invalidPassword);
 
                     if (invalidPassword)
                     {

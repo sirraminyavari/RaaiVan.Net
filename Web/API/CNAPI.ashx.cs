@@ -553,12 +553,12 @@ namespace RaaiVan.Web.API
 
                             get_nodes(ListMaker.get_guid_items(context.Request.Params["NodeTypeIDs"], '|'),
                                 PublicMethods.parse_bool(context.Request.Params["UseNodeTypeHierarchy"]),
-                                PublicMethods.parse_guid(context.Request.Params["RelatedToNodeID"]),
+                                ListMaker.get_guid_items(context.Request.Params["RelatedToIDs"], '|'),
                                 searchText,
                                 PublicMethods.parse_bool(context.Request.Params["IsDocument"]),
                                 PublicMethods.parse_bool(context.Request.Params["IsKnowledge"]),
                                 PublicMethods.parse_bool(context.Request.Params["IsMine"]),
-                                PublicMethods.parse_guid(context.Request.Params["CreatorUserID"]),
+                                ListMaker.get_guid_items(context.Request.Params["CreatorUserIDs"], '|'),
                                 PublicMethods.parse_bool(context.Request.Params["Archive"]),
                                 lowerCreationDateLimit,
                                 upperCreationDateLimit,
@@ -566,6 +566,9 @@ namespace RaaiVan.Web.API
                                 PublicMethods.parse_long(context.Request.Params["LowerBoundary"]),
                                 PublicMethods.parse_bool(context.Request.Params["Searchable"]),
                                 PublicMethods.parse_bool(context.Request.Params["HasChild"]),
+                                PublicMethods.parse_bool(context.Request.Params["IsFavorite"]),
+                                PublicMethods.parse_bool(context.Request.Params["IsGroup"]),
+                                PublicMethods.parse_bool(context.Request.Params["IsExpertiseDomain"]),
                                 FGUtilities.get_filters_from_json(PublicMethods.parse_string(context.Request.Params["FormFilters"])),
                                 PublicMethods.parse_bool(context.Request.Params["MatchAllFilters"]),
                                 PublicMethods.parse_bool(context.Request.Params["FetchCounts"]),
@@ -788,17 +791,12 @@ namespace RaaiVan.Web.API
                             PublicMethods.parse_string(context.Request.Params["text"]));
 
                         get_favorite_nodes(ListMaker.get_guid_items(context.Request.Params["NodeTypeIDs"], '|'),
-                            PublicMethods.parse_bool(context.Request.Params["UseNodeTypeHierarchy"]),
                             PublicMethods.parse_guid(context.Request.Params["UserID"]),
                             PublicMethods.parse_guid(context.Request.Params["NodeID"]),
                             PublicMethods.parse_string(context.Request.Params["AdditionalID"], false),
                             searchText,
                             PublicMethods.parse_bool(context.Request.Params["HasChild"]),
                             PublicMethods.parse_bool(context.Request.Params["IsDocument"]),
-                            PublicMethods.parse_guid(context.Request.Params["CreatorUserID"]),
-                            PublicMethods.parse_guid(context.Request.Params["RelatedToNodeID"]),
-                            FGUtilities.get_filters_from_json(PublicMethods.parse_string(context.Request.Params["FormFilters"])),
-                            PublicMethods.parse_bool(context.Request.Params["MatchAllFilters"]),
                             PublicMethods.parse_date(context.Request.Params["LowerDateLimit"]),
                             PublicMethods.parse_date(context.Request.Params["UpperDateLimit"], 1),
                             PublicMethods.parse_int(context.Request.Params["LowerBoundary"]),
@@ -1087,7 +1085,8 @@ namespace RaaiVan.Web.API
                     }
                 case "ImportNodesFromExcel":
                     {
-                        List<DocFileInfo> files = DocumentUtilities.get_files_info(context.Request.Params["Uploaded"]);
+                        List<DocFileInfo> files = 
+                            DocumentUtilities.get_files_info(paramsContainer.ApplicationID, context.Request.Params["Uploaded"]);
 
                         if (files == null || files.Count != 1)
                             responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -1102,7 +1101,8 @@ namespace RaaiVan.Web.API
                     }
                 case "XML2Node":
                     {
-                        List<DocFileInfo> files = DocumentUtilities.get_files_info(context.Request.Params["Uploaded"]);
+                        List<DocFileInfo> files = 
+                            DocumentUtilities.get_files_info(paramsContainer.ApplicationID, context.Request.Params["Uploaded"]);
 
                         if (files == null || files.Count != 1)
                             responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -1362,7 +1362,7 @@ namespace RaaiVan.Web.API
                         PublicMethods.parse_guid(context.Request.Params["AdminAreaID"]),
                         PublicMethods.parse_guid(context.Request.Params["FormInstanceID"]),
                         PublicMethods.parse_date(context.Request.Params["CreationDate"]),
-                        DocumentUtilities.get_files_info(context.Request.Params["Logo"]).FirstOrDefault(),
+                        DocumentUtilities.get_files_info(paramsContainer.ApplicationID, context.Request.Params["Logo"]).FirstOrDefault(),
                         PublicMethods.parse_bool(context.Request.Params["GetExtendInfo"]),
                         PublicMethods.parse_bool(context.Request.Params["GetWorkFlowInfo"]), ref responseText);
                     _return_response(ref context, ref responseText);
@@ -3535,7 +3535,7 @@ namespace RaaiVan.Web.API
                 ",\"Value\":" + (node.Searchable.HasValue && node.Searchable.Value).ToString().ToLower() + "}";
             string strAttachedFiles = ",\"AttachedFiles\":{\"Editable\":" +
                 (viewPermission == PermissionType.View && (hasModifyPermission || (node.Status == Status.Accepted ? perAreaAdminLevel : perCreatorLevel))).ToString().ToLower() +
-                ",\"Value\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, attachedFiles, true) + "}";
+                ",\"Value\":" + DocumentUtilities.get_files_json(attachedFiles, true) + "}";
 
             string strNewVersions = ",\"NewVersions\":[";
             if (service.EnablePreviousVersionSelect.HasValue && 
@@ -3790,7 +3790,7 @@ namespace RaaiVan.Web.API
                     string.Empty : node.MembershipStatus) + "\"" +
                 ",\"VisitsCount\":" + (node.VisitsCount.HasValue ? node.VisitsCount.ToString() : "0") +
                 ",\"PDFCovers\":[" + string.Join(",", DocumentsController.get_owner_files(paramsContainer.Tenant.Id,
-                    node.NodeTypeID.Value , FileOwnerTypes.PDFCover).Select(u => u.toJson(paramsContainer.Tenant.Id))) + "]" +
+                    node.NodeTypeID.Value , FileOwnerTypes.PDFCover).Select(u => u.toJson())) + "]" +
                 (formInstance == null ? string.Empty : ",\"FormInstance\":" + formInstance.toJson()) +
                 strOwner + strCreator + strIconUrl + strCoverUrl + strNameHierarchy + strType + strAdminArea +
                 strConfidentiality + strName + strDescription + strPublicDescription + strExpirationDate +
@@ -3798,16 +3798,17 @@ namespace RaaiVan.Web.API
                 strNewVersions + strSearchable + strKnowledgeSettings + strRelations + "}";
         }
 
-        protected void get_nodes(List<Guid> nodeTypeIds, bool? useNodeTypeHierarchy, Guid? relatedToNodeId,
-            string searchText, bool? isDocument, bool? isKnowledge, bool? isMine, Guid? creatorUserId, bool? archive,
-            DateTime? lowerCreationDateLimit, DateTime? upperCreationDateLimit,
-            int? count, long? lowerBoundary, bool? searchable, bool? hasChild, List<FormFilter> filters,
-            bool? matchAllFilters, bool? fetchCounts, Guid? groupByElementId, ref string responseText)
+        protected void get_nodes(List<Guid> nodeTypeIds, bool? useNodeTypeHierarchy, List<Guid> relatedToIds,
+            string searchText, bool? isDocument, bool? isKnowledge, bool? isMine, List<Guid> creatorUserIds, bool? archive,
+            DateTime? lowerCreationDateLimit, DateTime? upperCreationDateLimit, int? count, long? lowerBoundary, 
+            bool? searchable, bool? hasChild, bool? isFavorite, bool? isGroup, bool? isExpertiseDomain,
+            List<FormFilter> filters, bool? matchAllFilters, bool? fetchCounts, Guid? groupByElementId, ref string responseText)
         {
             if (!paramsContainer.GBView) return;
             
-            if (creatorUserId.HasValue) isMine = null;
-            else if (isMine.HasValue && isMine.Value) creatorUserId = paramsContainer.CurrentUserID;
+            if (creatorUserIds != null && creatorUserIds.Count > 0) isMine = null;
+            else if (isMine.HasValue && isMine.Value && paramsContainer.CurrentUserID.HasValue)
+                creatorUserIds = new List<Guid>() { paramsContainer.CurrentUserID.Value };
 
             bool hasViewAccess = paramsContainer.CurrentUserID.HasValue &&
                 AuthorizationManager.has_right(AccessRoleName.ManageOntology, paramsContainer.CurrentUserID);
@@ -3829,25 +3830,27 @@ namespace RaaiVan.Web.API
             if (groupByElementId.HasValue && groupByElementId != Guid.Empty && nodeTypeIds.Count == 1)
             {
                 responseText = PublicMethods.toJSON(CNController.get_nodes_grouped(applicationId: paramsContainer.Tenant.Id, 
-                    nodeTypeId: nodeTypeIds[0], groupByFormElementId: groupByElementId.Value, relatedToNodeId: relatedToNodeId, 
+                    nodeTypeId: nodeTypeIds[0], groupByFormElementId: groupByElementId.Value, relatedToIds: relatedToIds, 
                     searchText: searchText, lowerCreationDateLimit: lowerCreationDateLimit, 
-                    upperCreationDateLimit: upperCreationDateLimit, searchable: searchable, filters: filters, 
+                    upperCreationDateLimit: upperCreationDateLimit, searchable: searchable,
+                    isFavorite: isFavorite, isGroup: isGroup, isExpertiseDomain: isExpertiseDomain, filters: filters, 
                     matchAllFilters: matchAllFilters, currentUserId: paramsContainer.CurrentUserID, 
-                    creatorUserId: creatorUserId, checkAccess: !hasViewAccess));
+                    creatorUserIds: creatorUserIds, checkAccess: !hasViewAccess));
             }
             else {
                 long totalCount = 0;
                 List<NodesCount> nodesCount = new List<NodesCount>();
-                
+
                 List<Node> nodes = CNController.get_nodes(applicationId: paramsContainer.Tenant.Id,
                     totalCount: ref totalCount, nodesCount: ref nodesCount,
-                    nodeTypeIds: nodeTypeIds, useNodeTypeHierarchy: useNodeTypeHierarchy, relatedToNodeId: relatedToNodeId, 
+                    nodeTypeIds: nodeTypeIds, useNodeTypeHierarchy: useNodeTypeHierarchy, relatedToIds: relatedToIds, 
                     searchText: searchText, isDocument: isDocument, isKnowledge: isKnowledge,
                     lowerCreationDateLimit: lowerCreationDateLimit, upperCreationDateLimit: upperCreationDateLimit,
                     count: count.Value, lowerBoundary: lowerBoundary, archive: archive.HasValue && archive.Value,
-                    searchable: searchable, grabNoContentServices: grabNoContentServices, filters: filters,
+                    searchable: searchable, grabNoContentServices: grabNoContentServices, 
+                    isFavorite: isFavorite, isGroup: isGroup, isExpertiseDomain: isExpertiseDomain, filters: filters,
                     matchAllFilters: matchAllFilters, fetchCounts: fetchCounts, currentUserId: paramsContainer.CurrentUserID,
-                    creatorUserId: creatorUserId, checkAccess: !hasViewAccess);
+                    creatorUserIds: creatorUserIds, checkAccess: !hasViewAccess);
 
                 List<Guid> haveChild = !hasChild.HasValue || !hasChild.Value ? new List<Guid>() :
                     CNController.have_childs(paramsContainer.Tenant.Id, nodes.Select(u => u.NodeID.Value).ToList());
@@ -3855,7 +3858,9 @@ namespace RaaiVan.Web.API
                 nodes.ForEach(u => u.HasChild = haveChild.Exists(v => v == u.NodeID));
 
                 responseText = "{\"TotalCount\":" + totalCount.ToString() +
-                    ",\"Nodes\":[" + string.Join(",", nodes.Select(u => u.toJson(paramsContainer.Tenant.Id))) + "]}";
+                    ",\"Count\":[" + string.Join(",", nodesCount.Select(u => u.toJson())) + "]" +
+                    ",\"Nodes\":[" + string.Join(",", nodes.Select(u => u.toJson(paramsContainer.Tenant.Id))) + "]" +
+                    "}";
             }
         }
 
@@ -4657,10 +4662,9 @@ namespace RaaiVan.Web.API
                 u => _get_nodes_count_json(u))) + "]}";
         }
 
-        protected void get_favorite_nodes(List<Guid> nodeTypeIds, bool? useNodeTypeHierarchy, Guid? userId, Guid? nodeId, 
-            string additionalId, string searchText, bool? hasChild, bool? isDocument, Guid? creatorUserId, 
-            Guid? relatedToNodeId, List<FormFilter> filters, bool? matchAllFilters, DateTime? lowerDateLimit, 
-            DateTime? upperDateLimit, int? lowerBoundary, int? count, ref string responseText)
+        protected void get_favorite_nodes(List<Guid> nodeTypeIds, Guid? userId, Guid? nodeId, 
+            string additionalId, string searchText, bool? hasChild, bool? isDocument, 
+            DateTime? lowerDateLimit, DateTime? upperDateLimit, int? lowerBoundary, int? count, ref string responseText)
         {
             if (!paramsContainer.GBView) return;
 
@@ -4669,9 +4673,8 @@ namespace RaaiVan.Web.API
             long totalCount = 0;
 
             List<Node> nodes = !userId.HasValue ? new List<Node>() :
-                CNController.get_favorite_nodes(paramsContainer.Tenant.Id, userId.Value, nodeTypeIds, useNodeTypeHierarchy, nodeId,
-                additionalId, searchText, isDocument, creatorUserId, relatedToNodeId, filters, matchAllFilters,
-                lowerDateLimit, upperDateLimit, lowerBoundary, count, ref totalCount);
+                CNController.get_favorite_nodes(paramsContainer.Tenant.Id, userId.Value, nodeTypeIds, nodeId,
+                additionalId, searchText, isDocument, lowerDateLimit, upperDateLimit, lowerBoundary, count, ref totalCount);
 
             List<Guid> haveChild = !hasChild.HasValue || !hasChild.Value ? new List<Guid>() :
                 CNController.have_childs(paramsContainer.Tenant.Id, nodes.Select(u => u.NodeID.Value).ToList());
@@ -5426,9 +5429,9 @@ namespace RaaiVan.Web.API
                     experts.HasValue && experts.Value ? CNController.get_expertise_domains(paramsContainer.Tenant.Id,
                     itemId.Value, true, true, null, expertsNodeTypeId) : new List<Expert>();
                 List<Node> favoriteNodes =
-                    fans.HasValue && fans.Value ? CNController.get_favorite_nodes(paramsContainer.Tenant.Id, itemId.Value, 
-                    !fansNodeTypeId.HasValue ? new List<Guid>() : new List<Guid>() { fansNodeTypeId.Value }, null,
-                    null, null, null, null, null, null, new List<FormFilter>(), null, null, null, null, 10000, ref totalCount) :
+                    fans.HasValue && fans.Value ? CNController.get_favorite_nodes(paramsContainer.Tenant.Id, userId: itemId.Value, 
+                    nodeTypeIds: !fansNodeTypeId.HasValue ? new List<Guid>() : new List<Guid>() { fansNodeTypeId.Value },
+                    null, null, null, null, null, null, null,  10000, ref totalCount) :
                     new List<Node>();
                 List<Node> createdNodes = !creators.HasValue || !creators.Value ? new List<Node>() :
                     (creatorsNodeTypeId.HasValue ?
@@ -5632,7 +5635,7 @@ namespace RaaiVan.Web.API
                     ",\"Description\":\"" + Base64.encode(ni.Description) + "\"" +
                     (!attachments.HasValue || !attachments.Value ? string.Empty :
                         ",\"Attachments\":[" + string.Join(",", lstAttachments.Where(u => u.OwnerID == ni.NodeID)
-                            .Select(x => x.toJson(paramsContainer.Tenant.Id))) + "]"
+                            .Select(x => x.toJson())) + "]"
                     ) +
                     (!creator.HasValue || !creator.Value || !ni.Creator.UserID.HasValue ? string.Empty :
                         ",\"Creator\":{\"UserID\":\"" + ni.Creator.UserID.ToString() + "\"" +
@@ -6152,15 +6155,14 @@ namespace RaaiVan.Web.API
 
                 if (uploaded != null) uploaded.FolderName = FolderNames.TemporaryFiles;
 
-                if (!uploaded.exists(paramsContainer.Tenant.Id))
+                if (!uploaded.exists())
                 {
                     responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
                     return;
                 }
 
                 Dictionary<string, object> map = new Dictionary<string, object>();
-                System.Xml.XmlDocument doc =
-                    ExcelUtilities.Excel2XML(paramsContainer.Tenant.Id, uploaded, sheetNo.Value, ref map);
+                System.Xml.XmlDocument doc = ExcelUtilities.Excel2XML(uploaded, sheetNo.Value, ref map);
 
                 if (doc == null)
                 {
@@ -6468,11 +6470,11 @@ namespace RaaiVan.Web.API
 
             if (attachUploadedFile.HasValue && attachUploadedFile.Value)
             {
-                xmlFile.move(paramsContainer.Tenant.Id, FolderNames.TemporaryFiles, FolderNames.Attachments);
+                xmlFile.move(FolderNames.TemporaryFiles, FolderNames.Attachments);
 
                 if (!DocumentsController.add_file(paramsContainer.Tenant.Id, nodeId,
                     FileOwnerTypes.Node, xmlFile, paramsContainer.CurrentUserID.Value))
-                    xmlFile.move(paramsContainer.Tenant.Id, FolderNames.Attachments, FolderNames.TemporaryFiles);
+                    xmlFile.move(FolderNames.Attachments, FolderNames.TemporaryFiles);
             }
             //end of register new node
         }
@@ -8083,7 +8085,7 @@ namespace RaaiVan.Web.API
                     string res = string.Empty;
                     logo.FolderName = FolderNames.TemporaryFiles;
                     RVGraphics.create_icon(paramsContainer.Tenant.Id, 
-                        nodeObject.NodeID.Value, IconType.Icon, logo.toByteArray(paramsContainer.ApplicationID), ref res, ref meta);
+                        nodeObject.NodeID.Value, IconType.Icon, logo.toByteArray(), ref res, ref meta);
                 }, 0);
             }
 

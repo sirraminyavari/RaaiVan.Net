@@ -32,7 +32,7 @@ namespace RaaiVan.Modules.FormGenerator
 
     public static class FGUtilities
     {
-        public static List<FormElement> get_form_elements(string strElements, bool formDesignMode = false)
+        public static List<FormElement> get_form_elements(Guid? applicationId, string strElements, bool formDesignMode = false)
         {
             try
             {
@@ -65,7 +65,7 @@ namespace RaaiVan.Modules.FormGenerator
                         FloatValue = PublicMethods.parse_double(PublicMethods.get_dic_value(elem, "FloatValue")),
                         BitValue = PublicMethods.parse_bool(PublicMethods.get_dic_value(elem, "BitValue")),
                         DateValue = PublicMethods.parse_date(PublicMethods.get_dic_value(elem, "DateValue")),
-                        AttachedFiles = DocumentUtilities.get_files_info(PublicMethods.get_dic_value(elem, "Files"))
+                        AttachedFiles = DocumentUtilities.get_files_info(applicationId, PublicMethods.get_dic_value(elem, "Files"))
                     };
 
                     if (newElement.Type == FormElementTypes.Separator) newElement.Necessary = null;
@@ -417,7 +417,7 @@ namespace RaaiVan.Modules.FormGenerator
                 ",\"LastModificationDate\":\"" + (LastModificationDate.HasValue ?
                     GenericDate.get_local_date(LastModificationDate.Value, true) : string.Empty) + "\"" +
                 (AttachedFiles == null || AttachedFiles.Count == 0 ? string.Empty :
-                    ",\"Files\":" + DocumentUtilities.get_files_json(applicationId, AttachedFiles, true)
+                    ",\"Files\":" + DocumentUtilities.get_files_json(AttachedFiles, true)
                 ) +
                 ",\"EditionsCount\":" + (!EditionsCount.HasValue ? 0 : EditionsCount.Value).ToString() +
                 "}";

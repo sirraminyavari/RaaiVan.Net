@@ -64,14 +64,14 @@ namespace RaaiVan.Web.API
         }
 
         protected void nodes_rss(Guid? nodeTypeId, string title, string description, int? count, long? lowerBoundary,
-    string searchText, bool? isDocument, bool? isKnowledge, bool? sitemap)
+            string searchText, bool? isDocument, bool? isKnowledge, bool? sitemap)
         {
             if (!count.HasValue || count.Value <= 0) count = 20;
             if (count.HasValue && count > 5000) count = 5000;
 
             List<Node> nodes = nodeTypeId.HasValue ?
                 CNController.get_nodes(applicationId: paramsContainer.Tenant.Id, nodeTypeIds: new List<Guid>() { nodeTypeId.Value }, 
-                relatedToNodeId: null, searchText: searchText, isDocument: isDocument, isKnowledge: isKnowledge, 
+                relatedToIds: null, searchText: searchText, isDocument: isDocument, isKnowledge: isKnowledge, 
                 count: count.Value, lowerBoundary: lowerBoundary) :
                 CNController.get_nodes(applicationId: paramsContainer.Tenant.Id, searchText: searchText, 
                 isDocument: isDocument, isKnowledge: isKnowledge, count: count.Value, lowerBoundary: lowerBoundary);

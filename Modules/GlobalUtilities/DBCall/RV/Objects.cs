@@ -20,6 +20,8 @@ namespace RaaiVan.Modules.GlobalUtilities
         public string Description;
         public string AvatarName;
         public Guid? CreatorUserID;
+        public Guid? ExpertiseFieldID;
+        public string ExpertiseFieldName;
 
         public Tenant toTenant()
         {
@@ -32,6 +34,11 @@ namespace RaaiVan.Modules.GlobalUtilities
                 DocumentUtilities.get_application_icon_url(ApplicationID.Value);
             string highQualityIconUrl = !highQualityIcon || !ApplicationID.HasValue ? string.Empty :
                 DocumentUtilities.get_application_icon_url(ApplicationID.Value, highQuality: true);
+            
+            string strDomainOfExpertise = string.Empty;
+            if (ExpertiseFieldID.HasValue) strDomainOfExpertise = 
+                    ",\"FieldOfExpertise\":{\"ID\":\"" + ExpertiseFieldID.ToString() + "\"" +
+                    ",\"Name\":\"" + Base64.encode(ExpertiseFieldName) + "\"" + "}";
 
             return "{\"ApplicationID\":\"" + (!ApplicationID.HasValue ? string.Empty : ApplicationID.ToString()) + "\"" +
                 ",\"Title\":\"" + Base64.encode(string.IsNullOrEmpty(Title) ? Name : Title) + "\"" +
@@ -46,6 +53,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                     ",\"Removable\":" + (CreatorUserID.HasValue && CreatorUserID == currentUserId).ToString().ToLower()) +
                 (!currentUserId.HasValue ? string.Empty :
                     ",\"Editable\":" + (CreatorUserID.HasValue && CreatorUserID == currentUserId).ToString().ToLower()) +
+                strDomainOfExpertise +
                 "}";
         }
     }

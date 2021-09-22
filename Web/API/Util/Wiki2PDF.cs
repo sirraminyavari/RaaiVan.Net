@@ -303,7 +303,7 @@ namespace RaaiVan.Web.API
             pdfCover = DocumentsController.get_file(applicationId, coverId);
             if (pdfCover == null || string.IsNullOrEmpty(pdfCover.Extension) || pdfCover.Extension.ToLower() != "pdf") pdfCover = null;
 
-            byte[] coverContent = pdfContent == null ? null : pdfCover.toByteArray(applicationId);
+            byte[] coverContent = pdfContent == null ? null : pdfCover.toByteArray();
 
             if (coverContent == null || coverContent.Length == 0) return pdfContent;
 
@@ -565,13 +565,13 @@ namespace RaaiVan.Web.API
                     DocFileInfo fi = DocumentsController.get_file(ApplicationID, fileId.Value);
                     if (fi != null) fi.refresh_folder_name();
                     
-                    if (!fi.exists(ApplicationID))
+                    if (!fi.exists())
                     {
                         try
                         {
                             System.Drawing.Image img = null;
 
-                            using (MemoryStream stream = new MemoryStream(fi.toByteArray(ApplicationID)))
+                            using (MemoryStream stream = new MemoryStream(fi.toByteArray()))
                                 img = System.Drawing.Bitmap.FromStream(stream);
 
                             string strWidth = tag == null || tag.CSS == null || !tag.CSS.ContainsKey("width") ?

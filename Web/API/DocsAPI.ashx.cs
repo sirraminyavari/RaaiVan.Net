@@ -187,7 +187,8 @@ namespace RaaiVan.Web.API
                     }
                 case "XML2JSON":
                     {
-                        DocFileInfo file = DocumentUtilities.get_files_info(context.Request.Params["Uploaded"]).FirstOrDefault();
+                        DocFileInfo file = DocumentUtilities.get_files_info(paramsContainer.ApplicationID, 
+                            context.Request.Params["Uploaded"]).FirstOrDefault();
                         xml2json(file, ref responseText);
                         _return_response(ref responseText);
                         return;
@@ -1347,7 +1348,7 @@ namespace RaaiVan.Web.API
             if (file != null) file.FolderName = FolderNames.TemporaryFiles;
 
             if (file == null || !file.FileID.HasValue || string.IsNullOrEmpty(file.Extension) ||
-                file.Extension.ToLower() != "xml" || !file.exists(paramsContainer.Tenant.Id))
+                file.Extension.ToLower() != "xml" || !file.exists())
             {
                 responseText = "{}";
                 return;
@@ -1357,7 +1358,7 @@ namespace RaaiVan.Web.API
 
             try
             {
-                using (MemoryStream stream = new MemoryStream(file.toByteArray(paramsContainer.Tenant.Id)))
+                using (MemoryStream stream = new MemoryStream(file.toByteArray()))
                     doc.Load(stream);
             }
             catch (Exception ex)
@@ -1386,7 +1387,7 @@ namespace RaaiVan.Web.API
             List<DocFileInfo> files = !ownerId.HasValue ? new List<DocFileInfo>() :
                 DocumentsController.get_owner_files(paramsContainer.Tenant.Id, ownerId.Value, FileOwnerTypes.PDFCover);
 
-            responseText = "{\"Files\":[" + string.Join(",", files.Select(f => f.toJson(paramsContainer.Tenant.Id))) + "]}";
+            responseText = "{\"Files\":[" + string.Join(",", files.Select(f => f.toJson())) + "]}";
         }
 
         protected void rename_file(Guid? fileId, string name, ref string responseText)

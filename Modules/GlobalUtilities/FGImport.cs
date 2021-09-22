@@ -121,7 +121,7 @@ namespace RaaiVan.Modules.FormGenerator
         {
             if (!instanceId.HasValue || uploadedFile == null || !uploadedFile.FileID.HasValue) return false;
 
-            if (!uploadedFile.exists(applicationId)) return false;
+            if (!uploadedFile.exists()) return false;
 
             if (map.ContainsKey("sub")) map = (Dictionary<string, object>)map["sub"];
 
@@ -138,7 +138,7 @@ namespace RaaiVan.Modules.FormGenerator
             
             try
             {
-                using (MemoryStream stream = new MemoryStream(uploadedFile.toByteArray(applicationId)))
+                using (MemoryStream stream = new MemoryStream(uploadedFile.toByteArray()))
                     doc.Load(stream);
             }
             catch (Exception ex)
@@ -204,7 +204,7 @@ namespace RaaiVan.Modules.FormGenerator
                 .Where(u => u.Type != FormElementTypes.Text || !string.IsNullOrEmpty(u.TextValue)).ToList();
             //end of remove empty text elements
 
-            if (newFiles != null) newFiles.ForEach(f => f.move(applicationId, FolderNames.TemporaryFiles, FolderNames.Attachments));
+            if (newFiles != null) newFiles.ForEach(f => f.move(FolderNames.TemporaryFiles, FolderNames.Attachments));
 
             bool result = newFormInstances == null || newFormInstances.Count == 0 || 
                 FGController.create_form_instances(applicationId, newFormInstances, currentUserId);
@@ -213,7 +213,7 @@ namespace RaaiVan.Modules.FormGenerator
                 newElements, new List<Guid>(), currentUserId, ref errorMessage);
 
             if(!result && newFiles != null)
-                newFiles.ForEach(f => f.move(applicationId, FolderNames.Attachments, FolderNames.TemporaryFiles));
+                newFiles.ForEach(f => f.move(FolderNames.Attachments, FolderNames.TemporaryFiles));
 
             if (result) savedElements = theElements;
 

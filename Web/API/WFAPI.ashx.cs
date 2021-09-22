@@ -45,7 +45,7 @@ namespace RaaiVan.Web.API
             Guid historyId = string.IsNullOrEmpty(context.Request.Params["HistoryID"]) ? Guid.Empty : Guid.Parse(context.Request.Params["HistoryID"]);
             
             List<DocFileInfo> attachedFiles = string.IsNullOrEmpty(context.Request.Params["AttachedFiles"]) ? new List<DocFileInfo>() :
-                DocumentUtilities.get_files_info(context.Request.Params["AttachedFiles"]);
+                DocumentUtilities.get_files_info(paramsContainer.ApplicationID, context.Request.Params["AttachedFiles"]);
 
             string strAttachmentRequired = string.IsNullOrEmpty(context.Request.Params["AttachmentRequired"]) ?
                 string.Empty : context.Request.Params["AttachmentRequired"];
@@ -867,7 +867,7 @@ namespace RaaiVan.Web.API
                 ",\"NodeTypeName\":\"" + nodeTypeName + "\"" +
                 ",\"NodeTypeDescription\":\"" + Base64.encode(connection.NodeTypeDescription) + "\"" +
                 ",\"AttachedFiles\":[" + string.Join(",",
-                    connection.AttachedFiles.Select(u => u.toJson(paramsContainer.Tenant.Id))) + "]";
+                    connection.AttachedFiles.Select(u => u.toJson())) + "]";
 
             str += ",\"Forms\":[";
 
@@ -1925,8 +1925,8 @@ namespace RaaiVan.Web.API
                 "\",\"Title\":\"" + formTitle +
                 "\",\"Filled\":" + (form.Filled.HasValue ? form.Filled.Value : false).ToString().ToLower() +
                 ",\"FillingDate\":\"" + (form.FillingDate.HasValue ? GenericDate.get_local_date(form.FillingDate.Value, true) : string.Empty) +
-                "\"},\"PreAttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, preAttachedFiles) +
-                ",\"Attachments\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, attachments) + "}";
+                "\"},\"PreAttachedFiles\":" + DocumentUtilities.get_files_json(preAttachedFiles) +
+                ",\"Attachments\":" + DocumentUtilities.get_files_json(attachments) + "}";
         }
 
         protected void set_state_data_need_instance_as_filled(Guid? instanceId, ref string responseText)
@@ -2727,7 +2727,7 @@ namespace RaaiVan.Web.API
                     ",\"NodeName\":\"" + directorNodeName + "\"" +
                     ",\"NodeType\":\"" + directorNodeType + "\"" + "}" +
                 ",\"AttachedFiles\":[" + string.Join(",",
-                    history.AttachedFiles.Select(u => u.toJson(paramsContainer.Tenant.Id))) + "]" +
+                    history.AttachedFiles.Select(u => u.toJson())) + "]" +
                 ",\"Forms\":[" + string.Join(",",
                     history.FormInstances.Select(x => _get_history_form_instance_json(x))) + "]" +
                 "}";
@@ -2815,7 +2815,7 @@ namespace RaaiVan.Web.API
                 ",\"AttachmentRequired\":" + connection.AttachmentRequired.Value.ToString().ToLower() +
                 ",\"AttachmentTitle\":\"" + attachmentTitle + "\"" +
                 ",\"TemplateFiles\":[" + string.Join(",",
-                    connection.AttachedFiles.Select(u => u.toJson(paramsContainer.Tenant.Id, true))) + "]" +
+                    connection.AttachedFiles.Select(u => u.toJson(icon: true))) + "]" +
                 ",\"Forms\":[" + string.Join(",",
                     connection.HistoryFormInstances.Select(x => _get_history_form_instance_json(x))) + "]" +
                 "}";
@@ -2833,7 +2833,7 @@ namespace RaaiVan.Web.API
                 "\",\"Filled\":" + (instance.Filled.HasValue ? instance.Filled.Value : false).ToString().ToLower() +
                 ",\"FillingDate\":\"" + (instance.FillingDate.HasValue ?
                     GenericDate.get_local_date(instance.FillingDate.Value) : string.Empty) +
-                    "\",\"PreAttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, instance.PreAttachedFiles) + "}";
+                    "\",\"PreAttachedFiles\":" + DocumentUtilities.get_files_json(instance.PreAttachedFiles) + "}";
         }
 
         protected string _get_history_state_data_need_json(StateDataNeed dataNeed)
@@ -3062,7 +3062,7 @@ namespace RaaiVan.Web.API
                 ",\"RejectionTitle\":\"" + Base64.encode(state.RejectionTitle) + "\"" +
                 strPoll +
                 ",\"Attachments\":[" +
-                    string.Join(",", historyAttachedFiles.Select(u => u.toJson(paramsContainer.Tenant.Id, true))) + "]" +
+                    string.Join(",", historyAttachedFiles.Select(u => u.toJson(icon: true))) + "]" +
                 ",\"Creator\":" + creator +
                 ",\"Owners\":[" + string.Join(",", ownerUsers.Select(
                     nc => "{\"UserID\":\"" + nc.User.UserID.Value.ToString() + "\"" +
@@ -3280,7 +3280,7 @@ namespace RaaiVan.Web.API
             //end of find director
 
             if(attachedFiles != null)
-                attachedFiles.ForEach(f => f.move(paramsContainer.Tenant.Id, FolderNames.TemporaryFiles, FolderNames.Attachments));
+                attachedFiles.ForEach(f => f.move(FolderNames.TemporaryFiles, FolderNames.Attachments));
 
             string msg = string.Empty;
             List<Dashboard> sentDashboards = new List<Dashboard>();
@@ -3288,7 +3288,7 @@ namespace RaaiVan.Web.API
                 history, reject, ref msg, ref sentDashboards);
 
             if (!result && attachedFiles != null)
-                attachedFiles.ForEach(f => f.move(paramsContainer.Tenant.Id, FolderNames.Attachments, FolderNames.TemporaryFiles));
+                attachedFiles.ForEach(f => f.move(FolderNames.Attachments, FolderNames.TemporaryFiles));
 
             History oldHistory = new History();
             if (result)

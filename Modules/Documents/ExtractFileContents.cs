@@ -71,7 +71,7 @@ namespace RaaiVan.Modules.Documents
             // vojoode file dar folder ha
             file.refresh_folder_name();
 
-            bool find = file.exists(applicationId);
+            bool find = file.exists();
 
             //estekhraje mant e file ba farakhani method e "ExtractFileContent" 
             string content = string.Empty;
@@ -83,7 +83,7 @@ namespace RaaiVan.Modules.Documents
             if (find)
             {
                 DateTime dtBegin = DateTime.Now;
-                content = FileContentExtractor.ExtractFileContent(applicationId, file, ref errorText);
+                content = FileContentExtractor.ExtractFileContent(file, ref errorText);
                 duration = DateTime.Now.Subtract(dtBegin).TotalMilliseconds;
             }
 

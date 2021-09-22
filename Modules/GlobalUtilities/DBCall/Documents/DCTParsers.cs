@@ -52,7 +52,7 @@ namespace RaaiVan.Modules.Documents
             return retList;
         }
 
-        public static List<DocFileInfo> files(DBResultSet results)
+        public static List<DocFileInfo> files(DBResultSet results, Guid? applicationId)
         {
             List<DocFileInfo> retList = new List<DocFileInfo>();
 
@@ -60,7 +60,7 @@ namespace RaaiVan.Modules.Documents
 
             for (int i = 0; i < table.Rows.Count; i++)
             {
-                DocFileInfo file = new DocFileInfo();
+                DocFileInfo file = new DocFileInfo(applicationId);
 
                 file.OwnerID = table.GetGuid(i, "OwnerID");
                 file.FileID = table.GetGuid(i, "FileID");
@@ -75,7 +75,7 @@ namespace RaaiVan.Modules.Documents
             return retList;
         }
 
-        public static List<DocFileInfo> file_owner_nodes(DBResultSet results)
+        public static List<DocFileInfo> file_owner_nodes(DBResultSet results, Guid? applicationId)
         {
             List<DocFileInfo> retList = new List<DocFileInfo>();
 
@@ -83,7 +83,7 @@ namespace RaaiVan.Modules.Documents
 
             for (int i = 0; i < table.Rows.Count; i++)
             {
-                DocFileInfo file = new DocFileInfo();
+                DocFileInfo file = new DocFileInfo(applicationId);
 
                 file.FileID = table.GetGuid(i, "FileID");
                 file.OwnerNodeID = table.GetGuid(i, "NodeID");

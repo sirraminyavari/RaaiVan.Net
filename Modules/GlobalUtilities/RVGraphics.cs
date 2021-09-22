@@ -22,8 +22,8 @@ namespace RaaiVan.Modules.GlobalUtilities
                 ",\"Y\":" + Y.ToString() +
                 ",\"Width\":" + Width.ToString() + 
                 ",\"Height\":" + Height.ToString() +
-                ",\"HighQualityImageURL\":\"" + (HighQualityIcon == null ? string.Empty : HighQualityIcon.url(applicationId)) + "\"" +
-                ",\"ImageURL\":\"" + (Icon == null ? string.Empty : Icon.url(applicationId)) + "\"" +
+                ",\"HighQualityImageURL\":\"" + (HighQualityIcon == null ? string.Empty : HighQualityIcon.url()) + "\"" +
+                ",\"ImageURL\":\"" + (Icon == null ? string.Empty : Icon.url()) + "\"" +
                 "}";
         }
     }
@@ -229,7 +229,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                         img.Dispose();
 
                         destContent = ms.ToArray();
-                        if(!dontStore) destFile.store(applicationId, destContent);
+                        if(!dontStore) destFile.store(destContent);
                     }
 
                     return true;
@@ -348,7 +348,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                         retImage.Save(st, ImageFormat.Jpeg);
                         retImage.Dispose();
 
-                        destFile.store(applicationId, st.ToArray());
+                        destFile.store(st.ToArray());
                     }
                 }
 
@@ -374,8 +374,19 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             if (!isValid) return false;
 
-            DocFileInfo highQualityFile = new DocFileInfo() { FileID = iconId, Extension = "jpg", FolderName = highQualityImageFolder };
-            DocFileInfo file = new DocFileInfo() { FileID = iconId, Extension = "jpg", FolderName = imageFolder };
+            DocFileInfo highQualityFile = new DocFileInfo(applicationId)
+            {
+                FileID = iconId,
+                Extension = "jpg",
+                FolderName = highQualityImageFolder
+            };
+
+            DocFileInfo file = new DocFileInfo(applicationId)
+            {
+                FileID = iconId,
+                Extension = "jpg",
+                FolderName = imageFolder
+            };
 
             byte[] hqContent = new byte[0];
 

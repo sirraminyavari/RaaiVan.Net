@@ -98,7 +98,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             catch { return string.Empty; }
         }
 
-        protected static DocFileInfo _get_file_info(Dictionary<string, object> dic)
+        protected static DocFileInfo _get_file_info(Guid? applicationId, Dictionary<string, object> dic)
         {
             if (dic == null) return null;
 
@@ -111,7 +111,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             FileOwnerTypes ownerType = FileOwnerTypes.None;
             if (dic.ContainsKey("OwnerType")) Enum.TryParse<FileOwnerTypes>(dic["OwnerType"].ToString(), true, out ownerType);
 
-            DocFileInfo fi = new DocFileInfo()
+            DocFileInfo fi = new DocFileInfo(applicationId)
             {
                 FileID = fileId,
                 FileName = fileName,
@@ -125,7 +125,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             return !fileId.HasValue ? null : fi;
         }
 
-        public static List<DocFileInfo> get_files_info(string strFiles)
+        public static List<DocFileInfo> get_files_info(Guid? applicationId, string strFiles)
         {
             List<DocFileInfo> retList = new List<DocFileInfo>();
 
@@ -136,7 +136,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             if (!dic.ContainsKey("Items")) return retList;
 
             if (dic["Items"].GetType() == typeof(Dictionary<string, object>)) {
-                DocFileInfo fi = _get_file_info((Dictionary<string, object>)dic["Items"]);
+                DocFileInfo fi = _get_file_info(applicationId, (Dictionary<string, object>)dic["Items"]);
                 if (fi != null) retList.Add(fi);
             }
             else if (dic["Items"].GetType() == typeof(ArrayList))
@@ -146,7 +146,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                     Dictionary<string, object> f = obj.GetType() == typeof(string) ? PublicMethods.fromJSON((string)obj) :
                         (obj.GetType() == typeof(Dictionary<string, object>) ? (Dictionary<string, object>)obj : null);
 
-                    DocFileInfo fi = f == null ? null : _get_file_info(f);
+                    DocFileInfo fi = f == null ? null : _get_file_info(applicationId, f);
                     if (fi != null) retList.Add(fi);
                 }
             }
@@ -154,10 +154,10 @@ namespace RaaiVan.Modules.GlobalUtilities
             return retList;
         }
         
-        public static string get_files_json(Guid applicationId, List<DocFileInfo> attachedFiles, bool icon = false)
+        public static string get_files_json(List<DocFileInfo> attachedFiles, bool icon = false)
         {
             return attachedFiles == null || attachedFiles.Count == 0 ? "[]" : 
-                "[" + string.Join(",", attachedFiles.Select(u => u.toJson(applicationId, icon))) + "]";
+                "[" + string.Join(",", attachedFiles.Select(u => u.toJson(icon))) + "]";
         }
 
         public static DocFileInfo decode_base64_file_content(Guid applicationId, Guid? ownerId,
@@ -172,7 +172,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             int FIXED_HEADER = 16;
 
-            DocFileInfo ret = new DocFileInfo()
+            DocFileInfo ret = new DocFileInfo(applicationId)
             {
                 FileID = Guid.NewGuid(),
                 OwnerID = ownerId,
@@ -209,7 +209,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                         byte[] fileBytes = theReader.ReadBytes((int)ret.Size.Value);
 
-                        if (!ret.store(applicationId, fileBytes)) return null;
+                        if (!ret.store(fileBytes)) return null;
                     }
                 }
 
@@ -229,7 +229,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                     ret.FileName = "img";
                     ret.Extension = "jpg";
 
-                    if (!ret.store(applicationId, imageBytes)) return null;
+                    if (!ret.store(imageBytes)) return null;
 
                     return ret;
                 }
@@ -252,14 +252,14 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             FolderNames folderName = highQuality ? FolderNames.HighQualityProfileImage : FolderNames.ProfileImages;
 
-            DocFileInfo fi = new DocFileInfo() {
+            DocFileInfo fi = new DocFileInfo(applicationId) {
                 FileID = userId,
                 Extension = "jpg",
                 FolderName = folderName
             };
             
-            string address = !fi.exists(applicationId) ? 
-                (highQuality ? string.Empty : PublicConsts.DefaultProfileImageURL) : fi.url(applicationId);
+            string address = !fi.exists() ? 
+                (highQuality ? string.Empty : PublicConsts.DefaultProfileImageURL) : fi.url();
             
             return networkAddress ? address.Replace("../..", RaaiVanSettings.RaaiVanURL(applicationId)) : address;
         }
@@ -268,13 +268,13 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             if (pictureId == Guid.Empty) return false;
 
-            DocFileInfo fi = new DocFileInfo() {
+            DocFileInfo fi = new DocFileInfo(applicationId) {
                 FileID = pictureId,
                 Extension = "jpg",
                 FolderName = FolderNames.Pictures
             };
 
-            return fi.exists(applicationId);
+            return fi.exists();
         }
 
         private static bool get_icon_parameters(Guid? applicationId, IconType iconType, ref int width, ref int height, 
@@ -372,19 +372,19 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             if (ownerId == Guid.Empty) return string.Empty;
 
-            DocFileInfo fi = new DocFileInfo() {
+            DocFileInfo fi = new DocFileInfo(applicationId) {
                 FileID = ownerId,
                 OwnerID = ownerId,
                 Extension = "jpg",
                 FolderName = FolderNames.Icons
             };
 
-            string retUrl = fi.exists(applicationId) ? fi.url(applicationId) : string.Empty;
+            string retUrl = fi.exists() ? fi.url() : string.Empty;
 
             if (string.IsNullOrEmpty(retUrl) && alternateOwnerId.HasValue)
             {
                 fi.FileID = alternateOwnerId;
-                retUrl = fi.exists(applicationId) ? fi.url(applicationId) : string.Empty;
+                retUrl = fi.exists() ? fi.url() : string.Empty;
             }
 
             if (string.IsNullOrEmpty(retUrl) && defaultIcon != DefaultIconTypes.None)
@@ -400,7 +400,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             FolderNames folderName = highQuality ? FolderNames.HighQualityIcon : FolderNames.Icons;
 
-            DocFileInfo fi = new DocFileInfo()
+            DocFileInfo fi = new DocFileInfo(applicationId)
             {
                 FileID = ownerId,
                 OwnerID = ownerId,
@@ -408,7 +408,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                 FolderName = folderName
             };
 
-            string retUrl = fi.exists(applicationId) ? fi.url(applicationId) :
+            string retUrl = fi.exists() ? fi.url() :
                 (highQuality ? string.Empty : get_icon_url(applicationId, DefaultIconTypes.Extension, extension));
 
             return networkAddress ? retUrl.Replace("../..", RaaiVanSettings.RaaiVanURL(applicationId)) : retUrl;
@@ -426,25 +426,25 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             if (ownerId == Guid.Empty) return false;
 
-            DocFileInfo fi = new DocFileInfo() {
+            DocFileInfo fi = new DocFileInfo(applicationId) {
                 FileID = ownerId,
                 OwnerID = ownerId,
                 Extension = "jpg",
                 FolderName = FolderNames.Icons
             };
 
-            return fi.exists(applicationId);
+            return fi.exists();
         }
         
         public static string get_icon_json(Guid applicationId, Guid ownerId)
         {
-            return new DocFileInfo()
+            return new DocFileInfo(applicationId)
             {
                 FileID = ownerId,
                 FileName = "آیکون",
                 Extension = "jpg",
                 OwnerID = ownerId
-            }.toJson(applicationId);
+            }.toJson();
         }
 
         public static string get_application_icon_url(Guid? applicationId, bool highQuality = false, bool networkAddress = false)
@@ -459,14 +459,14 @@ namespace RaaiVan.Modules.GlobalUtilities
                     (networkAddress ? addr.Replace("../..", RaaiVanSettings.RaaiVanURL(applicationId)) : addr);
             }
 
-            DocFileInfo fi = new DocFileInfo() {
+            DocFileInfo fi = new DocFileInfo(applicationId) {
                 FileID = applicationId,
                 OwnerID = applicationId,
                 Extension = "jpg",
                 FolderName = folderName
             };
 
-            string retUrl = fi.exists(applicationId) ? fi.url(applicationId) : string.Empty;
+            string retUrl = fi.exists() ? fi.url() : string.Empty;
 
             if (string.IsNullOrEmpty(retUrl) && !highQuality) retUrl = RaaiVanSettings.LogoMiniURL;
 
@@ -488,14 +488,14 @@ namespace RaaiVan.Modules.GlobalUtilities
 
             FolderNames folderName = highQuality ? FolderNames.HighQualityCoverPhoto : FolderNames.CoverPhoto;
 
-            DocFileInfo fi = new DocFileInfo() {
+            DocFileInfo fi = new DocFileInfo(applicationId) {
                 FileID = ownerId,
                 OwnerID = ownerId,
                 Extension = "jpg",
                 FolderName = folderName
             };
 
-            string retUrl = fi.exists(applicationId) ? fi.url(applicationId) : string.Empty;
+            string retUrl = fi.exists() ? fi.url() : string.Empty;
 
             return networkAddress ? retUrl.Replace("../..", RaaiVanSettings.RaaiVanURL(applicationId)) : retUrl;
         }

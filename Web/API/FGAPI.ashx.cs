@@ -117,7 +117,8 @@ namespace RaaiVan.Web.API
                         PublicMethods.parse_string(context.Request.Params["Title"]),
                         PublicMethods.parse_string(context.Request.Params["Name"]),
                         PublicMethods.parse_string(context.Request.Params["Description"]),
-                        FGUtilities.get_form_elements(context.Request.Params["Elements"], formDesignMode: true), ref responseText);
+                        FGUtilities.get_form_elements(paramsContainer.ApplicationID, context.Request.Params["Elements"],
+                        formDesignMode: true), ref responseText);
                     _return_response(ref responseText);
                     return;
                 case "GetFormElements":
@@ -174,7 +175,7 @@ namespace RaaiVan.Web.API
                     if (!Enum.TryParse<PollOwnerType>(context.Request.Params["PollOwnerType"], out pot))
                         pot = PollOwnerType.None;
 
-                    save_form_instance_elements(FGUtilities.get_form_elements(context.Request.Params["Elements"]),
+                    save_form_instance_elements(FGUtilities.get_form_elements(paramsContainer.ApplicationID, context.Request.Params["Elements"]),
                         ListMaker.get_guid_items(context.Request.Params["ElementsToClear"], '|'),
                         PublicMethods.parse_guid(context.Request.Params["PollID"]), pot, ref responseText);
                     _return_response(ref responseText);
@@ -186,7 +187,8 @@ namespace RaaiVan.Web.API
                     _return_response(ref responseText);
                     return;
                 case "ImportForm":
-                    List<DocFileInfo> files = DocumentUtilities.get_files_info(context.Request.Params["Uploaded"]);
+                    List<DocFileInfo> files =
+                        DocumentUtilities.get_files_info(paramsContainer.ApplicationID, context.Request.Params["Uploaded"]);
 
                     if (files == null || files.Count != 1)
                         responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -387,7 +389,7 @@ namespace RaaiVan.Web.API
                 case "SaveAPOMaturityAssessmentForm":
                     responseText = APOMaturityAssessment.save_form(paramsContainer.ApplicationID,
                         PublicMethods.parse_guid(context.Request.Params["PollID"]),
-                        FGUtilities.get_form_elements(context.Request.Params["Elements"]),
+                        FGUtilities.get_form_elements(paramsContainer.ApplicationID, context.Request.Params["Elements"]),
                         paramsContainer.CurrentUserID);
                     _return_response(ref responseText);
                     return;
@@ -1454,7 +1456,7 @@ namespace RaaiVan.Web.API
             });
 
             if (attachedFiles != null &&
-                attachedFiles.Any(f => !f.move(paramsContainer.Tenant.Id, FolderNames.TemporaryFiles, FolderNames.Attachments))) {
+                attachedFiles.Any(f => !f.move(FolderNames.TemporaryFiles, FolderNames.Attachments))) {
                 responseText = "{\"ErrorText\":\"" + Messages.SavingFilesFailed + "\"}";
                 return false;
             }
@@ -1465,7 +1467,7 @@ namespace RaaiVan.Web.API
                 elements, elementsToClear, paramsContainer.CurrentUserID.Value, ref errorMessage);
 
             if (!result && attachedFiles != null)
-                attachedFiles.ForEach(f => f.move(paramsContainer.Tenant.Id, FolderNames.Attachments, FolderNames.TemporaryFiles));
+                attachedFiles.ForEach(f => f.move(FolderNames.Attachments, FolderNames.TemporaryFiles));
 
             //update AdditionalID for the form instance owner
             if (result && elements.Count > 0)
@@ -2426,7 +2428,7 @@ namespace RaaiVan.Web.API
             {
                 responseText = "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" +
                     ",\"NodeName\":\"" + Base64.encode(nodeName) + "\"" +
-                    ",\"NodeLogo\":" + (logo == null ? "null" : logo.toJson(paramsContainer.Tenant.Id)) +
+                    ",\"NodeLogo\":" + (logo == null ? "null" : logo.toJson()) +
                     ",\"Elements\":[" + string.Join(",", savedElements.Select(u => u.toJson(paramsContainer.Tenant.Id))) + "]" +
                     "}";
             }

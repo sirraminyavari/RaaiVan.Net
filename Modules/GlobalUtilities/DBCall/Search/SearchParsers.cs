@@ -17,7 +17,7 @@ namespace RaaiVan.Modules.Search
 
             for (int i = 0; i < table.Rows.Count; i++)
             {
-                SearchDoc sd = new SearchDoc()
+                SearchDoc sd = new SearchDoc(applicationId)
                 {
                     ID = table.GetGuid(i, "ID", defaultValue: Guid.Empty).Value,
                     Deleted = table.GetBool(i, "Deleted", defaultValue: false).Value,

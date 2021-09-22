@@ -32,7 +32,7 @@ namespace RaaiVan.Modules.GlobalUtilities
     class TextExtractor
     {
         private StringWriter _outputWriter;
-        public TextExtractionResult Extract(Guid applicationId, DocFileInfo file, ref bool succeed, ref string errorText)
+        public TextExtractionResult Extract(DocFileInfo file, ref bool succeed, ref string errorText)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace RaaiVan.Modules.GlobalUtilities
                 Class parserClass = parser.GetType();
                 parseContext.set(parserClass, parser);
 
-                byte[] fileContent = file.toByteArray(applicationId);
+                byte[] fileContent = file.toByteArray();
 
                 using (InputStream inputStream = TikaInputStream.get(fileContent, metadata))
                 {
@@ -89,11 +89,11 @@ namespace RaaiVan.Modules.GlobalUtilities
 
     public class FileContentExtractor
     {
-        public static string ExtractFileContent(Guid applicationId, DocFileInfo file, ref string errorText)
+        public static string ExtractFileContent(DocFileInfo file, ref string errorText)
         {
             bool succeed = true;
             TextExtractor textExtractor = new TextExtractor();
-            TextExtractionResult result = textExtractor.Extract(applicationId, file, ref succeed, ref errorText);
+            TextExtractionResult result = textExtractor.Extract(file, ref succeed, ref errorText);
 
             if (!succeed) return string.Empty;
 

@@ -62,7 +62,7 @@ namespace RaaiVan.Web.API
                         PublicMethods.parse_bool(context.Request.Params["IsGroup"]),
                         ListMaker.get_guid_items(context.Request.Params["ReceiverUserIDs"], '|'),
                         PublicMethods.parse_guid(context.Request.Params["ThreadID"]),
-                        DocumentUtilities.get_files_info(context.Request.Params["AttachedFiles"]),
+                        DocumentUtilities.get_files_info(paramsContainer.ApplicationID, context.Request.Params["AttachedFiles"]),
                         PublicMethods.parse_guid(context.Request.Params["GroupID"]),
                         PublicMethods.parse_string(context.Request.Params["Ref"], false),
                         ref responseText);
@@ -205,7 +205,7 @@ namespace RaaiVan.Web.API
                     ",\"SenderLastName\":\"" + Base64.encode(msg.SenderLastName) + "\"" +
                     ",\"ProfileImageURL\":\"" + DocumentUtilities.get_personal_image_address(paramsContainer.Tenant.Id,
                         msg.SenderUserID.Value) + "\"" +
-                    ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, attachments.Where(u => u.OwnerID == msg.MessageID).ToList(), true) +
+                    ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(attachments.Where(u => u.OwnerID == msg.MessageID).ToList(), true) +
                     "}";
                 isFirst = false;
             }
@@ -259,7 +259,7 @@ namespace RaaiVan.Web.API
                     ",\"MessageText\":\"" + Base64.encode(msg.MessageText) + "\"" +
                     ",\"SendDate\":\"" + GenericDate.get_local_date(msg.SendDate.Value, true) + "\"" +
                     ",\"ForwardedFrom\":\"" + (msg.ForwardedFrom.HasValue ? msg.ForwardedFrom.Value.ToString() : "") + "\"" +
-                    ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, attachments.Where(u => u.OwnerID == msg.MessageID).ToList(), true) +
+                    ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(attachments.Where(u => u.OwnerID == msg.MessageID).ToList(), true) +
                     ",\"Level\":" + msg.Level.ToString().ToLower() +
                     ",\"ReceiversCount\":" + (msg.ReceiversCount.HasValue ? msg.ReceiversCount.Value : 0).ToString() +
                     ",\"ReceiverUsers\":[" +
@@ -311,13 +311,13 @@ namespace RaaiVan.Web.API
                 threadId = isGroup.Value ? Guid.NewGuid() : (receiverUserIds.Count == 1 ? receiverUserIds.First() : threadId);
 
             if (attachedFiles != null)
-                attachedFiles.ForEach(f => f.move(paramsContainer.Tenant.Id, FolderNames.TemporaryFiles, FolderNames.Attachments));
+                attachedFiles.ForEach(f => f.move(FolderNames.TemporaryFiles, FolderNames.Attachments));
 
             long result = MSGController.send_message(paramsContainer.Tenant.Id, messageId, forwardedFrom,
                 paramsContainer.CurrentUserID.Value, title, messageText, isGroup.Value, receiverUserIds, threadId, attachedFiles);
 
             if (result <= 0 && attachedFiles != null)
-                attachedFiles.ForEach(f => f.move(paramsContainer.Tenant.Id, FolderNames.Attachments, FolderNames.TemporaryFiles));
+                attachedFiles.ForEach(f => f.move(FolderNames.Attachments, FolderNames.TemporaryFiles));
 
             List<User> receiverUsers;
             User senderUser = UsersController.get_user(paramsContainer.Tenant.Id, paramsContainer.CurrentUserID.Value);
@@ -382,7 +382,7 @@ namespace RaaiVan.Web.API
                         ",\"SenderLastName\":\"" + Base64.encode(senderUser.LastName) + "\"" +
                         ",\"ProfileImageURL\":\"" + DocumentUtilities.get_personal_image_address(
                             paramsContainer.Tenant.Id, senderUser.UserID.Value) + "\"" +
-                        ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, attachedFiles, true) +
+                        ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(attachedFiles, true) +
                         ",\"Ref\":\"" + (string.IsNullOrEmpty(_ref) ? string.Empty : _ref) + "\"" +
                     "}";
             }

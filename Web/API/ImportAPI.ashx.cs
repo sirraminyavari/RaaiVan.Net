@@ -43,7 +43,8 @@ namespace RaaiVan.Web.API
                     return;
                 */
                 case "ImportData":
-                    List<DocFileInfo> files = DocumentUtilities.get_files_info(context.Request.Params["AttachedFile"]);
+                    List<DocFileInfo> files = 
+                        DocumentUtilities.get_files_info(paramsContainer.ApplicationID, context.Request.Params["AttachedFile"]);
 
                     if (files == null || files.Count != 1)
                         responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
@@ -77,7 +78,7 @@ namespace RaaiVan.Web.API
                 return;
             }
 
-            if (!file.exists(paramsContainer.Tenant.Id))
+            if (!file.exists())
             {
                 responseText = "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
                 return;
@@ -87,7 +88,7 @@ namespace RaaiVan.Web.API
 
             try
             {
-                using (MemoryStream stream = new MemoryStream(file.toByteArray(paramsContainer.Tenant.Id)))
+                using (MemoryStream stream = new MemoryStream(file.toByteArray()))
                     xmlDoc.Load(stream);
             }
             catch (Exception ex)

@@ -58,7 +58,7 @@ namespace RaaiVan.Web.API
                 case "uploadfile":
                 case "upload_file":
                     {
-                        DocFileInfo file = new DocFileInfo()
+                        DocFileInfo file = new DocFileInfo(paramsContainer.ApplicationID)
                         {
                             FileID = fileId != Guid.Empty ? fileId : Guid.NewGuid(),
                             OwnerID = ownerId,
@@ -104,7 +104,7 @@ namespace RaaiVan.Web.API
                                 return;
                         }
                         
-                        DocFileInfo uploaded = new DocFileInfo() {
+                        DocFileInfo uploaded = new DocFileInfo(paramsContainer.ApplicationID) {
                             FileID = Guid.NewGuid(),
                             OwnerType = ownerType,
                             FolderName = FolderNames.TemporaryFiles
@@ -119,7 +119,7 @@ namespace RaaiVan.Web.API
 
                         if (succeed)
                         {
-                            DocFileInfo destFile = new DocFileInfo() {
+                            DocFileInfo destFile = new DocFileInfo(paramsContainer.ApplicationID) {
                                 FileID = hasId ? pictureId : uploaded.FileID,
                                 OwnerType = ownerType,
                                 Extension = "jpg",
@@ -191,7 +191,7 @@ namespace RaaiVan.Web.API
                             break;
                         }
 
-                        DocFileInfo uploaded = new DocFileInfo()
+                        DocFileInfo uploaded = new DocFileInfo(paramsContainer.ApplicationID)
                         {
                             FileID = iconId,
                             OwnerID = ownerId,
@@ -257,23 +257,23 @@ namespace RaaiVan.Web.API
                             break;
                         }
 
-                        new DocFileInfo()
+                        new DocFileInfo(paramsContainer.ApplicationID)
                         {
                             FileID = iconId,
                             Extension = "jpg",
                             OwnerID = ownerId,
                             OwnerType = ownerType,
                             FolderName = folderName
-                        }.delete(paramsContainer.ApplicationID);
+                        }.delete();
 
-                        new DocFileInfo()
+                        new DocFileInfo(paramsContainer.ApplicationID)
                         {
                             FileID = iconId,
                             Extension = "jpg",
                             OwnerID = ownerId,
                             OwnerType = ownerType,
                             FolderName = highQualityFolderName
-                        }.delete(paramsContainer.ApplicationID);
+                        }.delete();
 
                         responseText = "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + "\"" +
                             ",\"DefaultIconURL\":\"" + defaultIconUrl + "\"}";
@@ -308,10 +308,19 @@ namespace RaaiVan.Web.API
 
                         if (!isValid) break;
 
-                        DocFileInfo highQualityFile = 
-                            new DocFileInfo() { FileID = iconId, Extension = "jpg", FolderName = highQualityImageFolder };
+                        DocFileInfo highQualityFile = new DocFileInfo(paramsContainer.ApplicationID)
+                        {
+                            FileID = iconId,
+                            Extension = "jpg",
+                            FolderName = highQualityImageFolder
+                        };
 
-                        DocFileInfo file = new DocFileInfo() { FileID = iconId, Extension = "jpg", FolderName = imageFolder };
+                        DocFileInfo file = new DocFileInfo(paramsContainer.ApplicationID)
+                        {
+                            FileID = iconId,
+                            Extension = "jpg",
+                            FolderName = imageFolder
+                        };
 
                         int x = string.IsNullOrEmpty(context.Request.Params["X"]) ? -1 : int.Parse(context.Request.Params["X"]);
                         int y = string.IsNullOrEmpty(context.Request.Params["Y"]) ? -1 : int.Parse(context.Request.Params["Y"]);
@@ -322,7 +331,7 @@ namespace RaaiVan.Web.API
 
                         IconMeta meta = null;
 
-                        RVGraphics.extract_thumbnail(applicationId, highQualityFile, highQualityFile.toByteArray(applicationId), file,
+                        RVGraphics.extract_thumbnail(applicationId, highQualityFile, highQualityFile.toByteArray(), file,
                             x, y, width, height, iconWidth, iconHeight, ref responseText, ref meta);
 
                         break;
@@ -385,7 +394,7 @@ namespace RaaiVan.Web.API
 
                 if (!result)
                 {
-                    fileInfo.move(paramsContainer.ApplicationID, fn, FolderNames.TemporaryFiles);
+                    fileInfo.move(fn, FolderNames.TemporaryFiles);
                     responseText = "{\"success\":false}";
                     return false;
                 }
@@ -411,13 +420,13 @@ namespace RaaiVan.Web.API
                 using (BinaryReader reader = new BinaryReader(uploadedFile.InputStream))
                 {
                     fileContent = reader.ReadBytes(uploadedFile.ContentLength);
-                    if(!dontStore) fi.store(applicationId, fileContent);
+                    if(!dontStore) fi.store(fileContent);
                 }
 
                 responseText = "{\"success\":" + true.ToString().ToLower() +
-                    ",\"AttachedFile\":" + fi.toJson(applicationId, true) +
+                    ",\"AttachedFile\":" + fi.toJson(icon: true) +
                     ",\"name\":\"" + fi.file_name_with_extension + "\"" +
-                    ",\"url\":\"" + fi.url(applicationId) + "\"" +
+                    ",\"url\":\"" + fi.url() + "\"" +
                     ",\"Message\":\"~[[MSG]]\"}";
             }
             catch (Exception)
@@ -443,7 +452,7 @@ namespace RaaiVan.Web.API
                 using (BinaryReader reader = new BinaryReader(st))
                 {
                     fileContent = reader.ReadBytes(Convert.ToInt32(st.Length));
-                    if (!dontStore && !fi.store(applicationId, fileContent))
+                    if (!dontStore && !fi.store(fileContent))
                     {
                         responseText = "{\"success\":false}";
                         return false;
@@ -451,9 +460,9 @@ namespace RaaiVan.Web.API
                 }
 
                 responseText = "{\"success\":" + true.ToString().ToLower() + 
-                    ",\"AttachedFile\":" + fi.toJson(applicationId, true) +
+                    ",\"AttachedFile\":" + fi.toJson(icon: true) +
                     ",\"name\":\"" + fi.file_name_with_extension + "\"" +
-                    ",\"url\":\"" + fi.url(applicationId) + "\"" +
+                    ",\"url\":\"" + fi.url() + "\"" +
                     ",\"Message\":\"~[[MSG]]\"}";
 
             }
@@ -477,7 +486,7 @@ namespace RaaiVan.Web.API
             try
             {
                 if (file != null && file.FolderName.HasValue && file.FolderName.Value == FolderNames.TemporaryFiles)
-                    file.delete(paramsContainer.Tenant.Id);
+                    file.delete();
             }
             catch { }
             

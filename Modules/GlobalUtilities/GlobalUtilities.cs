@@ -2050,8 +2050,7 @@ namespace RaaiVan.Modules.GlobalUtilities
             return outputStream;
         }
 
-        public static XmlDocument Excel2XML(Guid applicationId,
-            DocFileInfo excelFile, int sheetNo, ref Dictionary<string, object> map)
+        public static XmlDocument Excel2XML(DocFileInfo excelFile, int sheetNo, ref Dictionary<string, object> map)
         {
             try
             {
@@ -2062,7 +2061,7 @@ namespace RaaiVan.Modules.GlobalUtilities
 
                 try
                 {
-                    using (MemoryStream stream = new MemoryStream(excelFile.toByteArray(applicationId)))
+                    using (MemoryStream stream = new MemoryStream(excelFile.toByteArray()))
                         wb = new XLWorkbook(stream);
                 }
                 catch (Exception ex)

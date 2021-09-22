@@ -68,9 +68,13 @@ namespace RaaiVan.Web.API
             if (isTemporary) file.FolderName = FolderNames.TemporaryFiles;
             else file.refresh_folder_name();
 
-            if (!file.exists(paramsContainer.Tenant.Id)) _return_response(ref responseText);
+            if (!file.exists()) _return_response(ref responseText);
 
-            DocFileInfo destFile = new DocFileInfo() { FileID = file.FileID, FolderName = FolderNames.PDFImages };
+            DocFileInfo destFile = new DocFileInfo(paramsContainer.ApplicationID)
+            {
+                FileID = file.FileID,
+                FolderName = FolderNames.PDFImages
+            };
 
             switch (command)
             {
@@ -134,8 +138,8 @@ namespace RaaiVan.Web.API
         {
             bool invalidPassword = false;
 
-            int count = PDFUtil.get_pages_count(paramsContainer.Tenant.Id, file, password, ref invalidPassword);
-            int convertedCount = count == 0 ? 0 : PDFUtil.get_converted_pages_count(paramsContainer.Tenant.Id, destFile);
+            int count = PDFUtil.get_pages_count(file, password, ref invalidPassword);
+            int convertedCount = count == 0 ? 0 : PDFUtil.get_converted_pages_count(destFile);
 
             responseText = "{\"Count\":" + count.ToString() +
                 ",\"ConvertedCount\":" + convertedCount.ToString() +
@@ -154,9 +158,8 @@ namespace RaaiVan.Web.API
                 destFile.FileName = pageNumber.ToString();
                 destFile.Extension = imageFormat.ToString().ToLower();
 
-                byte[] fileBytes = !destFile.exists(paramsContainer.ApplicationID) ?
-                    File.ReadAllBytes(PublicMethods.map_path(PublicConsts.NoPDFPage)) :
-                    destFile.toByteArray(paramsContainer.ApplicationID);
+                byte[] fileBytes = !destFile.exists() ?
+                    File.ReadAllBytes(PublicMethods.map_path(PublicConsts.NoPDFPage)) : destFile.toByteArray();
 
                 HttpContext.Current.Response.ContentType = "application/octet-stream";
                 HttpContext.Current.Response.AddHeader("Content-Disposition",

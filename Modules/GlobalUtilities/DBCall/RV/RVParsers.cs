@@ -25,7 +25,9 @@ namespace RaaiVan.Modules.GlobalUtilities
                     Name = table.GetString(i, "ApplicationName"),
                     Title = table.GetString(i, "Title"),
                     Description = table.GetString(i, "Description"),
-                    CreatorUserID = table.GetGuid(i, "CreatorUserID")
+                    CreatorUserID = table.GetGuid(i, "CreatorUserID"),
+                    ExpertiseFieldID = table.GetGuid(i, "ExpertiseFieldID"),
+                    ExpertiseFieldName = table.GetString(i, "ExpertiseFieldName")
                 });
             }
 

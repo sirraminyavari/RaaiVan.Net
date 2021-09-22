@@ -721,251 +721,71 @@ namespace RaaiVan.Modules.CoreNetwork
         public string NodeTypeAdditionalID;
         public string TypeName;
         public int? Count;
+
+        public string toJson() {
+            return "{\"NodeTypeID\":\"" + (NodeTypeID.HasValue ? NodeTypeID.ToString() : string.Empty) + "\"" +
+                ",\"TypeName\":\"" + Base64.encode(TypeName) + "\"" + 
+                ",\"Count\":" + (Count.HasValue ? Count.Value : 0).ToString() +
+                "}";
+        }
     }
 
     public class NodeList
     {
-        private Guid? _ListID;
-        private string _AdditionalID;
-        private Guid? _NodeTypeID;
-        private string _NodeType;
-        private string _Name;
-        private string _Description;
-        private Guid? _CreatorUserID;
-        private DateTime? _CreationDate;
-        private Guid? _LastModifierUserID;
-        private DateTime? _LastModificationDate;
-        private Guid? _ParentListID;
-        private string _ParentName;
-        private Guid? _OwnerID;
-        private string _OwnerType;
-
-        public Guid? ListID
-        {
-            get { return _ListID; }
-            set { _ListID = value; }
-        }
-
-        public string AdditionalID
-        {
-            get { return _AdditionalID; }
-            set { _AdditionalID = value; }
-        }
-
-        public Guid? NodeTypeID
-        {
-            get { return _NodeTypeID; }
-            set { _NodeTypeID = value; }
-        }
-
-        public string NodeType
-        {
-            get { return _NodeType; }
-            set { _NodeType = value; }
-        }
-
-        public string Name
-        {
-            get { return _Name; }
-            set { _Name = value; }
-        }
-
-        public string Description
-        {
-            get { return _Description; }
-            set { _Description = value; }
-        }
-
-        public Guid? CreatorUserID
-        {
-            get { return _CreatorUserID; }
-            set { _CreatorUserID = value; }
-        }
-
-        public DateTime? CreationDate
-        {
-            get { return _CreationDate; }
-            set { _CreationDate = value; }
-        }
-
-        public Guid? LastModifierUserID
-        {
-            get { return _LastModifierUserID; }
-            set { _LastModifierUserID = value; }
-        }
-
-        public DateTime? LastModificationDate
-        {
-            get { return _LastModificationDate; }
-            set { _LastModificationDate = value; }
-        }
-
-        public Guid? ParentListID
-        {
-            get { return _ParentListID; }
-            set { _ParentListID = value; }
-        }
-
-        public string ParentName
-        {
-            get { return _ParentName; }
-            set { _ParentName = value; }
-        }
-
-        public Guid? OwnerID
-        {
-            get { return _OwnerID; }
-            set { _OwnerID = value; }
-        }
-
-        public string OwnerType
-        {
-            get { return _OwnerType; }
-            set { _OwnerType = value; }
-        }
+        public Guid? ListID;
+        public string AdditionalID;
+        public Guid? NodeTypeID;
+        public string NodeType;
+        public string Name;
+        public string Description;
+        public Guid? CreatorUserID;
+        public DateTime? CreationDate;
+        public Guid? LastModifierUserID;
+        public DateTime? LastModificationDate;
+        public Guid? ParentListID;
+        public string ParentName;
+        public Guid? OwnerID;
+        public string OwnerType;
     }
 
     public class HierarchyAdmin
     {
-        private Node _Node;
-        private User _User;
-        private int? _Level;
+        public Node Node;
+        public User User;
+        public int? Level;
 
 
         public HierarchyAdmin()
         {
-            _Node = new Node();
-            _User = new User();
-        }
-
-        public Node Node
-        {
-            get { return _Node; }
-            set { _Node = value; }
-        }
-
-        public User User
-        {
-            get { return _User; }
-            set { _User = value; }
-        }
-
-        public int? Level
-        {
-            get { return _Level; }
-            set { _Level = value; }
+            Node = new Node();
+            User = new User();
         }
     }
 
     public class Tag
     {
-        private Guid? _TagID;
-        private string _Text;
-        private bool? _Approved;
-        private int? _CallsCount;
-        private Guid? _CreatorUserID;
-        private DateTime? _CreationDate;
-
-        public Guid? TagID
-        {
-            get{return _TagID;}
-            set{_TagID = value;}
-        }
-
-        public string Text
-        {
-            get { return _Text; }
-            set { _Text = value; }
-        }
-
-        public bool? Approved
-        {
-            get { return _Approved; }
-            set { _Approved = value; }
-        }
-
-        public int? CallsCount
-        {
-            get { return _CallsCount; }
-            set { _CallsCount = value; }
-        }
-
-        public Guid? CreatorUserID
-        {
-            get { return _CreatorUserID; }
-            set { _CreatorUserID = value; }
-        }
-
-        public DateTime? CreationDate
-        {
-            get { return _CreationDate; }
-            set { _CreationDate = value; }
-        }
+        public Guid? TagID;
+        public string Text;
+        public bool? Approved;
+        public int? CallsCount;
+        public Guid? CreatorUserID;
+        public DateTime? CreationDate;
     }
 
     public class NodeCreator
     {
-        private Guid? _NodeID;
-        private User _User;
-        private double? _CollaborationShare;
-        private string _Status;
-        private Guid? _CreatorUserID;
-        private DateTime? _CreationDate;
-        private Guid? _LastModifierUserID;
-        private DateTime? _LastModificationDate;
-
+        public Guid? NodeID;
+        public User User;
+        public double? CollaborationShare;
+        public string Status;
+        public Guid? CreatorUserID;
+        public DateTime? CreationDate;
+        public Guid? LastModifierUserID;
+        public DateTime? LastModificationDate;
 
         public NodeCreator()
         {
-            _User = new User();
-        }
-
-        public Guid? NodeID
-        {
-            get { return _NodeID; }
-            set { _NodeID = value; }
-        }
-
-        public User User
-        {
-            get { return _User; }
-            set { _User = value; }
-        }
-
-        public double? CollaborationShare
-        {
-            get { return _CollaborationShare; }
-            set { _CollaborationShare = value; }
-        }
-
-        public string Status
-        {
-            get { return _Status; }
-            set { _Status = value; }
-        }
-
-        public Guid? CreatorUserID
-        {
-            get { return _CreatorUserID; }
-            set { _CreatorUserID = value; }
-        }
-
-        public DateTime? CreationDate
-        {
-            get { return _CreationDate; }
-            set { _CreationDate = value; }
-        }
-
-        public Guid? LastModifierUserID
-        {
-            get { return _LastModifierUserID; }
-            set { _LastModifierUserID = value; }
-        }
-
-        public DateTime? LastModificationDate
-        {
-            get { return _LastModificationDate; }
-            set { _LastModificationDate = value; }
+            User = new User();
         }
     }
 

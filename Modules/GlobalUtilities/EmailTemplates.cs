@@ -75,13 +75,13 @@ namespace RaaiVan.Modules.GlobalUtilities
         {
             if (RaaiVanSettings.SAASBasedMultiTenancy) applicationId = null;
 
-            DocFileInfo fi = new DocFileInfo() {
+            DocFileInfo fi = new DocFileInfo(applicationId) {
                 FileName = templateType,
                 Extension = "txt",
                 FolderName = FolderNames.EmailTemplates
             };
 
-            return fi.exists(applicationId) ? fi.get_text_content(applicationId) :
+            return fi.exists() ? fi.get_text_content() :
                 (applicationId.HasValue ? _get_email_template(null, templateType) : string.Empty);
         }
 

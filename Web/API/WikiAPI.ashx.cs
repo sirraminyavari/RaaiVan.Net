@@ -174,7 +174,7 @@ namespace RaaiVan.Web.API
                 ",\"BodyText\":\"" + Base64.encode(_change.BodyText) + "\"" +
                 ",\"CreationDate\":\"" + GenericDate.get_local_date(_change.SendDate.Value) + "\"" +
                 ",\"IsExpert\":" + isAdmin.ToString().ToLower() +
-                ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, _change.AttachedFiles, true) +
+                ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(_change.AttachedFiles, true) +
                 "}";
         }
 
@@ -211,7 +211,7 @@ namespace RaaiVan.Web.API
                 ",\"AppliedChangesCount\":" + (!paragraph.AppliedChangesCount.HasValue ? 0 :
                     paragraph.AppliedChangesCount.Value).ToString() +
                 ",\"Changes\":[" + changesJson + "]" +
-                ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, paragraph.AttachedFiles, true) + "}";
+                ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(paragraph.AttachedFiles, true) + "}";
         }
 
         protected string _get_title_json(WikiTitle wikiTitle, bool isAdmin, bool editSuggestion, bool removed = false)
@@ -358,7 +358,7 @@ namespace RaaiVan.Web.API
                 isFirst = false;
             }
 
-            responseText += "]" + ",\"Files\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, wikiFiles) + "}";
+            responseText += "]" + ",\"Files\":" + DocumentUtilities.get_files_json(wikiFiles) + "}";
         }
 
         protected void add_title(Guid? ownerId, string title, int? sequenceNumber,
@@ -948,7 +948,7 @@ namespace RaaiVan.Web.API
             }
 
             responseText = result ? "{\"Succeed\":\"" + Messages.OperationCompletedSuccessfully + changeJson +
-                ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(paramsContainer.Tenant.Id, paragraph.AttachedFiles, true) + "}" :
+                ",\"AttachedFiles\":" + DocumentUtilities.get_files_json(paragraph.AttachedFiles, icon: true) + "}" :
                 "{\"ErrorText\":\"" + Messages.OperationFailed + "\"}";
 
             //Save Tagged Items

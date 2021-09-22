@@ -539,27 +539,27 @@ namespace RaaiVan.Web.API
 
             if (!templateNodeTypeId.HasValue) return;
 
-            DocFileInfo pic = new DocFileInfo() {
+            DocFileInfo pic = new DocFileInfo(RaaiVanSettings.ReferenceTenantID) {
                 FileID = templateNodeTypeId,
                 Extension = "jpg",
                 FileName = templateNodeTypeId.ToString(),
                 FolderName = FolderNames.Icons
             };
 
-            byte[] fileContent = pic.toByteArray(RaaiVanSettings.ReferenceTenantID);
+            byte[] fileContent = pic.toByteArray();
 
             if (fileContent.Length == 0) return;
 
             Guid? newFileId = IDs.new_id(id);
 
-            DocFileInfo newPic = new DocFileInfo() {
+            DocFileInfo newPic = new DocFileInfo(applicationId) {
                 FileID = newFileId,
                 Extension = "jpg",
                 FileName = newFileId.ToString(),
                 FolderName = FolderNames.Icons
             };
 
-            newPic.store(applicationId, fileContent);
+            newPic.store(fileContent);
         }
 
         public string get_template_status(Guid applicationId)
