@@ -367,7 +367,6 @@
     <Compile Include="DBCall\Logs\LogController.cs" />
     <Compile Include="DBCall\Logs\LogObjects.cs" />
     <Compile Include="DBCall\Logs\LGParsers.cs" />
-    <Compile Include="ICallWebService.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="RabbitMQAPI.cs" />
     <Compile Include="RedisAPI.cs" />
